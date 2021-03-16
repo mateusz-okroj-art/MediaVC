@@ -1,23 +1,23 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
-	<PropertyGroup>
+  <PropertyGroup>
 		<TargetFramework>net6</TargetFramework>
-		<Version>0.9.0</Version>
+    <Version>0.9.0</Version>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
-		<NeutralLanguage>en-US</NeutralLanguage>
-		<RepositoryUrl>https://github.com/mateuszokroj1/MediaVC.git</RepositoryUrl>
-		<RepositoryType>git</RepositoryType>
-		<Company>Mateusz Okrój</Company>
-		<Authors>Mateusz Okrój</Authors>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+    <NeutralLanguage>en-US</NeutralLanguage>
+    <RepositoryUrl>https://github.com/mateuszokroj1/MediaVC.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <Company>Mateusz Okrój</Company>
+    <Authors>Mateusz Okrój</Authors>
+    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<Configurations>Debug;Release;NightlyBuild</Configurations>
-	</PropertyGroup>
+  </PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
-		<DefineConstants>DEBUG;TRACE</DefineConstants>
-	</PropertyGroup>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+  </PropertyGroup>
 
 	<ItemGroup Condition="'$(Configuration)'=='Debug'">
 		<ProjectReference Include="..\MediaVC.Core\MediaVC.Core.csproj" />
@@ -31,12 +31,12 @@
 		<PackageReference Include="MediaVC.Core" Version="1.*" />
 	</ItemGroup>
 
-	<ItemGroup>
+  <ItemGroup>
 		<None Include="..\..\LICENSE" Link="LICENSE" />
 	</ItemGroup>
 
 	<ItemGroup>
 	  <PackageReference Include="System.Reactive" Version="5.*" />
-	</ItemGroup>
+  </ItemGroup>
 
 </Project>
