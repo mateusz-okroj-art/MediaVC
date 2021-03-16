@@ -59,7 +59,7 @@ steps:
   displayName: Publish tests results
   inputs:
     testResultsFormat: 'XUnit'
-    testResultsFiles: '**/TEST-*.xml'
+    testResultsFiles: '**/TEST-*.trx'
     failTaskOnFailedTests: true
     testRunTitle: 'MediaVC nightly build'
     buildConfiguration: 'Release'
