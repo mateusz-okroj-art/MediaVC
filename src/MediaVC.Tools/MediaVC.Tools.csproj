@@ -24,4 +24,8 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\MediaVC\MediaVC.csproj" />
+  </ItemGroup>
+
 </Project>
