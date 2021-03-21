@@ -15,14 +15,16 @@ namespace MediaVC.Tools.Difference
     {
         #region Constructor
 
-        public DifferenceCalculator(IInputSource currentVersion, IInputSource newVersion)
+        public DifferenceCalculator(IInputSource currentVersion, IInputSource newVersion) : this(newVersion)
         {
-
+            if (currentVersion == null)
+                throw new ArgumentNullException(nameof(currentVersion));
         }
 
         public DifferenceCalculator(IInputSource newVersion)
         {
-
+            if (newVersion == null)
+                throw new ArgumentNullException(nameof(newVersion));
         }
 
         #endregion
@@ -116,7 +118,7 @@ namespace MediaVC.Tools.Difference
                             }
                             else if(segment.Source.Equals(NewVersion))
                             {
-                                Result.Add(segment);
+                                Synchronize(() => Result.Add(segment));
 
                                 segment = null;
 
@@ -139,7 +141,7 @@ namespace MediaVC.Tools.Difference
                             }
                             else if(segment.Source.Equals(CurrentVersion))
                             {
-                                Result.Add(segment);
+                                Synchronize(() => Result.Add(segment));
 
                                 segment = null;
 
@@ -154,6 +156,23 @@ namespace MediaVC.Tools.Difference
                             }
                         }
                     }
+                }
+
+                /*var query = Result.Where(segment => segment.Source.Equals(NewVersion))
+                        .OrderBy(segment => segment.EndPosition)
+                        .Select(segment => segment.EndPosition);
+
+                if (query.Any())
+                    rightPosition = query.Last() + 1;*/
+
+                if (rightPosition < NewVersion.Length)
+                {
+                    Result.Add(new FileSegmentInfo
+                    {
+                        Source = NewVersion,
+                        StartPosition = rightPosition,
+                        EndPosition = NewVersion.Length - 1
+                    });
                 }
             }
             else
@@ -173,9 +192,33 @@ namespace MediaVC.Tools.Difference
                 SynchronizationContext.Post(_ => workToDo(), null);
         }
 
-        public static IEnumerable<IFileSegmentInfo> CalculateRemovedSegments(IEnumerable<IFileSegmentInfo> calculatedDifference)
+        public static IEnumerable<IFileSegmentInfo> CalculateRemovedSegments(IEnumerable<IFileSegmentInfo> calculatedDifference, IInputSource sourceToCalculate)
         {
+            if (calculatedDifference == null)
+                throw new ArgumentNullException(nameof(calculatedDifference));
 
+            if (sourceToCalculate == null)
+                throw new ArgumentNullException(nameof(sourceToCalculate));
+
+            var query = calculatedDifference.Where(segment => segment.Source.Equals(sourceToCalculate))
+                .OrderBy(segment => segment.StartPosition);
+
+            if(query.Any())
+            {
+                for(int index = 0; index < query.Count(); ++index)
+                {
+
+                }
+            }
+            else
+            {
+                yield return new FileSegmentInfo
+                {
+                    Source = sourceToCalculate,
+                    StartPosition = 0,
+                    EndPosition = sourceToCalculate.Length - 1
+                };
+            }    
         }
 
         #endregion
