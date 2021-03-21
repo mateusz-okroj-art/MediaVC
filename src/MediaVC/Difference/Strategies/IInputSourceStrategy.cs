@@ -6,8 +6,10 @@ using System.Threading.Tasks;
 
 namespace MediaVC.Difference.Strategies
 {
-    internal interface IInputSourceStrategy
+    internal interface IInputSourceStrategy : IEquatable<IInputSourceStrategy>
     {
+        long Length { get; }
 
+        long Position { get; set; }
     }
 }
