@@ -1,13 +1,17 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using MediaVC.Difference.Strategies;
 
 namespace MediaVC.Difference
 {
     public interface IInputSource
     {
+        long Position { get; set; }
 
+        long Length { get; }
+
+        byte ReadByte();
+
+        Memory<byte> ReadBytes(long count);
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -7,7 +8,7 @@ using MediaVC.Difference.Strategies;
 
 namespace MediaVC.Difference
 {
-    public sealed class InputSource : Stream, IInputSource
+    public sealed class InputSource : Stream, IInputSource, IEquatable<InputSource>
     {
         public InputSource(FileStream file)
         {
@@ -19,36 +20,49 @@ namespace MediaVC.Difference
 
         }
 
-        private readonly IInputSourceStrategy strategy;
-        public override bool CanRead { get; }
-        public override bool CanSeek { get; }
-        public override bool CanWrite { get; }
-        public override long Length { get; }
-        public override long Position { get; set; }
+        internal IInputSourceStrategy Strategy { get; }
 
-        public override void Flush()
+        public override bool CanRead { get; } = true;
+
+        public override bool CanSeek { get; } = true;
+
+        public override bool CanWrite { get; } = false;
+
+        public override long Length => Strategy.Length;
+
+        public override long Position
         {
-            throw new System.NotImplementedException();
+            get => Strategy.Position;
+            set => Strategy.Position = value;
         }
+
+
+        public override void Flush() => throw new InvalidOperationException();
 
         public override int Read(byte[] buffer, int offset, int count)
         {
-            throw new System.NotImplementedException();
+
         }
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new System.NotImplementedException();
+
         }
 
-        public override void SetLength(long value)
+        public override void SetLength(long value) => throw new InvalidOperationException();
+
+        public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
+
+        byte IInputSource.ReadByte()
         {
-            throw new System.NotImplementedException();
+            
         }
 
-        public override void Write(byte[] buffer, int offset, int count)
+        public Memory<byte> ReadBytes(long count)
         {
-            throw new System.NotImplementedException();
+            
         }
+
+        public bool Equals(InputSource other) => Strategy.Equals(other.Strategy);
     }
 }

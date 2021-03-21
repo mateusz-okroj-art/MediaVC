@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference;
@@ -18,5 +16,7 @@ namespace MediaVC.Tools.Difference
         IInputSource NewVersion { get; }
 
         IList<IFileSegmentInfo> Result { get; }
+
+        SynchronizationContext SynchronizationContext { get; }
     }
 }
