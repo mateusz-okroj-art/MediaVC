@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MediaVC.Tools
@@ -84,7 +84,10 @@ namespace MediaVC.Tools
         /// <summary>
         /// Checks, that selected stream is text-only
         /// </summary>
-        public static async ValueTask<bool> CheckIsTextAsync(Stream input)
+        /// <exception cref="ArgumentNullException" />
+        /// <exception cref="IOException" />
+        /// <exception cref="OperationCanceledException" />
+        public static async ValueTask<bool> CheckIsTextAsync(Stream input, CancellationToken cancellationToken = default)
         {
             if (input == null)
                 throw new ArgumentNullException(nameof(input));
@@ -96,16 +99,33 @@ namespace MediaVC.Tools
                 return false;
             else
             {
-                long position = 0;
+                try
+                {
+                    input.Position = 0;
+                    int value = -1;
 
-                Memory<byte> buffer = new byte[Math.Min(20_000, input.Length)];
-                
+                    while((value = input.ReadByte()) != -1)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if (!CheckSingleCharacter((byte)value))
+                            return false;
+                    }
+                }
+                catch(IOException)
+                {
+                    return false;
+                }
+
+                return true;
             }
         }
 
-        private static bool CheckSingleCharacter(byte character)
-        {
-
-        }
+        /// <summary>
+        /// Checks, that byte is text-based
+        /// </summary>
+        /// <param name="character">Byte to check</param>
+        private static bool CheckSingleCharacter(byte character) =>
+            character is (0 or >= 8) and (<= 13 or >= 26);
     }
 }
