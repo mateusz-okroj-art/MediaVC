@@ -205,9 +205,32 @@ namespace MediaVC.Tools.Difference
 
             if(query.Any())
             {
-                for(int index = 0; index < query.Count(); ++index)
-                {
+                long lastEndIndex = 0;
+                var segments = query.ToArray();
 
+                for(int index = 0; index < segments.Length; ++index)
+                {
+                    if(segments[index].StartPosition - lastEndIndex > 0)
+                    {
+                        yield return new FileSegmentInfo
+                        {
+                            Source = sourceToCalculate,
+                            StartPosition = lastEndIndex,
+                            EndPosition = segments[index].StartPosition - 1
+                        };
+                    }
+
+                    lastEndIndex = segments[index].EndPosition + 1;
+                }
+
+                if(sourceToCalculate.Length - lastEndIndex > 0)
+                {
+                    yield return new FileSegmentInfo
+                    {
+                        Source = sourceToCalculate,
+                        StartPosition = lastEndIndex,
+                        EndPosition = sourceToCalculate.Length - 1
+                    };
                 }
             }
             else
