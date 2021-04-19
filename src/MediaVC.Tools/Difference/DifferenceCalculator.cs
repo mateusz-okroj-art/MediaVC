@@ -69,7 +69,7 @@ namespace MediaVC.Tools.Difference
         public ValueTask CalculateAsync() => CalculateAsync(default, null);
 
         /// <summary>
-        /// 
+        /// Calculates differences between sources
         /// </summary>
         /// <param name="cancellation"></param>
         /// <exception cref="OperationCanceledException" />
@@ -192,6 +192,12 @@ namespace MediaVC.Tools.Difference
                 SynchronizationContext.Post(_ => workToDo(), null);
         }
 
+        /// <summary>
+        /// Calculates removed segments between calculated difference and selected source from calculation.
+        /// </summary>
+        /// <param name="calculatedDifference">Calculated segments</param>
+        /// <param name="sourceToCalculate">Selected source used in calculation</param>
+        /// <returns>Removed segments from source</returns>
         public static IEnumerable<IFileSegmentInfo> CalculateRemovedSegments(IEnumerable<IFileSegmentInfo> calculatedDifference, IInputSource sourceToCalculate)
         {
             if (calculatedDifference == null)

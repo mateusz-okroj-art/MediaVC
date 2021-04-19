@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using MediaVC.Difference;
+
+using Moq;
 
 using Xunit;
-using Moq;
-using MediaVC.Difference;
 
 namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 {
@@ -35,6 +33,36 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         public void Constructor1_WhenHaveAnyNull_ShouldThrowException(IInputSource input1, IInputSource input2)
         {
             Assert.Throws<ArgumentNullException>(() => new Tools.Difference.DifferenceCalculator(input1, input2));
+        }
+
+        [Fact]
+        public void Constructor1_WhenArgumentsAreValid_ShouldSetProperties()
+        {
+            var source1 = new Mock<IInputSource>().Object,
+                source2 = new Mock<IInputSource>().Object;
+
+            var result = new Tools.Difference.DifferenceCalculator(source1, source2);
+
+            Assert.Equal(source1, result.CurrentVersion);
+            Assert.Equal(source2, result.NewVersion);
+        }
+
+        [Fact]
+        public void Constructor2_WhenArgumentIsNull_ShouldThrowException()
+        {
+            IInputSource source = null;
+
+            Assert.Throws<ArgumentNullException>(() => new Tools.Difference.DifferenceCalculator(source));
+        }
+
+        [Fact]
+        public void Constructor2_WhenArgumentIsValid_ShouldSetProperty()
+        {
+            var source = new Mock<IInputSource>().Object;
+
+            var result = new Tools.Difference.DifferenceCalculator(source);
+
+            Assert.Equal(source, result.NewVersion);
         }
 
         #endregion
