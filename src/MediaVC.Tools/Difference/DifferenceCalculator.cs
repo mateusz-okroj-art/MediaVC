@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -17,38 +15,13 @@ namespace MediaVC.Tools.Difference
 
         public DifferenceCalculator(IInputSource currentVersion, IInputSource newVersion) : this(newVersion)
         {
-            if (currentVersion == null)
-                throw new ArgumentNullException(nameof(currentVersion));
+            CurrentVersion = currentVersion ?? throw new ArgumentNullException(nameof(currentVersion));
         }
 
         public DifferenceCalculator(IInputSource newVersion)
         {
-            if (newVersion == null)
-                throw new ArgumentNullException(nameof(newVersion));
+            NewVersion = newVersion ?? throw new ArgumentNullException(nameof(newVersion));
         }
-
-        #endregion
-
-        #region Fields
-
-        private readonly byte[] left = new byte[] { 0,1,2,3,4,5,6,7,8,9 };
-
-        private readonly byte[] right = new byte[]
-        {  
-            // New block
-            10, 13,
-
-            // Deleted block
-            // 0,1
-
-            // Current version
-            2,3,4,5,
-
-            // Delete version
-
-            // 
-            12,14,20
-        };
 
         #endregion
 
@@ -73,7 +46,7 @@ namespace MediaVC.Tools.Difference
         /// </summary>
         /// <param name="cancellation"></param>
         /// <exception cref="OperationCanceledException" />
-        public async ValueTask CalculateAsync(CancellationToken cancellation, IProgress<float> progress)
+        public async ValueTask CalculateAsync(CancellationToken cancellation, IProgress<float>? progress)
         {
             cancellation.ThrowIfCancellationRequested();
 

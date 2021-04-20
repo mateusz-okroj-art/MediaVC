@@ -11,6 +11,7 @@
     <Company>Mateusz Okrój</Company>
     <Authors>Mateusz Okrój</Authors>
     <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+	<Nullable>enable</Nullable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
