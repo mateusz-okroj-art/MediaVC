@@ -38,8 +38,8 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         [Fact]
         public void Constructor1_WhenArgumentsAreValid_ShouldSetProperties()
         {
-            var source1 = new Mock<IInputSource>().Object,
-                source2 = new Mock<IInputSource>().Object;
+            var source1 = new Mock<IInputSource>().Object;
+            var source2 = new Mock<IInputSource>().Object;
 
             var result = new Tools.Difference.DifferenceCalculator(source1, source2);
 

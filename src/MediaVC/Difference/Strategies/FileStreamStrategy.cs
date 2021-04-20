@@ -11,7 +11,7 @@ namespace MediaVC.Difference.Strategies
         public long Length { get; }
         public long Position { get; set; }
 
-        public bool Equals(IInputSourceStrategy other)
+        public bool Equals(IInputSourceStrategy? other)
         {
             throw new NotImplementedException();
         }

@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Xunit;
 using Moq;
 using MediaVC.Difference;
+using MediaVC.Difference.FileSegments;
 
 namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 {

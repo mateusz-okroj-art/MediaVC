@@ -14,7 +14,10 @@ namespace MediaVC.Difference
 
         public InputSource(FileStream file)
         {
-            throw new NotImplementedException();
+            if (file is null)
+                throw new ArgumentNullException(nameof(file));
+
+            
         }
 
         public InputSource(IEnumerable<IFileSegmentInfo> segments)
@@ -72,7 +75,7 @@ namespace MediaVC.Difference
             throw new NotImplementedException();
         }
 
-        public bool Equals(InputSource other) => Strategy.Equals(other.Strategy);
+        public bool Equals(InputSource? other) => Strategy.Equals(other.Strategy);
 
         #endregion
     }
