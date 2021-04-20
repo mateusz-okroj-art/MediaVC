@@ -10,6 +10,9 @@ namespace MediaVC.Tools.Tests.Fixtures
 {
     internal class DifferenceCalculatorTestFixture
     {
-        public DifferenceCalculator Calculator { get; }
+
+
+
+       
     }
 }

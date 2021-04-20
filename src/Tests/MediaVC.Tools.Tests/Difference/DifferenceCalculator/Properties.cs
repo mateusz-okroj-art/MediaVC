@@ -5,43 +5,31 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using MediaVC.Difference.FileSegments;
-using MediaVC.Tools.Tests.Fixtures;
-
 using Xunit;
+using Moq;
+using MediaVC.Difference;
 
 namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 {
-    public class Properties : IClassFixture<DifferenceCalculatorTestFixture>
+    public class Properties
     {
-        #region Fields
-
-        private readonly DifferenceCalculatorTestFixture fixture;
-
-        #endregion
-
-        #region Constructor
-
-        public Properties(DifferenceCalculatorTestFixture fixture)
-        {
-            this.fixture = fixture;
-        }
-
-        #endregion
-
         #region Methods
 
         [Fact]
         public void Result_ShouldGetList()
         {
-            Assert.IsType<List<IFileSegmentInfo>>(fixture.Calculator.Result);
+            var result = new Tools.Difference.DifferenceCalculator(new Mock<IInputSource>().Object, new Mock<IInputSource>().Object);
+
+            Assert.IsType<List<IFileSegmentInfo>>(result.Result);
+            Assert.Empty(result.Result);
         }
 
         [Fact]
         public void SynchronizationContext_ShouldGetAndSet()
         {
-            fixture.Calculator.SynchronizationContext = SynchronizationContext.Current;
-            Assert.Equal(SynchronizationContext.Current, fixture.Calculator.SynchronizationContext);
+            var result = new Tools.Difference.DifferenceCalculator(new Mock<IInputSource>().Object, new Mock<IInputSource>().Object);
+
+            Assert.Equal(SynchronizationContext.Current, result.SynchronizationContext);
         }
 
         #endregion
