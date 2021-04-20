@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MediaVC.Difference.Strategies
 {
@@ -11,5 +7,7 @@ namespace MediaVC.Difference.Strategies
         long Length { get; }
 
         long Position { get; set; }
+
+        int Read(byte[] buffer, int offset, int count);
     }
 }

@@ -17,12 +17,15 @@ namespace MediaVC.Difference
             if (file is null)
                 throw new ArgumentNullException(nameof(file));
 
-            Strategy = new FileStreamStrategy();
+            Strategy = new FileStreamStrategy(file);
         }
 
         public InputSource(IEnumerable<IFileSegmentInfo> segments)
         {
-            throw new NotImplementedException();
+            if (segments is null)
+                throw new ArgumentNullException(segments);
+
+            Strategy = new FileSegmentStrategy(segments);
         }
 
         #endregion
@@ -49,21 +52,25 @@ namespace MediaVC.Difference
 
         #region Methods
 
-        public override void Flush() => throw new InvalidOperationException();
 
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            throw new NotImplementedException();
-        }
+
+        public override int Read(byte[] buffer, int offset, int count) =>
+            Strategy.Read(buffer, offset, count);
 
         public override long Seek(long offset, SeekOrigin origin)
         {
-            throw new NotImplementedException();
+            var calculatedPosition = origin switch
+            {
+                SeekOrigin.Begin => offset,
+                SeekOrigin.Current => Position + offset,
+                SeekOrigin.End => Length - offset - 1,
+                _ => throw new NotImplementedException(),
+            };
+
+            Position = calculatedPosition;
+
+            return calculatedPosition;
         }
-
-        public override void SetLength(long value) => throw new InvalidOperationException();
-
-        public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
 
         byte IInputSource.ReadByte()
         {
@@ -76,6 +83,19 @@ namespace MediaVC.Difference
         }
 
         public bool Equals(InputSource? other) => Strategy.Equals(other.Strategy);
+
+        #region Obsoletes
+
+        [Obsolete]
+        public override void Flush() => throw new InvalidOperationException();
+
+        [Obsolete]
+        public override void SetLength(long value) => throw new InvalidOperationException();
+
+        [Obsolete]
+        public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
+
+        #endregion
 
         #endregion
     }
