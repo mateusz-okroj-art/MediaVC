@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MediaVC.Difference.Strategies
@@ -27,9 +24,30 @@ namespace MediaVC.Difference.Strategies
             set => File.Position = value;
         }
 
+        public int Read(byte[] buffer, int offset, int count) =>
+            File.Read(buffer, offset, count);
+
+        public ValueTask<int> ReadAsync(byte[] buffer, int offset, int count) =>
+            File.ReadAsync(byte[] buffer, int offset, int count);
+
+
+        public byte ReadByte()
+        {
+            var value = File.ReadByte();
+
+            if (value >= 0)
+                return value;
+            else
+                throw new InvalidOperationException();
+        }
+
         public bool Equals(IInputSourceStrategy? other)
         {
-            throw new NotImplementedException();
+            if (other is FileStreamStrategy strategy &&
+                strategy.File?.Name == File.Name)
+                return true;
+
+            return false;
         }
     }
 }
