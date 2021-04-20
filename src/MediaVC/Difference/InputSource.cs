@@ -17,7 +17,7 @@ namespace MediaVC.Difference
             if (file is null)
                 throw new ArgumentNullException(nameof(file));
 
-            
+            Strategy = new FileStreamStrategy();
         }
 
         public InputSource(IEnumerable<IFileSegmentInfo> segments)
