@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Threading.Tasks;
 
 namespace MediaVC.Difference.Strategies
 {
@@ -27,27 +26,15 @@ namespace MediaVC.Difference.Strategies
         public int Read(byte[] buffer, int offset, int count) =>
             File.Read(buffer, offset, count);
 
-        public ValueTask<int> ReadAsync(byte[] buffer, int offset, int count) =>
-            File.ReadAsync(byte[] buffer, int offset, int count);
-
-
         public byte ReadByte()
         {
             var value = File.ReadByte();
 
-            if (value >= 0)
-                return value;
-            else
-                throw new InvalidOperationException();
+            return value >= 0 ? (byte)value : throw new InvalidOperationException();
         }
 
-        public bool Equals(IInputSourceStrategy? other)
-        {
-            if (other is FileStreamStrategy strategy &&
-                strategy.File?.Name == File.Name)
-                return true;
-
-            return false;
-        }
+        public bool Equals(IInputSourceStrategy? other) =>
+            other is FileStreamStrategy strategy &&
+                strategy.File?.Name == File.Name;
     }
 }

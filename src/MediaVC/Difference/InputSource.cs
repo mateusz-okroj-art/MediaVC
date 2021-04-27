@@ -23,7 +23,7 @@ namespace MediaVC.Difference
         public InputSource(IEnumerable<IFileSegmentInfo> segments)
         {
             if (segments is null)
-                throw new ArgumentNullException(segments);
+                throw new ArgumentNullException(nameof(segments));
 
             Strategy = new FileSegmentStrategy(segments);
         }
@@ -52,8 +52,6 @@ namespace MediaVC.Difference
 
         #region Methods
 
-
-
         public override int Read(byte[] buffer, int offset, int count) =>
             Strategy.Read(buffer, offset, count);
 
@@ -63,7 +61,7 @@ namespace MediaVC.Difference
             {
                 SeekOrigin.Begin => offset,
                 SeekOrigin.Current => Position + offset,
-                SeekOrigin.End => Length - offset - 1,
+                SeekOrigin.End => Length - offset - 1, // TODO: To check
                 _ => throw new NotImplementedException(),
             };
 
@@ -72,14 +70,14 @@ namespace MediaVC.Difference
             return calculatedPosition;
         }
 
-        byte IInputSource.ReadByte()
-        {
-            throw new NotImplementedException();
-        }
+        byte IInputSource.ReadByte() => Strategy.ReadByte();
 
         public Memory<byte> ReadBytes(long count)
         {
-            throw new NotImplementedException();
+            var buffer = new byte[count];
+            Strategy.Read(buffer, 0, (int)count);
+
+            return new Memory<byte>(buffer);
         }
 
         public bool Equals(InputSource? other) => Strategy.Equals(other.Strategy);
