@@ -61,7 +61,7 @@ namespace MediaVC.Difference
             {
                 SeekOrigin.Begin => offset,
                 SeekOrigin.Current => Position + offset,
-                SeekOrigin.End => Length - offset - 1, // TODO: To check
+                SeekOrigin.End => Length - offset - 1,
                 _ => throw new NotImplementedException(),
             };
 
@@ -80,7 +80,7 @@ namespace MediaVC.Difference
             return new Memory<byte>(buffer);
         }
 
-        public bool Equals(InputSource? other) => Strategy.Equals(other.Strategy);
+        public bool Equals(InputSource? other) => Strategy.Equals(other?.Strategy);
 
         #region Obsoletes
 

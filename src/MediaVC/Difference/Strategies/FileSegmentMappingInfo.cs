@@ -2,7 +2,7 @@
 
 namespace MediaVC.Difference.Strategies
 {
-    internal class FileSegmentMappingInfo : IFileSegmentMappingInfo
+    internal struct FileSegmentMappingInfo : IFileSegmentMappingInfo
     {
         public IFileSegmentInfo Segment { get; set; }
 
