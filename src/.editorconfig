@@ -218,3 +218,6 @@ dotnet_naming_style.fieldstylename.required_prefix =
 dotnet_naming_style.fieldstylename.required_suffix = 
 dotnet_naming_style.fieldstylename.word_separator = 
 dotnet_naming_style.fieldstylename.capitalization = camel_case
+
+# CS0809: Przestarzała składowa przesłania nieprzestarzałą składową
+dotnet_diagnostic.CS0809.severity = silent

@@ -10,7 +10,7 @@ namespace MediaVC.Difference.Strategies
     {
         private readonly IEnumerable<IFileSegmentInfo> segments;
         private readonly IFileSegmentMappingInfo[] mappings;
-        private long position = -1;
+        private long position;
 
         public FileSegmentStrategy(IEnumerable<IFileSegmentInfo> segments)
         {
@@ -39,7 +39,10 @@ namespace MediaVC.Difference.Strategies
             get => this.position;
             set
             {
-                throw new NotImplementedException();
+                if(value >= Length)
+                    throw new ArgumentOutOfRangeException();
+
+                this.position = value;
             }
         }
 
@@ -48,12 +51,44 @@ namespace MediaVC.Difference.Strategies
 
         public int Read(byte[] buffer, int offset, int count)
         {
-            throw new NotImplementedException();
+            if(offset < 0)
+                throw new ArgumentOutOfRangeException(nameof(offset));
+
+            int bufferPosition = offset;
+
+            int counter = 0;
+
+            while(bufferPosition < buffer.Length - 1 && counter < count)
+            {
+                var mappedSegment = this.mappings
+                    .Where(mapping =>
+                        mapping.StartIndex < Position &&
+                        mapping.StartIndex + (long)mapping.Segment.Length > Position
+                    )
+                    .SingleOrDefault();
+
+                if(mappedSegment is null)
+                    break;
+
+                var source = mappedSegment.Segment.Source;
+                source.Position = mappedSegment.Segment.StartPosition;
+
+                var currentCount = Math.Min(count, (int)mappedSegment.Segment.Length);
+
+                currentCount = source.Read(buffer, bufferPosition, currentCount);
+
+                counter += currentCount;
+                bufferPosition += currentCount;
+            }
+
+            return counter;
         }
 
         public byte ReadByte()
         {
-            throw new NotImplementedException();
+            var buffer = new byte[1];
+
+            return Read(buffer, 0, 1) != 1 ? throw new InvalidOperationException() : buffer[0];
         }
     }
 }
