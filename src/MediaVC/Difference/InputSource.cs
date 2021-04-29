@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -55,6 +54,9 @@ namespace MediaVC.Difference
         public override int Read(byte[] buffer, int offset, int count) =>
             Strategy.Read(buffer, offset, count);
 
+        public int Read(Span<byte> buffer, int offset, int count) =>
+            Strategy.Read(buffer, offset, count);
+
         public override long Seek(long offset, SeekOrigin origin)
         {
             var calculatedPosition = origin switch
@@ -70,17 +72,11 @@ namespace MediaVC.Difference
             return calculatedPosition;
         }
 
-        byte IInputSource.ReadByte() => Strategy.ReadByte();
-
-        public Memory<byte> ReadBytes(long count)
-        {
-            var buffer = new byte[count];
-            Strategy.Read(buffer, 0, (int)count);
-
-            return new Memory<byte>(buffer);
-        }
+        public new byte ReadByte() => Strategy.ReadByte();
 
         public bool Equals(InputSource? other) => Strategy.Equals(other?.Strategy);
+
+        public override bool Equals(object? obj) => Equals(obj as InputSource);
 
         #region Obsoletes
 

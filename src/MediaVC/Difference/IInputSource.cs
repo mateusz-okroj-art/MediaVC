@@ -1,7 +1,5 @@
 ﻿using System;
 
-using MediaVC.Difference.Strategies;
-
 namespace MediaVC.Difference
 {
     public interface IInputSource
@@ -14,6 +12,6 @@ namespace MediaVC.Difference
 
         int Read(byte[] buffer, int offset, int count);
 
-        Memory<byte> ReadBytes(long count);
+        int Read(Span<byte> buffer, int offset, int count);
     }
 }

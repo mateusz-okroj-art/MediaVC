@@ -5,6 +5,8 @@ namespace MediaVC.Difference.Strategies
 {
     internal sealed class FileStreamStrategy : IInputSourceStrategy
     {
+        #region Constructor
+
         public FileStreamStrategy(FileStream file)
         {
             File = file ?? throw new ArgumentNullException(nameof(file));
@@ -12,6 +14,10 @@ namespace MediaVC.Difference.Strategies
             if (!File.CanRead)
                 throw new IOException("Stream is not readable.");
         }
+
+        #endregion
+
+        #region Properties
 
         public FileStream File { get; }
 
@@ -23,8 +29,15 @@ namespace MediaVC.Difference.Strategies
             set => File.Position = value;
         }
 
+        #endregion
+
+        #region Methods
+
         public int Read(byte[] buffer, int offset, int count) =>
             File.Read(buffer, offset, count);
+
+        public int Read(Span<byte> buffer, int offset, int count) =>
+            File.Read(buffer.Slice(offset, count));
 
         public byte ReadByte()
         {
@@ -36,5 +49,7 @@ namespace MediaVC.Difference.Strategies
         public bool Equals(IInputSourceStrategy? other) =>
             other is FileStreamStrategy strategy &&
                 strategy.File?.Name == File.Name;
+
+        #endregion
     }
 }

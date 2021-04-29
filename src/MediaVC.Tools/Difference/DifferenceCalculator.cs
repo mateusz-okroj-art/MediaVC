@@ -13,21 +13,17 @@ namespace MediaVC.Tools.Difference
     {
         #region Constructor
 
-        public DifferenceCalculator(IInputSource currentVersion, IInputSource newVersion) : this(newVersion)
-        {
+        public DifferenceCalculator(IInputSource currentVersion, IInputSource newVersion) : this(newVersion) =>
             CurrentVersion = currentVersion ?? throw new ArgumentNullException(nameof(currentVersion));
-        }
 
-        public DifferenceCalculator(IInputSource newVersion)
-        {
+        public DifferenceCalculator(IInputSource newVersion) =>
             NewVersion = newVersion ?? throw new ArgumentNullException(nameof(newVersion));
-        }
 
         #endregion
 
         #region Properties
 
-        public IInputSource CurrentVersion { get; }
+        public IInputSource? CurrentVersion { get; }
 
         public IInputSource NewVersion { get; }
 
@@ -55,24 +51,20 @@ namespace MediaVC.Tools.Difference
             if(CurrentVersion != null)
             {
                 long leftPosition = 0, rightPosition = 0;
-                IFileSegmentInfo segment = null;
+                IFileSegmentInfo? segment = null;
 
                 while(leftPosition < CurrentVersion.Length)
                 {
                     Synchronize(() => progress?.Report((float) Math.Round((double) leftPosition / CurrentVersion.Length, 2)));
                     cancellation.ThrowIfCancellationRequested();
 
-                    Func<long, bool> loopPredicate = index =>
-                        index + leftPosition < CurrentVersion.Length &&
-                        index + rightPosition < NewVersion.Length;
-
                     // Searching
-                    for(long searchingIndex = 0; loopPredicate(searchingIndex); ++searchingIndex)
+                    for(long searchingIndex = 0; LoopPredicate(searchingIndex, leftPosition, rightPosition); ++searchingIndex)
                     {
                         CurrentVersion.Position = searchingIndex + leftPosition;
                         NewVersion.Position = searchingIndex + rightPosition;
 
-                        byte searchedByte = CurrentVersion.ReadByte();
+                        var searchedByte = CurrentVersion.ReadByte();
 
                         if(searchedByte == NewVersion.ReadByte())
                         {
@@ -140,24 +132,32 @@ namespace MediaVC.Tools.Difference
 
                 if (rightPosition < NewVersion.Length)
                 {
-                    Result.Add(new FileSegmentInfo
-                    {
-                        Source = NewVersion,
-                        StartPosition = rightPosition,
-                        EndPosition = NewVersion.Length - 1
-                    });
+                    Synchronize(() =>
+                        Result.Add(new FileSegmentInfo
+                        {
+                            Source = NewVersion,
+                            StartPosition = rightPosition,
+                            EndPosition = NewVersion.Length - 1
+                        })
+                    );
                 }
             }
             else
             {
-                Result.Add(new FileSegmentInfo
-                {
-                    Source = NewVersion,
-                    StartPosition = 0,
-                    EndPosition = NewVersion.Length - 1
-                });
+                Synchronize(() =>
+                    Result.Add(new FileSegmentInfo
+                    {
+                        Source = NewVersion,
+                        StartPosition = 0,
+                        EndPosition = NewVersion.Length - 1
+                    })
+                );
             }
         }
+
+        private bool LoopPredicate(long index, long leftPosition, long rightPosition) =>
+            index + leftPosition < CurrentVersion?.Length &&
+                        index + rightPosition < NewVersion.Length;
 
         private void Synchronize(Action workToDo)
         {
@@ -187,7 +187,7 @@ namespace MediaVC.Tools.Difference
                 long lastEndIndex = 0;
                 var segments = query.ToArray();
 
-                for(int index = 0; index < segments.Length; ++index)
+                for(var index = 0; index < segments.Length; ++index)
                 {
                     if(segments[index].StartPosition - lastEndIndex > 0)
                     {
