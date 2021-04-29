@@ -9,6 +9,9 @@ namespace MediaVC.Difference.Strategies
         long Position { get; set; }
 
         int Read(byte[] buffer, int offset, int count);
+
+        int Read(Span<byte> buffer, int offset, int count);
+
         byte ReadByte();
     }
 }
