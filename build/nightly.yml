@@ -42,24 +42,8 @@ steps:
     projects: '**/*.csproj'
     configuration: Release
 
-- task: VSTest@2
-  displayName: Test solution
+- task: DotNetCoreCLI@2
   inputs:
-    testSelector: 'testAssemblies'
-    testAssemblyVer2: |
-      **\*test*.dll
-      !**\*TestAdapter.dll
-      !**\obj\**
-    searchFolder: '$(System.DefaultWorkingDirectory)'
-    runInParallel: true
-    codeCoverageEnabled: true
-    configuration: 'Release'
-
-- task: PublishTestResults@2
-  displayName: Publish tests results
-  inputs:
-    testResultsFormat: 'XUnit'
-    testResultsFiles: '**/TEST-*.trx'
-    failTaskOnFailedTests: true
-    testRunTitle: 'MediaVC nightly build'
-    buildConfiguration: 'Release'
+    command: 'test'
+    projects: '**/*Tests.csproj'
+    arguments: '--logger trx'
