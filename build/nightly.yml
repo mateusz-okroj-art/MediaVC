@@ -7,6 +7,9 @@ name: MediaVC - nightly build
 
 trigger: none
 
+variables:
+ -isMaster: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+
 schedules:
   - cron: "0 0 * * *"
     displayName: MediaVC daily nightly build
@@ -43,7 +46,16 @@ steps:
     configuration: Release
 
 - task: DotNetCoreCLI@2
+  displayName: Test solution
   inputs:
     command: 'test'
     projects: '**/*Tests.csproj'
     arguments: '--logger trx'
+
+- task: PublishTestResults@2
+  displayName: Publish tests and fails if failed tests exists
+  condition: eq(variables.isMaster, true)
+  inputs:
+    testResultsFormat: 'XUnit'
+    testResultsFiles: '**/TEST-*.trx'
+    failTaskOnFailedTests: true
