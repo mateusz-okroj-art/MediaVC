@@ -77,9 +77,9 @@ namespace MediaVC.Difference.Strategies
             other is FileSegmentStrategy strategy && this.segments == strategy.segments;
 
         public int Read(byte[] buffer, int offset, int count) =>
-            Read(buffer.AsSpan(), offset, count);
+            Read(buffer.AsMemory(), offset, count);
 
-        public int Read(Span<byte> buffer, int offset, int count)
+        public int Read(Memory<byte> buffer, int offset, int count)
         {
             if(offset < 0)
                 throw new ArgumentOutOfRangeException(nameof(offset));

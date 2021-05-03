@@ -54,7 +54,7 @@ namespace MediaVC.Difference
         public override int Read(byte[] buffer, int offset, int count) =>
             Strategy.Read(buffer, offset, count);
 
-        public int Read(Span<byte> buffer, int offset, int count) =>
+        public int Read(Memory<byte> buffer, int offset, int count) =>
             Strategy.Read(buffer, offset, count);
 
         public override long Seek(long offset, SeekOrigin origin)

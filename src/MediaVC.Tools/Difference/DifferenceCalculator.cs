@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -163,64 +162,6 @@ namespace MediaVC.Tools.Difference
         {
             if (workToDo != null)
                 SynchronizationContext.Post(_ => workToDo(), null);
-        }
-
-        /// <summary>
-        /// Calculates removed segments between calculated difference and selected source from calculation.
-        /// </summary>
-        /// <param name="calculatedDifference">Calculated segments</param>
-        /// <param name="sourceToCalculate">Selected source used in calculation</param>
-        /// <returns>Removed segments from source</returns>
-        public static IEnumerable<IFileSegmentInfo> CalculateRemovedSegments(IEnumerable<IFileSegmentInfo> calculatedDifference, IInputSource sourceToCalculate)
-        {
-            if (calculatedDifference == null)
-                throw new ArgumentNullException(nameof(calculatedDifference));
-
-            if (sourceToCalculate == null)
-                throw new ArgumentNullException(nameof(sourceToCalculate));
-
-            var query = calculatedDifference.Where(segment => segment.Source.Equals(sourceToCalculate))
-                .OrderBy(segment => segment.StartPosition);
-
-            if(query.Any())
-            {
-                long lastEndIndex = 0;
-                var segments = query.ToArray();
-
-                for(var index = 0; index < segments.Length; ++index)
-                {
-                    if(segments[index].StartPosition - lastEndIndex > 0)
-                    {
-                        yield return new FileSegmentInfo
-                        {
-                            Source = sourceToCalculate,
-                            StartPosition = lastEndIndex,
-                            EndPosition = segments[index].StartPosition - 1
-                        };
-                    }
-
-                    lastEndIndex = segments[index].EndPosition + 1;
-                }
-
-                if(sourceToCalculate.Length - lastEndIndex > 0)
-                {
-                    yield return new FileSegmentInfo
-                    {
-                        Source = sourceToCalculate,
-                        StartPosition = lastEndIndex,
-                        EndPosition = sourceToCalculate.Length - 1
-                    };
-                }
-            }
-            else
-            {
-                yield return new FileSegmentInfo
-                {
-                    Source = sourceToCalculate,
-                    StartPosition = 0,
-                    EndPosition = sourceToCalculate.Length - 1
-                };
-            }    
         }
 
         #endregion

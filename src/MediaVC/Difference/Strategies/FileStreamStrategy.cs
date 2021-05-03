@@ -36,8 +36,8 @@ namespace MediaVC.Difference.Strategies
         public int Read(byte[] buffer, int offset, int count) =>
             File.Read(buffer, offset, count);
 
-        public int Read(Span<byte> buffer, int offset, int count) =>
-            File.Read(buffer.Slice(offset, count));
+        public int Read(Memory<byte> buffer, int offset, int count) =>
+            File.Read(buffer.Slice(offset, count).Span);
 
         public byte ReadByte()
         {

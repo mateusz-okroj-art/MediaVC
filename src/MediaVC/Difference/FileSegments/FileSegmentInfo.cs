@@ -2,7 +2,7 @@
 
 namespace MediaVC.Difference.FileSegments
 {
-    public class FileSegmentInfo : IFileSegmentInfo
+    public struct FileSegmentInfo : IFileSegmentInfo
     {
         public long StartPosition { get; set; }
 
