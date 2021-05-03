@@ -10,18 +10,13 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 {
     public class Constructors
     {
-        #region Fields
+        #region Properties
 
-        public static readonly object[][] constructor1_TestCasesWithNull = new object[][]
+        public static object[][] Constructor1_TestCasesWithNull { get; } = new object[][]
         {
             new object[]{ null,null },
             new object[]{ new Mock<IInputSource>().Object, null },
             new object[]{ null, new Mock<IInputSource>().Object },
-        };
-
-        public static readonly object[][] constructor1_ValidTestCases = new object[][]
-        {
-            new object[]{ new Mock<IInputSource>().Object, new Mock<IInputSource>().Object }
         };
 
         #endregion
@@ -29,7 +24,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         #region Methods
 
         [Theory]
-        [MemberData(nameof(constructor1_TestCasesWithNull))]
+        [MemberData(nameof(Constructor1_TestCasesWithNull))]
         public void Constructor1_WhenHaveAnyNull_ShouldThrowException(IInputSource input1, IInputSource input2)
         {
             Assert.Throws<ArgumentNullException>(() => new Tools.Difference.DifferenceCalculator(input1, input2));

@@ -21,7 +21,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         {
             var result = new Tools.Difference.DifferenceCalculator(new Mock<IInputSource>().Object, new Mock<IInputSource>().Object);
 
-            Assert.IsType<List<IFileSegmentInfo>>(result.Result);
+            Assert.NotNull(result.Result);
             Assert.Empty(result.Result);
         }
 

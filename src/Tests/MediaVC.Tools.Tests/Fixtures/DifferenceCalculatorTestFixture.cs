@@ -6,13 +6,29 @@ using System.Threading.Tasks;
 
 using MediaVC.Tools.Difference;
 
-namespace MediaVC.Tools.Tests.Fixtures
+namespace MediaVC.Tools.Tests
 {
-    internal class DifferenceCalculatorTestFixture
+    public sealed class DifferenceCalculatorTestFixture : IDifferenceCalculatorTestFixture
     {
+        #region Constructor
 
+        #endregion
 
+        #region Fields
 
-       
+        #endregion
+
+        #region Properties
+
+        #endregion
+
+        #region Methods
+
+        public void Dispose()
+        {
+
+        }
+
+        #endregion
     }
 }
