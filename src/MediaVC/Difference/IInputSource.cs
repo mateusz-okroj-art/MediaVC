@@ -2,7 +2,7 @@
 
 namespace MediaVC.Difference
 {
-    public interface IInputSource
+    public interface IInputSource : IDisposable
     {
         long Position { get; set; }
 

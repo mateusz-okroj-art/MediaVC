@@ -8,7 +8,7 @@ namespace MediaVC.Difference.FileSegments
 
         public long EndPosition { get; set; }
 
-        public ulong Length => (ulong)Math.Abs(EndPosition - StartPosition);
+        public ulong Length => (ulong)Math.Abs(EndPosition - StartPosition + 1);
 
         public IInputSource Source { get; set; }
     }

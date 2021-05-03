@@ -9,7 +9,7 @@ using Moq;
 
 namespace MediaVC.Tools.Tests.Fixtures
 {
-    public sealed class RemovedSegmentsCalculatorTestFixture : IDisposable
+    public sealed class RemovedSegmentsCalculatorTestFixture : IDisposable, IRemovedSegmentsCalculatorTestFixture
     {
         #region Constructor
 
@@ -19,7 +19,31 @@ namespace MediaVC.Tools.Tests.Fixtures
 
             ConfigureSource2();
 
+            Test1_Segments = new IFileSegmentInfo[]
+            {
+                new FileSegmentInfo
+                {
+                    Source = InputSource1,
+                    StartPosition = 0,
+                    EndPosition = InputSource1.Length - 1
+                }
+            };
 
+            Test2_Segments = new IFileSegmentInfo[]
+            {
+                new FileSegmentInfo
+                {
+                    Source = InputSource1,
+                    StartPosition = 0,
+                    EndPosition = 1
+                },
+                new FileSegmentInfo
+                {
+                    Source = InputSource2,
+                    StartPosition = 2,
+                    EndPosition = 3
+                }
+            };
         }
 
         #endregion
@@ -40,8 +64,6 @@ namespace MediaVC.Tools.Tests.Fixtures
         public IEnumerable<IFileSegmentInfo> Test1_Segments { get; }
 
         public IEnumerable<IFileSegmentInfo> Test2_Segments { get; }
-
-        public IEnumerable<IFileSegmentInfo> Test3_Segments { get; }
 
         #endregion
 
@@ -119,6 +141,8 @@ namespace MediaVC.Tools.Tests.Fixtures
         {
             this.stream1?.Dispose();
             this.stream2?.Dispose();
+            InputSource1.Dispose();
+            InputSource2.Dispose();
         }
 
         #endregion
