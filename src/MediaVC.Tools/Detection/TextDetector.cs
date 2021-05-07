@@ -6,13 +6,34 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace MediaVC.Tools
+using MediaVC.Tools.Detection.Strategies;
+
+namespace MediaVC.Tools.Detection
 {
     /// <summary>
     /// Checks, that selected file is text-only
     /// </summary>
-    public static class TextDetector
+    public sealed class TextDetector
     {
+        #region Constructor
+
+        public TextDetector(Stream streamToDetect) =>
+            this.strategy = new StreamTextDetectionStrategy(streamToDetect);
+
+        #endregion
+
+        #region Fields
+
+        private readonly ITextDetectionStrategy strategy;
+
+        #endregion
+
+        #region Methods
+
+        public ValueTask<bool> CheckIsTextAsync() => this.strategy.CheckIsTextAsync();
+
+        #endregion
+
         /// <summary>
         /// Checks, that selected enumerable is text-only
         /// </summary>
@@ -49,37 +70,6 @@ namespace MediaVC.Tools
 
             return true;
         }
-
-        public static bool CheckIsText(Memory<byte> input) => CheckIsText(MemoryMarshal.ToEnumerable<byte>(input));
-
-        public static bool CheckIsText(ReadOnlyMemory<byte> input) => CheckIsText(MemoryMarshal.ToEnumerable(input));
-
-        /// <summary>
-        /// Checks, that selected bytes is text-only
-        /// </summary>
-        /// <param name="input">Memory block to be checked</param>
-        public static bool CheckIsText(Span<byte> input) => CheckIsText((ReadOnlySpan<byte>)input);
-
-        public static bool CheckIsText(ReadOnlySpan<byte> input)
-        {
-            var length = input.Length;
-
-            if (length < 1)
-                return false;
-            else
-                foreach (var value in input)
-                {
-                    if (!CheckSingleCharacter(value))
-                        return false;
-                }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Checks, that selected stream is text-only
-        /// </summary>
-        public static bool CheckIsText(Stream input) => CheckIsTextAsync(input).Result;
 
         /// <summary>
         /// Checks, that selected stream is text-only
