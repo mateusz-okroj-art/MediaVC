@@ -17,7 +17,7 @@ namespace MediaVC.Tools.Detection.Strategies
             if(!stream.CanRead)
                 throw new IOException("Stream is not readable.");
 
-            this.stream = stream;
+            Stream = stream;
 
             var bufferLength = (int)Math.Min(stream.Length, 500_000_000);
 
@@ -37,30 +37,49 @@ namespace MediaVC.Tools.Detection.Strategies
 
         #region Fields
 
-        private readonly Stream stream;
         private readonly Memory<byte> buffer;
         private readonly bool canReadAll;
 
         #endregion
 
+        #region Properties
+
+        public Stream Stream { get; }
+
+        #endregion
+
         public async ValueTask<bool> CheckIsTextAsync(CancellationToken cancellationToken = default)
         {
-            if(stream.Length < 1)
+            if(Stream.Length < 1)
                 return false;
 
             var memoryStrategy = new MemoryTextDetectionStrategy(this.buffer);
 
             if(this.canReadAll)
             {
-                this.stream.Position = 0;
+                Stream.Position = 0;
 
-                await this.stream.ReadAsync(this.buffer, cancellationToken);
+                _ = await Stream.ReadAsync(this.buffer, cancellationToken);
 
                 return await memoryStrategy.CheckIsTextAsync(cancellationToken);
             }
             else
             {
-                throw new NotImplementedException();
+                var bufferA = this.buffer.Slice(0, 250_000_000);
+                var bufferB = this.buffer.Slice(249_000_000, 250_000_000);
+
+                var lockerA = new object();
+                var lockerB = new object();
+
+                long position = 0;
+                var canContinue = false;
+
+                while(position < Stream.Length)
+                {
+                    Stream.Position = position;
+
+
+                }
             }
         }
     }
