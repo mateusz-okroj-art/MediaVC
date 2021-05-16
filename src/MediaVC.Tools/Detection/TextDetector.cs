@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Tools.Detection.Strategies;
@@ -19,6 +16,9 @@ namespace MediaVC.Tools.Detection
         public TextDetector(Stream streamToDetect) =>
             this.strategy = new StreamTextDetectionStrategy(streamToDetect);
 
+        public TextDetector(Memory<byte> dataToDetect) =>
+            this.strategy = new MemoryTextDetectionStrategy(dataToDetect);
+
         #endregion
 
         #region Fields
@@ -32,13 +32,5 @@ namespace MediaVC.Tools.Detection
         public ValueTask<bool> CheckIsTextAsync() => this.strategy.CheckIsTextAsync();
 
         #endregion
-
-        /// <summary>
-        /// Checks, that selected enumerable is text-only
-        /// </summary>
-        /// <param name="input">Enumerable object to be checked</param>
-        public static bool CheckIsText(IEnumerable<byte> input)
-        {
-            
     }
 }
