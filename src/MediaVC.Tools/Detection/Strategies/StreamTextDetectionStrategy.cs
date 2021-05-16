@@ -68,18 +68,53 @@ namespace MediaVC.Tools.Detection.Strategies
                 var bufferA = this.buffer.Slice(0, 250_000_000);
                 var bufferB = this.buffer.Slice(249_000_000, 250_000_000);
 
-                var lockerA = new object();
-                var lockerB = new object();
+                var streamLocker = new object();
 
-                long position = 0;
+                MemoryTextDetectionStrategy detector1, detector2;
+
                 var canContinue = false;
 
-                while(position < Stream.Length)
-                {
-                    Stream.Position = position;
+                bool? result = null;
 
+                Stream.Position = 0; 
+
+                while(Stream.Position < Stream.Length)
+                {
+                    if(result.HasValue)
+                        return result.Value;
+
+                    Monitor.Enter(streamLocker);
+
+                    canContinue = await Stream.ReadAsync(bufferA, cancellationToken) == 250_000_000;
+
+                    if(canContinue)
+                    {
+                        Stream.ReadAsync(bufferB, cancellationToken)
+                            .GetAwaiter()
+                            .OnCompleted(async () =>
+                            {
+                                Monitor.Exit(streamLocker);
+
+                                detector2 = new MemoryTextDetectionStrategy(bufferB);
+                                if(!await detector2.CheckIsTextAsync(cancellationToken))
+                                {
+                                    result = false;
+                                    return;
+                                }
+                            });
+                    }
+
+                    if(result.HasValue)
+                        return result.Value;
+
+                    detector1 = new MemoryTextDetectionStrategy(bufferA);
+
+                    if(!await detector1.CheckIsTextAsync(cancellationToken))
+                        return false;
 
                 }
+
+                return result ?? true;
             }
         }
     }

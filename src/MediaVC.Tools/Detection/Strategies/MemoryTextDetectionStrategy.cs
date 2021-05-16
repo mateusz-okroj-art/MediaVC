@@ -32,7 +32,7 @@ namespace MediaVC.Tools.Detection.Strategies
         {
             var input = MemoryMarshal.ToEnumerable<byte>(Memory);
 
-            var length = input?.Count();
+            var length = input.Count();
 
             if(length < 1)
                 return false;
@@ -47,7 +47,7 @@ namespace MediaVC.Tools.Detection.Strategies
                 var stopped = false;
                 var locker = new object();
 
-                Parallel.ForEach(input, (value, state) =>
+                _ = Parallel.ForEach(input, (value, state) =>
                 {
                     if(!CheckSingleCharacter(value))
                     {
