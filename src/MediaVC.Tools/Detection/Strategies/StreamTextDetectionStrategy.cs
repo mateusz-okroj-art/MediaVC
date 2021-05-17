@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -53,14 +56,13 @@ namespace MediaVC.Tools.Detection.Strategies
             if(Stream.Length < 1)
                 return false;
 
-            var memoryStrategy = new MemoryTextDetectionStrategy(this.buffer);
-
             if(this.canReadAll)
             {
                 Stream.Position = 0;
 
                 _ = await Stream.ReadAsync(this.buffer, cancellationToken);
 
+                var memoryStrategy = new MemoryTextDetectionStrategy(this.buffer);
                 return await memoryStrategy.CheckIsTextAsync(cancellationToken);
             }
             else
@@ -71,14 +73,15 @@ namespace MediaVC.Tools.Detection.Strategies
                 var streamLocker = new object();
 
                 MemoryTextDetectionStrategy detector1, detector2;
+                IList<Task> activeActions = new List<Task>();
 
                 var canContinue = false;
 
                 bool? result = null;
 
-                Stream.Position = 0; 
+                Stream.Position = 0;
 
-                while(Stream.Position < Stream.Length)
+                do
                 {
                     if(result.HasValue)
                         return result.Value;
@@ -89,20 +92,29 @@ namespace MediaVC.Tools.Detection.Strategies
 
                     if(canContinue)
                     {
-                        Stream.ReadAsync(bufferB, cancellationToken)
+                        var streamTask = Stream.ReadAsync(bufferB, cancellationToken).AsTask();
+                        activeActions.Add(streamTask);
+
+                        streamTask
                             .GetAwaiter()
                             .OnCompleted(async () =>
                             {
                                 Monitor.Exit(streamLocker);
 
                                 detector2 = new MemoryTextDetectionStrategy(bufferB);
-                                if(!await detector2.CheckIsTextAsync(cancellationToken))
-                                {
+
+                                var detectionTask = detector2.CheckIsTextAsync(cancellationToken).AsTask();
+                                activeActions.Add(detectionTask);
+
+                                if(!await detectionTask)
                                     result = false;
-                                    return;
-                                }
+
+                                _ = activeActions.Remove(detectionTask);
+                                _ = activeActions.Remove(streamTask);
                             });
                     }
+                    else
+                        Monitor.Exit(streamLocker);
 
                     if(result.HasValue)
                         return result.Value;
@@ -111,8 +123,10 @@ namespace MediaVC.Tools.Detection.Strategies
 
                     if(!await detector1.CheckIsTextAsync(cancellationToken))
                         return false;
-
                 }
+                while(Stream.Position < Stream.Length);
+
+                Task.WaitAll(activeActions.ToArray(), cancellationToken);
 
                 return result ?? true;
             }
