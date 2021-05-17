@@ -24,4 +24,9 @@
     <ProjectReference Include="..\..\MediaVC.Tools\MediaVC.Tools.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Detection\TextDetector\Strategies\MemoryTextDetectionStrategy\" />
+    <Folder Include="Detection\TextDetector\Strategies\StreamTextDetectionStrategy\" />
+  </ItemGroup>
+
 </Project>
