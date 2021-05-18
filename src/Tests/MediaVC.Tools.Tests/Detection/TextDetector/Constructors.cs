@@ -30,7 +30,7 @@ namespace MediaVC.Tools.Tests.Detection.TextDetector
         [Fact]
         public void Constructor2_WhenArgumentIsEmpty_ShouldThrowException()
         {
-            Assert.Throws<ArgumentNullException>(() => new Tools.Detection.TextDetector(Memory<byte>.Empty));
+            Assert.Throws<ArgumentException>(() => new Tools.Detection.TextDetector(Memory<byte>.Empty));
         }
 
         [Fact]
