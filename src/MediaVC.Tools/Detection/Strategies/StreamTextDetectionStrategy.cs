@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MediaVC.Tools.Detection.Strategies
 {
-    internal class StreamTextDetectionStrategy : ITextDetectionStrategy
+    internal class StreamTextDetectionStrategy : ITextDetector
     {
         #region Constructor
 

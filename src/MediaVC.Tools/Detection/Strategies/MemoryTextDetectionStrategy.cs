@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace MediaVC.Tools.Detection.Strategies
 {
-    internal class MemoryTextDetectionStrategy : ITextDetectionStrategy
+    internal class MemoryTextDetectionStrategy : ITextDetector
     {
         #region Constructor
 

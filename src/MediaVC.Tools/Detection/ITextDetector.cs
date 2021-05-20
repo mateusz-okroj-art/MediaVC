@@ -1,9 +1,9 @@
 ﻿using System.Threading;
 using System.Threading.Tasks;
 
-namespace MediaVC.Tools.Detection.Strategies
+namespace MediaVC.Tools.Detection
 {
-    internal interface ITextDetectionStrategy
+    public interface ITextDetector
     {
         ValueTask<bool> CheckIsTextAsync(CancellationToken cancellationToken = default);
     }
