@@ -10,7 +10,7 @@ namespace MediaVC.Tools.Detection.Strategies
     {
         #region Constructor
 
-        public MemoryTextDetectionStrategy(Memory<byte> memory)
+        public MemoryTextDetectionStrategy(ReadOnlyMemory<byte> memory)
         {
             if(memory.IsEmpty)
                 throw new ArgumentException("Argument is empty.");
@@ -22,7 +22,7 @@ namespace MediaVC.Tools.Detection.Strategies
 
         #region Properties
 
-        public Memory<byte> Memory { get; }
+        public ReadOnlyMemory<byte> Memory { get; }
 
         #endregion
 
@@ -30,42 +30,58 @@ namespace MediaVC.Tools.Detection.Strategies
 
         public async ValueTask<bool> CheckIsTextAsync(CancellationToken cancellationToken = default)
         {
-            var input = MemoryMarshal.ToEnumerable<byte>(Memory);
+            var input = MemoryMarshal.ToEnumerable(Memory);
 
             var length = input.Count();
 
+            var isText = true;
+
             if(length < 1)
-                return false;
-            else if(length < 10_000)
+                isText = false;
+            else if(length < 100_000)
+            {
                 foreach(var value in input)
                 {
+                    cancellationToken.ThrowIfCancellationRequested();
+
                     if(!CheckSingleCharacter(value))
-                        return false;
+                    {
+                        isText = false;
+                        break;
+                    }
                 }
+            }
             else
             {
-                var stopped = false;
                 var locker = new object();
 
                 _ = Parallel.ForEach(input, (value, state) =>
                 {
+                    if(cancellationToken.IsCancellationRequested)
+                    {
+                        state.Break();
+
+                        return;
+                    }
+
                     if(!CheckSingleCharacter(value))
                     {
                         lock(locker)
-                            stopped = true;
+                            isText = false;
 
                         state.Break();
                     }
                 });
 
-                return stopped;
+                if(cancellationToken.IsCancellationRequested)
+                    throw new OperationCanceledException();
             }
 
-            return true;
+            return isText;
         }
 
         private static bool CheckSingleCharacter(byte character) =>
-            character is (0 or >= 8) and (<= 13 or >= 26);
+            character is >= 0 and <= 127;
 
         #endregion
     }
