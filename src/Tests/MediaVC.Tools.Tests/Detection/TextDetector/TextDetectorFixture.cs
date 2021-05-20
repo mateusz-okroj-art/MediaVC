@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace MediaVC.Tools.Tests.Detection.TextDetector
@@ -19,10 +16,15 @@ namespace MediaVC.Tools.Tests.Detection.TextDetector
             Memory_Text2 = new Memory<byte>(dataText);
             Stream_Text2 = new MemoryStream(dataText);
 
-            var dataNonText = new byte[100_001];
+            var dataNonText1 = new byte[100_001];
+            _ = Parallel.For(0, dataNonText1.Length, index => dataNonText1[index] = (byte)(index % 256));
 
-            Memory_NonText2 = new Memory<byte>(dataNonText);
-            Stream_NonText2 = new MemoryStream(dataNonText);
+            Memory_NonText2 = new Memory<byte>(dataNonText1);
+
+            var dataNonText2 = new byte[600_000_000];
+            _ = Parallel.For(0, dataNonText2.Length, index => dataNonText2[index] = (byte)(index % 256));
+
+            Stream_NonText2 = new MemoryStream(dataNonText2);
         }
 
         #endregion

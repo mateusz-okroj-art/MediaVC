@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -24,7 +23,7 @@ namespace MediaVC.Tools.Detection.Strategies
 
             var bufferLength = (int)Math.Min(stream.Length, 500_000_000);
 
-            if(bufferLength <= 500_000_000)
+            if(Stream.Length <= 500_000_000)
             {
                 this.buffer = new byte[bufferLength];
                 this.canReadAll = true;
@@ -84,11 +83,15 @@ namespace MediaVC.Tools.Detection.Strategies
                 do
                 {
                     if(result.HasValue)
+                    {
+                        Task.WaitAll(activeActions.ToArray(), cancellationToken);
                         return result.Value;
+                    }
 
                     Monitor.Enter(streamLocker);
 
-                    canContinue = await Stream.ReadAsync(bufferA, cancellationToken) == 250_000_000;
+                    var countReaded = await Stream.ReadAsync(bufferA, cancellationToken);
+                    canContinue = countReaded == 250_000_000;
 
                     if(canContinue)
                     {
@@ -117,9 +120,12 @@ namespace MediaVC.Tools.Detection.Strategies
                         Monitor.Exit(streamLocker);
 
                     if(result.HasValue)
+                    {
+                        Task.WaitAll(activeActions.ToArray(), cancellationToken);
                         return result.Value;
+                    }
 
-                    detector1 = new MemoryTextDetectionStrategy(bufferA);
+                    detector1 = new MemoryTextDetectionStrategy(bufferA.Slice(0, countReaded));
 
                     if(!await detector1.CheckIsTextAsync(cancellationToken))
                         return false;
@@ -127,7 +133,6 @@ namespace MediaVC.Tools.Detection.Strategies
                 while(Stream.Position < Stream.Length);
 
                 Task.WaitAll(activeActions.ToArray(), cancellationToken);
-
                 return result ?? true;
             }
         }

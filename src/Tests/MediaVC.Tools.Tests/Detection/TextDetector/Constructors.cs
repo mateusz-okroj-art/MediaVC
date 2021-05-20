@@ -1,13 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.IO;
 
 using Xunit;
-using Moq;
-using System.IO;
-using MediaVC.Tools.Detection;
 
 namespace MediaVC.Tools.Tests.Detection.TextDetector
 {
