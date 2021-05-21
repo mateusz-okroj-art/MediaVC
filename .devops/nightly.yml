@@ -23,40 +23,43 @@ schedules:
 pool:
   vmImage: windows-latest
 
-steps:
+jobs:
+  - job: Nightly-build
+    condition: ne(variables['Build.Reason'], 'PullRequest')
+    steps:
 
-- task: UseDotNet@2
-  displayName: Install .NET 5
-  inputs:
-    packageType: 'sdk'
-    version: '5.0.x'
+    - task: UseDotNet@2
+      displayName: Install .NET 5
+      inputs:
+        packageType: 'sdk'
+        version: '5.0.x'
 
-- task: NuGetCommand@2
-  displayName: Restore solution
-  inputs:
-    command: 'restore'
-    restoreSolution: 'src/MediaVC.sln'
-    feedsToUse: 'select'
+    - task: NuGetCommand@2
+      displayName: Restore solution
+      inputs:
+        command: 'restore'
+        restoreSolution: 'src/MediaVC.sln'
+        feedsToUse: 'select'
 
-- task: DotNetCoreCLI@2
-  displayName: Build solution
-  inputs:
-    command: 'build'
-    projects: '**/*.csproj'
-    configuration: Release
+    - task: DotNetCoreCLI@2
+      displayName: Build solution
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        configuration: Release
 
-- task: DotNetCoreCLI@2
-  displayName: Test solution
-  inputs:
-    command: 'test'
-    projects: '**/*Tests.csproj'
-    arguments: '--logger trx'
+    - task: DotNetCoreCLI@2
+      displayName: Test solution
+      inputs:
+        command: 'test'
+        projects: '**/*Tests.csproj'
+        arguments: '--logger trx'
 
-- task: PublishTestResults@2
-  displayName: Publish tests and fails if failed tests exists
-  condition: eq(variables.isMaster, true)
-  inputs:
-    testResultsFormat: 'XUnit'
-    testResultsFiles: 'D:\a\_temp\*.trx'
-    mergeTestResults: true
-    failTaskOnFailedTests: true
+    - task: PublishTestResults@2
+      displayName: Publish tests and fails if failed tests exists
+      condition: eq(variables.isMaster, true)
+      inputs:
+        testResultsFormat: 'XUnit'
+        testResultsFiles: 'D:\a\_temp\*.trx'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
