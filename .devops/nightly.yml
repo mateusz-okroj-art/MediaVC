@@ -1,0 +1,65 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+name: MediaVC - nightly build
+
+trigger: none
+
+variables:
+ -isMaster: $[eq(variables['Build.SourceBranch'], 'refs/heads/master')]
+
+schedules:
+  - cron: "0 0 * * *"
+    displayName: MediaVC daily nightly build
+    branches:
+      include:
+        - master
+        - features/*
+        - bugfixes/*
+    always: false
+
+pool:
+  vmImage: windows-latest
+
+jobs:
+  - job: Nightly_build
+    condition: ne(variables['Build.Reason'], 'PullRequest')
+    steps:
+
+    - task: UseDotNet@2
+      displayName: Install .NET 5
+      inputs:
+        packageType: 'sdk'
+        version: '5.0.x'
+
+    - task: NuGetCommand@2
+      displayName: Restore solution
+      inputs:
+        command: 'restore'
+        restoreSolution: 'src/MediaVC.sln'
+        feedsToUse: 'select'
+
+    - task: DotNetCoreCLI@2
+      displayName: Build solution
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        configuration: Release
+
+    - task: DotNetCoreCLI@2
+      displayName: Test solution
+      inputs:
+        command: 'test'
+        projects: '**/*Tests.csproj'
+        arguments: '--logger trx'
+
+    - task: PublishTestResults@2
+      displayName: Publish tests and fails if failed tests exists
+      condition: eq(variables.isMaster, true)
+      inputs:
+        testResultsFormat: 'XUnit'
+        testResultsFiles: 'D:\a\_temp\*.trx'
+        mergeTestResults: true
+        failTaskOnFailedTests: true

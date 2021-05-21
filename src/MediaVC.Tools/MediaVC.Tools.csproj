@@ -3,8 +3,8 @@
   <PropertyGroup>
     <TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.1</TargetFrameworks>
     <Version>0.9.0</Version>
-    <PackageLicenseExpression></PackageLicenseExpression>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <PackageLicenseExpression>gpl-3.0-only</PackageLicenseExpression>
+    <PackageLicenseFile></PackageLicenseFile>
     <NeutralLanguage>en-US</NeutralLanguage>
     <RepositoryUrl>https://github.com/mateuszokroj1/MediaVC.git</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
@@ -20,10 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
+    <ProjectReference Include="..\MediaVC\MediaVC.csproj" />
   </ItemGroup>
 
   <ItemGroup>
