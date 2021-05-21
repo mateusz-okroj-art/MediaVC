@@ -1,0 +1,54 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+name: Pull Request
+
+trigger: none
+
+pool:
+  vmImage: windows-latest
+
+steps:
+
+- task: UseDotNet@2
+  displayName: Install .NET 5
+  inputs:
+    packageType: 'sdk'
+    version: '5.0.x'
+
+- task: NuGetCommand@2
+  displayName: Restore solution
+  inputs:
+    command: 'restore'
+    restoreSolution: '**/*.sln'
+    feedsToUse: 'select'
+
+- task: DotNetCoreCLI@2
+  displayName: Build solution
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    configuration: Release
+
+- task: DotNetCoreCLI@2
+  displayName: Pack Nuget packages
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/*.csproj'
+    versioningScheme: 'off'
+
+- task: DotNetCoreCLI@2
+  displayName: Test solution
+  inputs:
+    command: 'test'
+    projects: '**/*.csproj'
+    configuration: Release
+
+- task: PublishTestResults@2
+  inputs:
+    testResultsFormat: 'XUnit'
+    testResultsFiles: '**/TEST-*.trx'
+    mergeTestResults: true
+    failTaskOnFailedTests: true
