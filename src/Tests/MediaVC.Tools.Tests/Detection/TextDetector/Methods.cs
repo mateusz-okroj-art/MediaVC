@@ -1,5 +1,7 @@
 ﻿using System;
 
+using MediaVC.Tools.Tests.Fixtures;
+
 using Xunit;
 
 namespace MediaVC.Tools.Tests.Detection.TextDetector
