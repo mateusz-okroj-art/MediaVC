@@ -44,11 +44,11 @@ steps:
   inputs:
     command: 'test'
     projects: '**/*.csproj'
-    configuration: Release
 
 - task: PublishTestResults@2
+  displayName: Publish tests and fails if failed tests exists
   inputs:
     testResultsFormat: 'XUnit'
-    testResultsFiles: '**/TEST-*.trx'
+    testResultsFiles: 'D:\a\_temp\*.trx'
     mergeTestResults: true
     failTaskOnFailedTests: true

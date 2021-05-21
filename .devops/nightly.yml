@@ -57,5 +57,6 @@ steps:
   condition: eq(variables.isMaster, true)
   inputs:
     testResultsFormat: 'XUnit'
-    testResultsFiles: '**/TEST-*.trx'
+    testResultsFiles: 'D:\a\_temp\*.trx'
+    mergeTestResults: true
     failTaskOnFailedTests: true
