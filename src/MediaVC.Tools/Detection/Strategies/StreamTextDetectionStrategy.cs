@@ -72,7 +72,7 @@ namespace MediaVC.Tools.Detection.Strategies
                 var streamLocker = new object();
 
                 MemoryTextDetectionStrategy detector1, detector2;
-                IList<Task> activeActions = new List<Task>();
+                var activeActions = new List<Task>();
 
                 var canContinue = false;
 

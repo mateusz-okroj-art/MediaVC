@@ -47,7 +47,7 @@ namespace MediaVC.Tools.Difference
 
             Synchronize(() => Result.Clear());
 
-            if(CurrentVersion != null)
+            if(CurrentVersion is not null)
             {
                 long leftPosition = 0, rightPosition = 0;
                 IFileSegmentInfo? segment = null;
