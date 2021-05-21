@@ -24,7 +24,7 @@ pool:
   vmImage: windows-latest
 
 jobs:
-  - job: Nightly-build
+  - job: Nightly_build
     condition: ne(variables['Build.Reason'], 'PullRequest')
     steps:
 
