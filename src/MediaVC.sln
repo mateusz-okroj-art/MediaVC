@@ -3,17 +3,21 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31105.61
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaVC.Tools", "MediaVC.Tools\MediaVC.Tools.csproj", "{D5D58F3B-3E30-42BD-9EB8-183E7BD0D706}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediaVC.Tools", "MediaVC.Tools\MediaVC.Tools.csproj", "{D5D58F3B-3E30-42BD-9EB8-183E7BD0D706}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{A596CCF2-CB7F-4869-AD92-61916E6BB0FD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaVC.Tools.Tests", "Tests\MediaVC.Tools.Tests\MediaVC.Tools.Tests.csproj", "{490347FA-B7DB-428F-8D2B-8A078A3F089E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediaVC.Tools.Tests", "Tests\MediaVC.Tools.Tests\MediaVC.Tools.Tests.csproj", "{490347FA-B7DB-428F-8D2B-8A078A3F089E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaVC", "MediaVC\MediaVC.csproj", "{5340141B-6357-42E0-8047-D1F68E830551}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediaVC", "MediaVC\MediaVC.csproj", "{5340141B-6357-42E0-8047-D1F68E830551}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaVC.Tests", "Tests\MediaVC.Tests\MediaVC.Tests.csproj", "{D6B5E606-5FDE-49EA-87FC-D0632EA37B28}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MediaVC.Tests", "Tests\MediaVC.Tests\MediaVC.Tests.csproj", "{D6B5E606-5FDE-49EA-87FC-D0632EA37B28}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Examples", "Examples", "{AECF88A5-8537-4D2A-AF9D-DBA2074BB79D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaVC.Core", "MediaVC.Core\MediaVC.Core.csproj", "{24628C99-BDBC-4560-8592-EFDC6FD6F058}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MediaVC.Core.Tests", "Tests\MediaVC.Core.Tests\MediaVC.Core.Tests.csproj", "{A6B6800A-D860-4B00-B501-7A2B8E0DAA32}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +41,14 @@ Global
 		{D6B5E606-5FDE-49EA-87FC-D0632EA37B28}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6B5E606-5FDE-49EA-87FC-D0632EA37B28}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D6B5E606-5FDE-49EA-87FC-D0632EA37B28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{24628C99-BDBC-4560-8592-EFDC6FD6F058}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{24628C99-BDBC-4560-8592-EFDC6FD6F058}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{24628C99-BDBC-4560-8592-EFDC6FD6F058}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{24628C99-BDBC-4560-8592-EFDC6FD6F058}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A6B6800A-D860-4B00-B501-7A2B8E0DAA32}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A6B6800A-D860-4B00-B501-7A2B8E0DAA32}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A6B6800A-D860-4B00-B501-7A2B8E0DAA32}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A6B6800A-D860-4B00-B501-7A2B8E0DAA32}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -44,6 +56,7 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{490347FA-B7DB-428F-8D2B-8A078A3F089E} = {A596CCF2-CB7F-4869-AD92-61916E6BB0FD}
 		{D6B5E606-5FDE-49EA-87FC-D0632EA37B28} = {A596CCF2-CB7F-4869-AD92-61916E6BB0FD}
+		{A6B6800A-D860-4B00-B501-7A2B8E0DAA32} = {A596CCF2-CB7F-4869-AD92-61916E6BB0FD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {65C05E8F-9373-42FC-BE3F-778C754AE41D}

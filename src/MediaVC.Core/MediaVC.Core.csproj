@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.1</TargetFrameworks>
+		<Version>0.9.0</Version>
+		<PackageLicenseExpression>gpl-3.0-only</PackageLicenseExpression>
+		<PackageLicenseFile></PackageLicenseFile>
+		<NeutralLanguage>en-US</NeutralLanguage>
+		<RepositoryUrl>https://github.com/mateuszokroj1/MediaVC.git</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<Company>Mateusz Okrój</Company>
+		<Authors>Mateusz Okrój</Authors>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
+		<LangVersion>latest</LangVersion>
+		<Nullable>enable</Nullable>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\LICENSE" Link="LICENSE" />
+	</ItemGroup>
+
+</Project>
