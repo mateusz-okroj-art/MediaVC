@@ -28,6 +28,7 @@ steps:
     command: 'restore'
     restoreSolution: 'src/MediaVC.sln'
     feedsToUse: 'select'
+    configuration: Debug
 
 - task: DotNetCoreCLI@2
   displayName: Build solution
