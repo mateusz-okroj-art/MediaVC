@@ -27,6 +27,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\MediaVC.Core\MediaVC.Core.csproj" />
     <ProjectReference Include="..\..\MediaVC.Tools\MediaVC.Tools.csproj" />
   </ItemGroup>
 

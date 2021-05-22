@@ -1,4 +1,4 @@
-﻿namespace MediaVC.Difference.FileSegments
+﻿namespace MediaVC.Difference
 {
     public interface IFileSegmentInfo
     {

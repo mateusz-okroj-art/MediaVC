@@ -13,6 +13,7 @@
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
+		<RootNamespace>MediaVC</RootNamespace>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

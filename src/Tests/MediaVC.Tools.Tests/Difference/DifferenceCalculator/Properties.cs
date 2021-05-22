@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading;
+
+using MediaVC.Difference;
+
+using Moq;
 
 using Xunit;
-using Moq;
-using MediaVC.Difference;
-using MediaVC.Difference.FileSegments;
 
 namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 {
@@ -31,6 +27,11 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             var result = new Tools.Difference.DifferenceCalculator(new Mock<IInputSource>().Object, new Mock<IInputSource>().Object);
 
             Assert.Equal(SynchronizationContext.Current, result.SynchronizationContext);
+
+            var value2 = new SynchronizationContext();
+            result.SynchronizationContext = value2;
+
+            Assert.Equal(value2, result.SynchronizationContext);
         }
 
         #endregion
