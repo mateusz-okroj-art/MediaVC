@@ -26,4 +26,5 @@
 		<ProjectReference Include="..\..\MediaVC.Core\MediaVC.Core.csproj" />
 		<ProjectReference Include="..\MediaVC.Tests.Extensions\MediaVC.Tests.Extensions.csproj" />
 	</ItemGroup>
+
 </Project>

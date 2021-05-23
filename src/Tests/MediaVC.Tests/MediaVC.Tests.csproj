@@ -21,8 +21,8 @@
     </PackageReference>
   </ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\MediaVC\MediaVC.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\MediaVC\MediaVC.csproj" />
+	</ItemGroup>
 
 </Project>
