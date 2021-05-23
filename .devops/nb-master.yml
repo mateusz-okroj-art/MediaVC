@@ -1,0 +1,108 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+name: MediaVC - NB master
+
+trigger: none
+
+schedules:
+  - cron: "0 0 * * *"
+    displayName: MediaVC daily NB master
+    branches:
+      include:
+        - master
+    always: false
+
+pr:
+  branches:
+    exclude:
+      - master
+      - features/*
+      - bugfixes/*
+      - releases/*
+
+pool:
+  vmImage: windows-latest
+
+steps:
+
+    - task: UseDotNet@2
+      displayName: Install .NET 5
+      inputs:
+        packageType: 'sdk'
+        version: '5.0.x'
+
+    - task: DotNetCoreCLI@2
+      displayName: Restore solution
+      inputs:
+        command: 'restore'
+        projects: '**/*.csproj'
+        feedsToUse: 'select'
+        configuration: NightlyBuild
+
+    - task: DotNetCoreCLI@2
+      displayName: Build solution
+      inputs:
+        command: 'build'
+        projects: '**/*.csproj'
+        configuration: NightlyBuild
+
+    - task: DotNetCoreCLI@2
+      displayName: Test solution
+      inputs:
+        command: 'test'
+        projects: '**/*Tests.csproj'
+        configuration: NightlyBuild
+
+    - task: PublishTestResults@2
+      displayName: Publish tests and fails if failed tests exists
+      inputs:
+        testResultsFormat: 'XUnit'
+        testResultsFiles: 'D:\a\_temp\*.trx'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+
+    - task: DotNetCoreCLI@2
+      displayName: Pack MediaVC.Core
+      continueOnError: true
+      inputs:
+        command: 'pack'
+        packagesToPack: 'src/MediaVC.Core/MediaVC.Core.csproj'
+        configuration: 'NightlyBuild'
+        versioningScheme: 'byPrereleaseNumber'
+        majorVersion: '0'
+        minorVersion: '9'
+        patchVersion: '0'
+
+    - task: DotNetCoreCLI@2
+      displayName: Pack MediaVC
+      continueOnError: true
+      inputs:
+        command: 'pack'
+        packagesToPack: 'src/MediaVC/MediaVC.csproj'
+        configuration: 'NightlyBuild'
+        versioningScheme: 'byPrereleaseNumber'
+        majorVersion: '0'
+        minorVersion: '9'
+        patchVersion: '0'
+
+    - task: DotNetCoreCLI@2
+      displayName: Pack MediaVC.Tools
+      inputs:
+        command: 'pack'
+        packagesToPack: 'src/MediaVC.Tools/MediaVC.Tools.csproj'
+        configuration: 'NightlyBuild'
+        versioningScheme: 'byPrereleaseNumber'
+        majorVersion: '0'
+        minorVersion: '9'
+        patchVersion: '0'
+
+    - task: NuGetCommand@2
+      displayName: Publish packages to Nuget.org
+      inputs:
+        command: 'push'
+        packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+        nuGetFeedType: 'external'
+        publishFeedCredentials: 'Nuget.org mateuszokroj1'

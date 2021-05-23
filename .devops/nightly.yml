@@ -5,23 +5,27 @@
 
 name: MediaVC - nightly build
 
-trigger: none
+pr:
+ branches:
+   exclude:
+     - master
+     - features/*
+     - bugfixes/*
+     - releases/*
 
 schedules:
   - cron: "0 0 * * *"
     displayName: MediaVC daily nightly build
     branches:
       include:
-        - master
+        - features/*
+        - bugfixes/*
     always: false
 
 pool:
   vmImage: windows-latest
 
-jobs:
-  - job: Nightly_build
-    condition: ne(variables['Build.Reason'], 'PullRequest')
-    steps:
+steps:
 
     - task: UseDotNet@2
       displayName: Install .NET 5
@@ -29,75 +33,24 @@ jobs:
         packageType: 'sdk'
         version: '5.0.x'
 
-    - task: NuGetCommand@2
+    - task: DotNetCoreCLI@2
       displayName: Restore solution
       inputs:
         command: 'restore'
-        restoreSolution: 'src/MediaVC.sln'
+        projects: '**/*.csproj'
         feedsToUse: 'select'
-        configuration: NightlyBuild
+        configuration: Debug
 
     - task: DotNetCoreCLI@2
       displayName: Build solution
       inputs:
         command: 'build'
         projects: '**/*.csproj'
-        configuration: NightlyBuild
+        configuration: Debug
 
     - task: DotNetCoreCLI@2
       displayName: Test solution
       inputs:
         command: 'test'
         projects: '**/*Tests.csproj'
-        configuration: NightlyBuild
-
-    - task: PublishTestResults@2
-      displayName: Publish tests and fails if failed tests exists
-      inputs:
-        testResultsFormat: 'XUnit'
-        testResultsFiles: 'D:\a\_temp\*.trx'
-        mergeTestResults: true
-        failTaskOnFailedTests: true
-
-    - task: DotNetCoreCLI@2
-      displayName: Pack MediaVC.Core
-      continueOnError: true
-      inputs:
-        command: 'pack'
-        packagesToPack: 'src/MediaVC.Core/MediaVC.Core.csproj'
-        configuration: 'NightlyBuild'
-        versioningScheme: 'byPrereleaseNumber'
-        majorVersion: '0'
-        minorVersion: '9'
-        patchVersion: '0'
-
-    - task: DotNetCoreCLI@2
-      displayName: Pack MediaVC
-      continueOnError: true
-      inputs:
-        command: 'pack'
-        packagesToPack: 'src/MediaVC/MediaVC.csproj'
-        configuration: 'NightlyBuild'
-        versioningScheme: 'byPrereleaseNumber'
-        majorVersion: '0'
-        minorVersion: '9'
-        patchVersion: '0'
-
-    - task: DotNetCoreCLI@2
-      displayName: Pack MediaVC.Tools
-      inputs:
-        command: 'pack'
-        packagesToPack: 'src/MediaVC.Tools/MediaVC.Tools.csproj'
-        configuration: 'NightlyBuild'
-        versioningScheme: 'byPrereleaseNumber'
-        majorVersion: '0'
-        minorVersion: '9'
-        patchVersion: '0'
-
-    - task: NuGetCommand@2
-      displayName: Publish packages to Nuget.org
-      inputs:
-        command: 'push'
-        packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
-        nuGetFeedType: 'external'
-        publishFeedCredentials: 'Nuget.org mateuszokroj1'
+        configuration: Debug
