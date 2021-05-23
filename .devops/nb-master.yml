@@ -3,13 +3,13 @@
 # Add steps that build, run tests, deploy, and more:
 # https://aka.ms/yaml
 
-name: MediaVC - nightly build
+name: MediaVC - NB master
 
 trigger: none
 
 schedules:
   - cron: "0 0 * * *"
-    displayName: MediaVC daily nightly build
+    displayName: MediaVC daily NB master
     branches:
       include:
         - master
