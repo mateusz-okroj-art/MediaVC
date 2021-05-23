@@ -4,7 +4,6 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference;
-using MediaVC.Difference.FileSegments;
 
 namespace MediaVC.Tools.Difference
 {

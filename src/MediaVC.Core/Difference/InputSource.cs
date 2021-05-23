@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.IO;
 
-using MediaVC.Difference.FileSegments;
 using MediaVC.Difference.Strategies;
 
 namespace MediaVC.Difference

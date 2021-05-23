@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 
 using MediaVC.Difference;
-using MediaVC.Difference.FileSegments;
 
 using Moq;
 

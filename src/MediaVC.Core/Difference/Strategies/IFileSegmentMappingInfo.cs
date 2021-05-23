@@ -1,6 +1,4 @@
-﻿using MediaVC.Difference.FileSegments;
-
-namespace MediaVC.Difference.Strategies
+﻿namespace MediaVC.Difference.Strategies
 {
     internal interface IFileSegmentMappingInfo
     {
