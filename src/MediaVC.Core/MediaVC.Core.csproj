@@ -3,8 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.1</TargetFrameworks>
 		<Version>0.9.0</Version>
-		<PackageLicenseExpression>gpl-3.0-only</PackageLicenseExpression>
-		<PackageLicenseFile></PackageLicenseFile>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<RepositoryUrl>https://github.com/mateuszokroj1/MediaVC.git</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
@@ -13,6 +12,7 @@
 		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
+		<Configurations>Debug;Release;NightlyBuild</Configurations>
 		<RootNamespace>MediaVC</RootNamespace>
 	</PropertyGroup>
 
