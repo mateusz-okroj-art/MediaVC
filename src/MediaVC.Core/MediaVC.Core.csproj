@@ -3,7 +3,7 @@
 	<PropertyGroup>
 		<TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.1</TargetFrameworks>
 		<Version>0.9.0</Version>
-		<PackageLicenseExpression>GPL-3.0</PackageLicenseExpression>
+		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<RepositoryUrl>https://github.com/mateuszokroj1/MediaVC.git</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
