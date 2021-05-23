@@ -7,6 +7,9 @@ name: Pull Request
 
 trigger: none
 
+pr:
+ autoCancel: true
+
 pool:
   vmImage: windows-latest
 
@@ -18,19 +21,20 @@ steps:
     packageType: 'sdk'
     version: '5.0.x'
 
-- task: NuGetCommand@2
+- task: DotNetCoreCLI@2
   displayName: Restore solution
   inputs:
     command: 'restore'
-    restoreSolution: '**/*.sln'
+    projects: '**/*.csproj'
     feedsToUse: 'select'
+    configuration: Debug
 
 - task: DotNetCoreCLI@2
   displayName: Build solution
   inputs:
     command: 'build'
     projects: '**/*.csproj'
-    configuration: Release
+    configuration: Debug
 
 - task: DotNetCoreCLI@2
   displayName: Pack Nuget packages
@@ -38,12 +42,15 @@ steps:
     command: 'pack'
     packagesToPack: '**/*.csproj'
     versioningScheme: 'off'
+    configuration: Debug
+
 
 - task: DotNetCoreCLI@2
   displayName: Test solution
   inputs:
     command: 'test'
     projects: '**/*.csproj'
+    configuration: Debug
 
 - task: PublishTestResults@2
   displayName: Publish tests and fails if failed tests exists
