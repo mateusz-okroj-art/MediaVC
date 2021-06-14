@@ -6,7 +6,7 @@
 
         public long StartIndex { get; set; }
 
-        public bool CheckPositionIsInRange(long position) =>
-            StartIndex < position && StartIndex + (long)Segment.Length > position;
+        public readonly bool CheckPositionIsInRange(long position) =>
+            StartIndex <= position && StartIndex + (long)Segment.Length > position;
     }
 }

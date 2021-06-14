@@ -27,6 +27,5 @@
 
 	<ItemGroup>
 	  <Folder Include="Difference\InputSource\" />
-	  <Folder Include="Difference\Strategies\" />
 	</ItemGroup>
 </Project>

@@ -29,7 +29,7 @@ namespace MediaVC.Core.Tests.Difference.FileSegments
 
             result.EndPosition = testValue;
 
-            Assert.Equal(testValue, result.StartPosition);
+            Assert.Equal(testValue, result.EndPosition);
         }
 
         [Fact]

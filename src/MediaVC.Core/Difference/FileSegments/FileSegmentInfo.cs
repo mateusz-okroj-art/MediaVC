@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace MediaVC.Difference
+﻿namespace MediaVC.Difference
 {
     public struct FileSegmentInfo : IFileSegmentInfo
     {
@@ -8,11 +6,11 @@ namespace MediaVC.Difference
 
         public long EndPosition { get; set; }
 
-        public ulong Length => IsPositionsValid() ? (ulong)(EndPosition - StartPosition + 1) : 0;
+        public readonly ulong Length => IsPositionsValid() ? (ulong)(EndPosition - StartPosition + 1) : 0;
 
         public IInputSource Source { get; set; }
 
-        private bool IsPositionsValid() =>
+        private readonly bool IsPositionsValid() =>
             StartPosition >= 0 && StartPosition <= EndPosition && EndPosition >= StartPosition;
     }
 }
