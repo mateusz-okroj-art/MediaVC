@@ -21,9 +21,22 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         #region Tests
 
         [Fact]
-        public void Calculate_WhenNewFile_ShouldReturnOneSegment()
+        public async void Calculate_WhenNewFile_ShouldReturnOneSegment()
         {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero);
 
+            await calculator.CalculateAsync();
+
+            Assert.Null(calculator.CurrentVersion);
+            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+
+            Assert.NotNull(calculator.Result);
+            Assert.Equal(1, calculator.Result.Count);
+
+            Assert.Equal(this.fixture.OneZero, calculator.Result[0].Source);
+            Assert.Equal(0, calculator.Result[0].StartPosition);
+            Assert.Equal(0, calculator.Result[0].EndPosition);
+            Assert.Equal(1U, calculator.Result[0].Length);
         }
 
         #endregion
