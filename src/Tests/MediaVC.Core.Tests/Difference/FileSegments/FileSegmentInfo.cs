@@ -45,19 +45,21 @@ namespace MediaVC.Core.Tests.Difference.FileSegments
         }
 
         [Theory]
-        [InlineData(0, 0, 1)]
-        [InlineData(0, 1, 2)]
-        [InlineData(1, 100, 100)]
-        [InlineData(-100, 0, 0)]
-        [InlineData(100, -1000, 0)]
-        public void Length_TestCases_ShouldChangeAfterSetPosition(long start, long end, ulong expectedLength)
+        [InlineData(0, 0)]
+        [InlineData(0, 1)]
+        [InlineData(1, 100)]
+        [InlineData(-100, 0)]
+        [InlineData(100, -1000)]
+        public void Length_TestCases_ShouldChangeAfterSetPosition(long start, long end)
         {
             MediaVC.Difference.FileSegmentInfo result = default;
 
             result.StartPosition = start;
             result.EndPosition = end;
-
-            Assert.Equal(expectedLength, result.Length);
+            
+            Assert.Equal(
+                result.StartPosition >= 0 && result.StartPosition <= result.EndPosition && result.EndPosition >= result.StartPosition ? (ulong)(result.EndPosition - result.StartPosition + 1) : 0,
+                result.Length);
         }
     }
 }

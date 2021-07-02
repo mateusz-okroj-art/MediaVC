@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediaVC.Difference;
+
+using Moq;
 
 using Xunit;
-using Moq;
-using MediaVC.Difference;
 
 namespace MediaVC.Core.Tests.Difference.Strategies
 {
@@ -37,7 +33,12 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         }
 
         [Theory]
-        [InlineData()]
+        [InlineData(0, 0, 0, false)]
+        [InlineData(0, 0, 1, true)]
+        [InlineData(1, 0, 1, false)]
+        [InlineData(1, 0, 2, true)]
+        [InlineData(long.MaxValue-1, long.MaxValue-1, 1, true)]
+        [InlineData(long.MaxValue-1, 0, long.MaxValue, true)]
         public void CheckIsPositionInRange_TestCases_ShouldValid(long position, long startIndex, long segmentLength, bool expectedResult)
         {
             MediaVC.Difference.Strategies.FileSegmentMappingInfo result = default;
@@ -45,7 +46,8 @@ namespace MediaVC.Core.Tests.Difference.Strategies
             result.StartIndex = startIndex;
 
             var segmentMock = new Mock<IFileSegmentInfo>();
-            segmentMock.SetupGet(model => model.Length).Returns((ulong)segmentLength);
+            segmentMock.SetupGet(model => model.Length)
+                .Returns((ulong)segmentLength);
             result.Segment = segmentMock.Object;
 
             Assert.Equal(expectedResult, result.CheckPositionIsInRange(position));
