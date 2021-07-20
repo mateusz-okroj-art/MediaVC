@@ -40,118 +40,129 @@ namespace MediaVC.Tools.Difference
         /// </summary>
         /// <param name="cancellation"></param>
         /// <exception cref="OperationCanceledException" />
-        public async ValueTask CalculateAsync(CancellationToken cancellation, IProgress<float>? progress)
-        {
-            cancellation.ThrowIfCancellationRequested();
-
-            Synchronize(() => Result.Clear());
-
-            if(CurrentVersion is not null)
+        public ValueTask CalculateAsync(CancellationToken cancellation, IProgress<float>? progress) =>
+            new(Task.Run(() =>
             {
-                long leftPosition = 0, rightPosition = 0;
-                IFileSegmentInfo? segment = null;
+                cancellation.ThrowIfCancellationRequested();
 
-                while(leftPosition < CurrentVersion.Length)
+                Synchronize(() => Result.Clear());
+
+                if(CurrentVersion is not null)
                 {
-                    Synchronize(() => progress?.Report((float) Math.Round((double) leftPosition / CurrentVersion.Length, 2)));
-                    cancellation.ThrowIfCancellationRequested();
+                    long leftPosition = 0, rightPosition = 0;
+                    IFileSegmentInfo? segment = null;
 
-                    // Searching
-                    for(long searchingIndex = 0; LoopPredicate(searchingIndex, leftPosition, rightPosition); ++searchingIndex)
+                    while(leftPosition < CurrentVersion.Length)
                     {
-                        CurrentVersion.Position = searchingIndex + leftPosition;
-                        NewVersion.Position = searchingIndex + rightPosition;
+                        Synchronize(() => progress?.Report((float)Math.Round((double)leftPosition / CurrentVersion.Length, 2)));
+                        cancellation.ThrowIfCancellationRequested();
 
-                        var searchedByte = CurrentVersion.ReadByte();
-
-                        if(searchedByte == NewVersion.ReadByte())
+                        // Searching
+                        for(long searchingIndex = 0; LoopPredicate(searchingIndex, leftPosition, rightPosition); ++searchingIndex)
                         {
-                            if(segment == null)
+                            CurrentVersion.Position = searchingIndex + leftPosition;
+                            NewVersion.Position = searchingIndex + rightPosition;
+
+                            var searchedByte = CurrentVersion.ReadByte();
+
+                            if(searchedByte == NewVersion.ReadByte())
                             {
-                                segment = new FileSegmentInfo
+                                if(segment == null)
                                 {
-                                    Source = CurrentVersion,
-                                    StartPosition = leftPosition + searchingIndex,
-                                    EndPosition = leftPosition + searchingIndex
-                                };
-                            }
-                            else if(segment.Source.Equals(CurrentVersion))
-                            {
-                                segment.EndPosition = leftPosition + searchingIndex;
-                            }
-                            else if(segment.Source.Equals(NewVersion))
-                            {
-                                Synchronize(() => Result.Add(segment));
+                                    segment = new FileSegmentInfo
+                                    {
+                                        Source = CurrentVersion,
+                                        StartPosition = leftPosition + searchingIndex,
+                                        EndPosition = leftPosition + searchingIndex
+                                    };
 
-                                segment = null;
+                                    if(searchingIndex + rightPosition + 1 >= NewVersion.Length)
+                                    {
+                                        Synchronize(() => Result.Add(segment));
 
-                                leftPosition += searchingIndex;
-                                rightPosition += searchingIndex;
+                                        leftPosition += searchingIndex + 1;
+                                        rightPosition += searchingIndex + 1;
 
-                                break;
-                            }
-                        }
-                        else
-                        {
-                            if(segment == null)
-                            {
-                                segment = new FileSegmentInfo
+                                        break;
+                                    }
+                                }
+                                else if(segment.Source.Equals(CurrentVersion))
                                 {
-                                    Source = NewVersion,
-                                    StartPosition = rightPosition + searchingIndex,
-                                    EndPosition = rightPosition + searchingIndex
-                                };
+                                    segment.EndPosition = leftPosition + searchingIndex;
+                                }
+                                else if(segment.Source.Equals(NewVersion))
+                                {
+                                    Synchronize(() => Result.Add(segment));
+
+                                    segment = null;
+
+                                    leftPosition += searchingIndex;
+                                    rightPosition += searchingIndex;
+
+                                    break;
+                                }
                             }
-                            else if(segment.Source.Equals(CurrentVersion))
+                            else
                             {
-                                Synchronize(() => Result.Add(segment));
+                                if(segment == null)
+                                {
+                                    segment = new FileSegmentInfo
+                                    {
+                                        Source = NewVersion,
+                                        StartPosition = rightPosition + searchingIndex,
+                                        EndPosition = rightPosition + searchingIndex
+                                    };
+                                }
+                                else if(segment.Source.Equals(CurrentVersion))
+                                {
+                                    Synchronize(() => Result.Add(segment));
 
-                                segment = null;
+                                    segment = null;
 
-                                leftPosition += searchingIndex;
-                                rightPosition += searchingIndex;
+                                    leftPosition += searchingIndex;
+                                    rightPosition += searchingIndex;
 
-                                break;
-                            }
-                            else if(segment.Source.Equals(NewVersion))
-                            {
-                                segment.EndPosition = rightPosition + searchingIndex;
+                                    break;
+                                }
+                                else if(segment.Source.Equals(NewVersion))
+                                {
+                                    segment.EndPosition = rightPosition + searchingIndex;
+                                }
                             }
                         }
                     }
+
+                    /*var query = Result.Where(segment => segment.Source.Equals(NewVersion))
+                            .OrderBy(segment => segment.EndPosition)
+                            .Select(segment => segment.EndPosition);
+
+                    if (query.Any())
+                        rightPosition = query.Last() + 1;*/
+
+                    if(rightPosition < NewVersion.Length)
+                    {
+                        Synchronize(() =>
+                            Result.Add(new FileSegmentInfo
+                            {
+                                Source = NewVersion,
+                                StartPosition = rightPosition,
+                                EndPosition = NewVersion.Length - 1
+                            })
+                        );
+                    }
                 }
-
-                /*var query = Result.Where(segment => segment.Source.Equals(NewVersion))
-                        .OrderBy(segment => segment.EndPosition)
-                        .Select(segment => segment.EndPosition);
-
-                if (query.Any())
-                    rightPosition = query.Last() + 1;*/
-
-                if (rightPosition < NewVersion.Length)
+                else
                 {
                     Synchronize(() =>
                         Result.Add(new FileSegmentInfo
                         {
                             Source = NewVersion,
-                            StartPosition = rightPosition,
+                            StartPosition = 0,
                             EndPosition = NewVersion.Length - 1
                         })
                     );
                 }
-            }
-            else
-            {
-                Synchronize(() =>
-                    Result.Add(new FileSegmentInfo
-                    {
-                        Source = NewVersion,
-                        StartPosition = 0,
-                        EndPosition = NewVersion.Length - 1
-                    })
-                );
-            }
-        }
+            }));
 
         private bool LoopPredicate(long index, long leftPosition, long rightPosition) =>
             index + leftPosition < CurrentVersion?.Length &&
