@@ -61,7 +61,6 @@ steps:
         codeCoverageEnabled: true
         testRunTitle: 'MediaVC NB daily'
         configuration: 'Debug'
-        failOnMinTestsNotRun: true
         rerunFailedTests: true
         rerunType: 'basedOnTestFailureCount'
         rerunFailedTestCasesMaxLimit: '3'
