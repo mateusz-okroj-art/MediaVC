@@ -49,20 +49,31 @@ steps:
         projects: '**/*.csproj'
         configuration: NightlyBuild
 
-    - task: DotNetCoreCLI@2
+    - task: VSTest@2
       displayName: Test solution
       inputs:
-        command: 'test'
-        projects: '**/*Tests.csproj'
-        configuration: NightlyBuild
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: |
+          src/Tests/**\*test*.dll
+          !**\*TestAdapter.dll
+          !**\obj\**
+        searchFolder: '$(System.DefaultWorkingDirectory)'
+        runInParallel: true
+        codeCoverageEnabled: true
+        testRunTitle: 'MediaVC NB daily'
+        configuration: 'NightlyBuild'
+        rerunFailedTests: true
+        rerunType: 'basedOnTestFailureCount'
+        rerunFailedTestCasesMaxLimit: '3'
+        rerunMaxAttempts: '2'
 
     - task: PublishTestResults@2
-      displayName: Publish tests and fails if failed tests exists
+      displayName: Fail if tests are failed
       inputs:
         testResultsFormat: 'XUnit'
         testResultsFiles: 'D:\a\_temp\*.trx'
-        mergeTestResults: true
         failTaskOnFailedTests: true
+        buildConfiguration: 'NightlyBuild'
 
     - task: DotNetCoreCLI@2
       displayName: Pack MediaVC.Core
