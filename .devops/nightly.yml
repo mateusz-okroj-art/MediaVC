@@ -70,6 +70,6 @@ steps:
       displayName: Fail if tests are failed
       inputs:
         testResultsFormat: 'XUnit'
-        testResultsFiles: '**/*.trx'
+        testResultsFiles: 'D:\a\_temp\*.trx'
         failTaskOnFailedTests: true
         buildConfiguration: 'Debug'
