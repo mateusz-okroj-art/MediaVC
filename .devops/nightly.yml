@@ -48,9 +48,28 @@ steps:
         projects: '**/*.csproj'
         configuration: Debug
 
-    - task: DotNetCoreCLI@2
+    - task: VSTest@2
       displayName: Test solution
       inputs:
-        command: 'test'
-        projects: '**/*Tests.csproj'
-        configuration: Debug
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: |
+          src/Tests/**\*test*.dll
+          !**\*TestAdapter.dll
+          !**\obj\**
+        searchFolder: '$(System.DefaultWorkingDirectory)'
+        runInParallel: true
+        codeCoverageEnabled: true
+        testRunTitle: 'MediaVC NB daily'
+        configuration: 'Debug'
+        rerunFailedTests: true
+        rerunType: 'basedOnTestFailureCount'
+        rerunFailedTestCasesMaxLimit: '3'
+        rerunMaxAttempts: '2'
+
+    - task: PublishTestResults@2
+      displayName: Fail if tests are failed
+      inputs:
+        testResultsFormat: 'XUnit'
+        testResultsFiles: 'D:\a\_temp\*.trx'
+        failTaskOnFailedTests: true
+        buildConfiguration: 'Debug'

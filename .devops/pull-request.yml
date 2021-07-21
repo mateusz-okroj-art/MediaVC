@@ -44,18 +44,28 @@ steps:
     versioningScheme: 'off'
     configuration: Debug
 
-
-- task: DotNetCoreCLI@2
+- task: VSTest@2
   displayName: Test solution
   inputs:
-    command: 'test'
-    projects: '**/*.csproj'
-    configuration: Debug
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: |
+          src/Tests/**\*test*.dll
+          !**\*TestAdapter.dll
+          !**\obj\**
+        searchFolder: '$(System.DefaultWorkingDirectory)'
+        runInParallel: true
+        codeCoverageEnabled: true
+        testRunTitle: 'Pull request'
+        configuration: 'Debug'
+        rerunFailedTests: true
+        rerunType: 'basedOnTestFailureCount'
+        rerunFailedTestCasesMaxLimit: '3'
+        rerunMaxAttempts: '2'
 
 - task: PublishTestResults@2
-  displayName: Publish tests and fails if failed tests exists
+  displayName: Fail if tests are failed
   inputs:
-    testResultsFormat: 'XUnit'
-    testResultsFiles: 'D:\a\_temp\*.trx'
-    mergeTestResults: true
-    failTaskOnFailedTests: true
+        testResultsFormat: 'XUnit'
+        testResultsFiles: 'D:\a\_temp\*.trx'
+        failTaskOnFailedTests: true
+        buildConfiguration: 'Debug'
