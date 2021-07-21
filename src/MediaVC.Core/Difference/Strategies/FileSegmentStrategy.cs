@@ -124,6 +124,8 @@ namespace MediaVC.Difference.Strategies
                                                     Position -
                                                     mappedSegment.StartIndex;
 
+            this.position++;
+
             return source.ReadByte();
         }
 

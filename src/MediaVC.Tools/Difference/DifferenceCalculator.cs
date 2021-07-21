@@ -69,22 +69,20 @@ namespace MediaVC.Tools.Difference
                             {
                                 if(segment == null)
                                 {
+                                    if(searchingIndex + rightPosition + 1 >= NewVersion.Length)
+                                    {
+                                        leftPosition += searchingIndex + 1;
+                                        rightPosition += searchingIndex + 1;
+
+                                        break;
+                                    }
+
                                     segment = new FileSegmentInfo
                                     {
                                         Source = CurrentVersion,
                                         StartPosition = leftPosition + searchingIndex,
                                         EndPosition = leftPosition + searchingIndex
                                     };
-
-                                    if(searchingIndex + rightPosition + 1 >= NewVersion.Length)
-                                    {
-                                        Synchronize(() => Result.Add(segment));
-
-                                        leftPosition += searchingIndex + 1;
-                                        rightPosition += searchingIndex + 1;
-
-                                        break;
-                                    }
                                 }
                                 else if(segment.Source.Equals(CurrentVersion))
                                 {

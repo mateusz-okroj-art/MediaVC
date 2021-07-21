@@ -2,6 +2,7 @@
 using System.IO;
 
 using MediaVC.Difference;
+using MediaVC.Tools.Tests.Fixtures;
 
 using Moq;
 
@@ -19,25 +20,13 @@ namespace MediaVC.Tools.Tests
             var oneZeroMock = new Mock<IInputSource>();
             ConfigureMockToStream(oneZeroMock, this.oneZeroStream);
             OneZero = oneZeroMock.Object;
-
-            var mFullBytesArray = new byte[1_000_000];
-            for(var i = 0; i < 999_999; ++i)
-                mFullBytesArray[i] = 255;
-
-            this.mFullBytesStream = new MemoryStream(mFullBytesArray);
-
-            var mFullBytesMock = new Mock<IInputSource>();
-            ConfigureMockToStream(mFullBytesMock, this.mFullBytesStream);
-            MFullBytes = mFullBytesMock.Object;
         }
-
 
         #endregion
 
         #region Fields
 
         private readonly Stream oneZeroStream;
-        private readonly Stream mFullBytesStream;
 
         #endregion
 
@@ -45,7 +34,7 @@ namespace MediaVC.Tools.Tests
 
         public IInputSource OneZero { get; }
 
-        public IInputSource MFullBytes { get; }
+        public IInputSource MFullBytes { get; } = new MFullBytesReadonlyStream();
 
         #endregion
 
@@ -67,11 +56,7 @@ namespace MediaVC.Tools.Tests
                 .Returns(sourceStream.ReadByte() is int i && i >= 0 ? (byte)i : throw new InvalidOperationException());
         }
 
-        public void Dispose()
-        {
-            this.oneZeroStream.Dispose();
-            this.mFullBytesStream.Dispose();
-        }
+        public void Dispose() => this.oneZeroStream.Dispose();
 
         #endregion
     }
