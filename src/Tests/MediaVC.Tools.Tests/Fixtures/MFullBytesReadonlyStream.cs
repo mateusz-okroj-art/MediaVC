@@ -62,9 +62,15 @@ namespace MediaVC.Tools.Tests.Fixtures
             if(count < 1 || Position + offset + count - 1 >= Length)
                 throw new ArgumentOutOfRangeException(nameof(count));
 
-            this.buffer.Slice((int)Position).CopyTo(buffer.Slice(offset, count));
+            var destinationBufferArea = buffer.Slice(offset, count);
 
-            return (int)Math.Min(Length - Position, count);
+            this.buffer.Slice((int)Position).CopyTo(destinationBufferArea);
+
+            var readedBytes = Math.Min(Length - Position, destinationBufferArea.Length);
+
+            Position += readedBytes;
+
+            return (int)readedBytes;
         }
 
         public byte ReadByte()

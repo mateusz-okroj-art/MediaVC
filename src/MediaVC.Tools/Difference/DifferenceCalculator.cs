@@ -1,5 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reactive;
+using System.Reactive.Linq;
+using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -19,6 +22,13 @@ namespace MediaVC.Tools.Difference
 
         #endregion
 
+        #region Fields
+
+        private readonly ISubject<Unit> resultAdded = new Subject<Unit>();
+        private readonly ISubject<Unit> resultCleared = new Subject<Unit>();
+
+        #endregion
+
         #region Properties
 
         public IInputSource? CurrentVersion { get; }
@@ -26,6 +36,10 @@ namespace MediaVC.Tools.Difference
         public IInputSource NewVersion { get; }
 
         public IList<IFileSegmentInfo> Result { get; } = new List<IFileSegmentInfo>();
+
+        public IObservable<Unit> ResultAdded => this.resultAdded.AsObservable();
+
+        public IObservable<Unit> ResultCleared => this.resultCleared.AsObservable();
 
         public SynchronizationContext SynchronizationContext { get; set; } = SynchronizationContext.Current;
 
