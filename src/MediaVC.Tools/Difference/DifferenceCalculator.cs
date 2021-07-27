@@ -59,7 +59,11 @@ namespace MediaVC.Tools.Difference
             {
                 cancellation.ThrowIfCancellationRequested();
 
-                Synchronize(() => Result.Clear());
+                Synchronize(() =>
+                {
+                    Result.Clear();
+                    this.resultCleared.OnNext(Unit.Default);
+                });
 
                 if(CurrentVersion is not null)
                 {
@@ -104,7 +108,11 @@ namespace MediaVC.Tools.Difference
                                 }
                                 else if(segment.Source.Equals(NewVersion))
                                 {
-                                    Synchronize(() => Result.Add(segment));
+                                    Synchronize(() =>
+                                    { 
+                                        Result.Add(segment);
+                                        this.resultAdded.OnNext(Unit.Default);
+                                    });
 
                                     segment = null;
 
@@ -127,7 +135,11 @@ namespace MediaVC.Tools.Difference
                                 }
                                 else if(segment.Source.Equals(CurrentVersion))
                                 {
-                                    Synchronize(() => Result.Add(segment));
+                                    Synchronize(() =>
+                                    {
+                                        Result.Add(segment);
+                                        this.resultAdded.OnNext(Unit.Default);
+                                    });
 
                                     segment = null;
 
@@ -154,25 +166,29 @@ namespace MediaVC.Tools.Difference
                     if(rightPosition < NewVersion.Length)
                     {
                         Synchronize(() =>
+                        {
                             Result.Add(new FileSegmentInfo
                             {
                                 Source = NewVersion,
                                 StartPosition = rightPosition,
                                 EndPosition = NewVersion.Length - 1
-                            })
-                        );
+                            });
+                            this.resultAdded.OnNext(Unit.Default);
+                        });
                     }
                 }
                 else
                 {
                     Synchronize(() =>
+                    {
                         Result.Add(new FileSegmentInfo
                         {
                             Source = NewVersion,
                             StartPosition = 0,
                             EndPosition = NewVersion.Length - 1
-                        })
-                    );
+                        });
+                        this.resultAdded.OnNext(Unit.Default);
+                    });
                 }
             }));
 
