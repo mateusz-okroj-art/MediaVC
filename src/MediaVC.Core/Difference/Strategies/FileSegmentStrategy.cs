@@ -11,7 +11,6 @@ namespace MediaVC.Difference.Strategies
         public FileSegmentStrategy(IEnumerable<IFileSegmentInfo> segments)
         {
             this.segments = segments ?? throw new ArgumentNullException(nameof(segments));
-
             this.mappings = new IFileSegmentMappingInfo[segments.Count()];
 
             InitMappings();
@@ -72,7 +71,36 @@ namespace MediaVC.Difference.Strategies
                     .SingleOrDefault();
 
         public bool Equals(IInputSourceStrategy? other) =>
-            other is FileSegmentStrategy strategy && this.segments == strategy.segments;
+            other is FileSegmentStrategy strategy ?
+            GetHashCode() == strategy.GetHashCode() :
+            Equals(this, other);
+
+        public override int GetHashCode()
+        {
+            if(this.segments?.Count() < 1)
+                return base.GetHashCode();
+
+            var query = from segment in this.segments
+                    where segment is not null
+                    select segment;
+
+            
+            var hashes = query.AsParallel().Select(segment => segment.GetHashCode()).ToArray();
+
+            if(hashes.Length <= 0)
+                return 0;
+            else if(hashes.Length == 1)
+                return hashes[0];
+            else
+            {
+                var result = HashCode.Combine(hashes[0], hashes[1]);
+
+                foreach(var hash in hashes.Skip(2))
+                    result = HashCode.Combine(result, hash);
+
+                return result;
+            }
+        }
 
         public int Read(byte[] buffer, int offset, int count) =>
             Read(buffer.AsMemory(), offset, count);
@@ -124,7 +152,7 @@ namespace MediaVC.Difference.Strategies
                                                     Position -
                                                     mappedSegment.StartIndex;
 
-            this.position++;
+            ++this.position;
 
             return source.ReadByte();
         }

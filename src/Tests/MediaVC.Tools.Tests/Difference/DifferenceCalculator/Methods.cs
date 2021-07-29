@@ -1,6 +1,5 @@
 ﻿using System;
-
-using MediaVC.Difference;
+using System.Diagnostics;
 
 using Xunit;
 
@@ -47,20 +46,20 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         [Fact]
         public async void Calculate_WhenNewFile_Variant2_ShouldReturnOneSegment()
         {
-            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.MFullBytes);
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes);
 
             await calculator.CalculateAsync();
 
             Assert.Null(calculator.CurrentVersion);
-            Assert.Equal(this.fixture.MFullBytes, calculator.NewVersion);
+            Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
 
             Assert.NotNull(calculator.Result);
             Assert.Single(calculator.Result);
 
-            Assert.Equal(this.fixture.MFullBytes, calculator.Result[0].Source);
+            Assert.Equal(this.fixture.ThousandFullBytes, calculator.Result[0].Source);
             Assert.Equal(0, calculator.Result[0].StartPosition);
-            Assert.Equal(this.fixture.MFullBytes.Length-1, calculator.Result[0].EndPosition);
-            Assert.Equal((ulong)this.fixture.MFullBytes.Length, calculator.Result[0].Length);
+            Assert.Equal(this.fixture.ThousandFullBytes.Length-1, calculator.Result[0].EndPosition);
+            Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, calculator.Result[0].Length);
         }
 
         [Fact]
@@ -80,15 +79,22 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         [Fact]
         public async void Calculate_WhenVersionEqual_Variant2_ShouldReturnEmpty()
         {
-            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.MFullBytes, this.fixture.MFullBytes);
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes, this.fixture.ThousandFullBytes);
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
 
             await calculator.CalculateAsync();
 
-            Assert.Equal(this.fixture.MFullBytes, calculator.CurrentVersion);
-            Assert.Equal(this.fixture.MFullBytes, calculator.NewVersion);
+            stopwatch.Stop();
+
+            Assert.Equal(this.fixture.ThousandFullBytes, calculator.CurrentVersion);
+            Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
 
             Assert.NotNull(calculator.Result);
             Assert.Empty(calculator.Result);
+
+            Debug.WriteLine($"Calculating difference for 1000 bytes: {stopwatch.ElapsedMilliseconds} ms.");
         }
 
         #endregion

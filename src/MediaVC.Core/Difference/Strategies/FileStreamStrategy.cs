@@ -48,7 +48,8 @@ namespace MediaVC.Difference.Strategies
 
         public bool Equals(IInputSourceStrategy? other) =>
             other is FileStreamStrategy strategy &&
-                strategy.File?.Name == File.Name;
+            strategy.File?.Name == File.Name &&
+            strategy.Length == File.Length;
 
         #endregion
     }

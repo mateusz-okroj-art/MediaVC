@@ -1,12 +1,11 @@
-﻿using System;
-
-using MediaVC.Difference;
+﻿using MediaVC.Difference;
 
 namespace MediaVC.Tools.Tests
 {
-    public interface IDifferenceCalculatorTestFixture : IDisposable
+    public interface IDifferenceCalculatorTestFixture
     {
         IInputSource OneZero { get; }
-        IInputSource MFullBytes { get; }
+
+        IInputSource ThousandFullBytes { get; }
     }
 }

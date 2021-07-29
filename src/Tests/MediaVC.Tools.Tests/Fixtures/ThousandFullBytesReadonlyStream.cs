@@ -4,23 +4,23 @@ using MediaVC.Difference;
 
 namespace MediaVC.Tools.Tests.Fixtures
 {
-    public sealed class MFullBytesReadonlyStream : IInputSource
+    public sealed class ThousandFullBytesReadonlyStream : IInputSource
     {
         #region Fields
 
-        private const int M = 1_000_000;
-        private readonly Memory<byte> buffer = new byte[M];
+        private const int count = 1000;
+        private readonly Memory<byte> buffer = new byte[count];
         private long position;
 
         #endregion
 
         #region Constructor
 
-        public MFullBytesReadonlyStream()
+        public ThousandFullBytesReadonlyStream()
         {
             var span = this.buffer.Span;
 
-            for(var i = 0; i < M; ++i)
+            for(var i = 0; i < count; ++i)
                 span[i] = 255;
         }
 
@@ -33,7 +33,7 @@ namespace MediaVC.Tools.Tests.Fixtures
             get => this.position;
             set
             {
-                if(value is >= M or < 0)
+                if(value is >= count or < 0)
                     throw new ArgumentOutOfRangeException();
 
                 this.position = value;
@@ -54,7 +54,7 @@ namespace MediaVC.Tools.Tests.Fixtures
         public int Read(Memory<byte> buffer, int offset, int count)
         {
             if(buffer.IsEmpty)
-                throw new ArgumentException(nameof(buffer));
+                throw new ArgumentException("Buffer is empty");
 
             if(Position + offset >= Length)
                 throw new ArgumentOutOfRangeException(nameof(offset));
@@ -64,7 +64,7 @@ namespace MediaVC.Tools.Tests.Fixtures
 
             var destinationBufferArea = buffer.Slice(offset, count);
 
-            this.buffer.Slice((int)Position).CopyTo(destinationBufferArea);
+            this.buffer[(int)Position..].CopyTo(destinationBufferArea);
 
             var readedBytes = Math.Min(Length - Position, destinationBufferArea.Length);
 
@@ -73,13 +73,10 @@ namespace MediaVC.Tools.Tests.Fixtures
             return (int)readedBytes;
         }
 
-        public byte ReadByte()
-        {
-            if(Position >= Length)
-                throw new InvalidOperationException("Stream is on the end.");
-
-            return this.buffer.Span.Slice((int)Position)[0];
-        }
+        public byte ReadByte() =>
+            Position >= Length
+                ? throw new InvalidOperationException("Stream is on the end.")
+                : this.buffer.Span[(int)this.position++..][0];
 
         #endregion
     }

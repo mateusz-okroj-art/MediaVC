@@ -26,6 +26,9 @@ namespace MediaVC.Difference
             Strategy = new FileSegmentStrategy(segments);
         }
 
+        internal InputSource(IInputSourceStrategy externalStrategy) =>
+            Strategy = externalStrategy ?? throw new ArgumentNullException(nameof(externalStrategy));
+
         #endregion
 
         #region Properties
@@ -76,6 +79,8 @@ namespace MediaVC.Difference
         public bool Equals(InputSource? other) => Strategy.Equals(other?.Strategy);
 
         public override bool Equals(object? obj) => Equals(obj as InputSource);
+
+        public override int GetHashCode() => Strategy.GetHashCode();
 
         #region Obsoletes
 

@@ -24,8 +24,4 @@
 	<ItemGroup>
 		<ProjectReference Include="..\..\MediaVC.Core\MediaVC.Core.csproj" />
 	</ItemGroup>
-
-	<ItemGroup>
-	  <Folder Include="Difference\InputSource\" />
-	</ItemGroup>
 </Project>

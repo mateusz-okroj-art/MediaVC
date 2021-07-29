@@ -82,6 +82,7 @@ namespace MediaVC.Tools.Difference
                             NewVersion.Position = searchingIndex + rightPosition;
 
                             var searchedByte = CurrentVersion.ReadByte();
+                            --CurrentVersion.Position;
 
                             if(searchedByte == NewVersion.ReadByte())
                             {
@@ -153,6 +154,14 @@ namespace MediaVC.Tools.Difference
                                     segment.EndPosition = rightPosition + searchingIndex;
                                 }
                             }
+
+                            if(searchingIndex + leftPosition + 1 >= CurrentVersion.Length)
+                            {
+                                leftPosition += searchingIndex + 1;
+                                rightPosition += searchingIndex + 1;
+                            }
+
+                            --NewVersion.Position;
                         }
                     }
 
