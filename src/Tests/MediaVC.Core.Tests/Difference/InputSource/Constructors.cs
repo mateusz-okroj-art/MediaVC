@@ -49,7 +49,7 @@ namespace MediaVC.Core.Tests.Difference.InputSource
         [Fact]
         public void Constructor2_WhenArgumentIsValid_ShouldSetStrategy()
         {
-            using var argument = File.Create($"test-{Guid.NewGuid()}.tmp", 0, FileOptions.DeleteOnClose);
+            using var argument = File.Create($"test-{Guid.NewGuid()}.tmp", 1, FileOptions.DeleteOnClose);
 
             var result = new MediaVC.Difference.InputSource(argument);
 

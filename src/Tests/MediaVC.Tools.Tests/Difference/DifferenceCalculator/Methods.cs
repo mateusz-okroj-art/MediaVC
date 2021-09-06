@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -25,7 +26,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         #region Tests
 
         [Fact]
-        public async void Calculate_WhenNewFile_Variant1_ShouldReturnOneSegment()
+        public async Task Calculate_WhenNewFile_Variant1_ShouldReturnOneSegment()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero);
 
@@ -44,7 +45,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         }
 
         [Fact]
-        public async void Calculate_WhenNewFile_Variant2_ShouldReturnOneSegment()
+        public async Task Calculate_WhenNewFile_Variant2_ShouldReturnOneSegment()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes);
 
@@ -63,7 +64,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         }
 
         [Fact]
-        public async void Calculate_WhenVersionEqual_Variant1_ShouldReturnEmpty()
+        public async Task Calculate_WhenVersionEqual_Variant1_ShouldReturnEmpty()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero, this.fixture.OneZero);
 
@@ -77,7 +78,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         }
 
         [Fact]
-        public async void Calculate_WhenVersionEqual_Variant2_ShouldReturnEmpty()
+        public async Task Calculate_WhenVersionEqual_Variant2_ShouldReturnEmpty()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes, this.fixture.ThousandFullBytes);
 

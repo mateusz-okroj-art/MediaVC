@@ -2,7 +2,7 @@
 
 namespace MediaVC.Difference.Strategies
 {
-    internal interface IInputSourceStrategy : IEquatable<IInputSourceStrategy>
+    public interface IInputSourceStrategy : IEquatable<IInputSourceStrategy>
     {
         long Length { get; }
 
