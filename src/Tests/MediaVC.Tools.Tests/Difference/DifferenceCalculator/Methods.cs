@@ -2,6 +2,8 @@
 using System.Diagnostics;
 using System.Threading.Tasks;
 
+using MediaVC.Difference;
+
 using Xunit;
 
 namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
@@ -96,6 +98,17 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Empty(calculator.Result);
 
             Debug.WriteLine($"Calculating difference for 1000 bytes: {stopwatch.ElapsedMilliseconds} ms.");
+        }
+
+        [Fact]
+        public async Task Calculate_WhenFileCleared_Variant1_ShouldReturnEmpty()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes, InputSource.Empty);
+
+            await calculator.CalculateAsync();
+
+            Assert.NotNull(calculator.Result);
+            Assert.Empty(calculator.Result);
         }
 
         #endregion

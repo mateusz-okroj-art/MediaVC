@@ -65,7 +65,11 @@ namespace MediaVC.Tools.Difference
                     this.resultCleared.OnNext(Unit.Default);
                 });
 
-                if(CurrentVersion is not null)
+                if(NewVersion is null || NewVersion.Length < 1)
+                {
+                    return;
+                }
+                else if(CurrentVersion is not null)
                 {
                     long leftPosition = 0, rightPosition = 0;
                     IFileSegmentInfo? segment = null;

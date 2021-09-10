@@ -49,6 +49,8 @@ namespace MediaVC.Difference
             set => Strategy.Position = value;
         }
 
+        public static IInputSource Empty { get; } = new InputSource(new EmptyStreamStrategy());
+
         #endregion
 
         #region Methods
