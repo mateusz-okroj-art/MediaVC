@@ -66,6 +66,25 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         }
 
         [Fact]
+        public async Task Calculate_WhenNewFile_Variant3_ShouldReturnOneSegment()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(InputSource.Empty, this.fixture.OneZero);
+
+            await calculator.CalculateAsync();
+
+            Assert.Equal(InputSource.Empty, calculator.CurrentVersion);
+            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+
+            Assert.NotNull(calculator.Result);
+            Assert.Single(calculator.Result);
+
+            Assert.Equal(this.fixture.OneZero, calculator.Result[0].Source);
+            Assert.Equal(0, calculator.Result[0].StartPosition);
+            Assert.Equal(this.fixture.OneZero.Length-1, calculator.Result[0].EndPosition);
+            Assert.Equal(this.fixture.OneZero.Length, (long)calculator.Result[0].Length);
+        }
+
+        [Fact]
         public async Task Calculate_WhenVersionEqual_Variant1_ShouldReturnEmpty()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero, this.fixture.OneZero);
@@ -109,6 +128,12 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 
             Assert.NotNull(calculator.Result);
             Assert.Empty(calculator.Result);
+        }
+
+        [Fact]
+        public async Task Calculate_WhenFileIsDifferent()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.);
         }
 
         #endregion
