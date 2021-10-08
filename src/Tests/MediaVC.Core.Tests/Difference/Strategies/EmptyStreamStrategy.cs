@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using MediaVC.Difference.Strategies;
+
+using Moq;
 
 using Xunit;
 
@@ -33,25 +32,35 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         [Fact]
         public void Equals_WhenArgumentLengthIsEquals_ShouldReturnTrue()
         {
-            var mock = 
+            var emptyStrategyMock = new Mock<IInputSourceStrategy>(MockBehavior.Loose);
+            emptyStrategyMock.SetupGet(mocked => mocked.Length).Returns(0);
+
+            Assert.True(this.fixture.Equals(emptyStrategyMock.Object));
+
+            emptyStrategyMock.VerifyGet(mocked => mocked.Length);
         }
 
         [Fact]
         public void Equals_WhenArgumentLengthIsNotEqual_ShouldReturnFalse()
         {
+            var emptyStrategyMock = new Mock<IInputSourceStrategy>(MockBehavior.Loose);
+            emptyStrategyMock.SetupGet(mocked => mocked.Length).Returns(100);
 
+            Assert.False(this.fixture.Equals(emptyStrategyMock.Object));
+
+            emptyStrategyMock.VerifyGet(mocked => mocked.Length);
         }
 
         [Fact]
         public void Read_ShouldThrowException()
         {
-
+            Assert.Throws<InvalidOperationException>(() => this.fixture.Read(new byte[0], 0, 1));
         }
 
         [Fact]
         public void ReadByte_ShouldThrowException()
         {
-
+            Assert.Throws<InvalidOperationException>(() => this.fixture.ReadByte());
         }
     }
 }

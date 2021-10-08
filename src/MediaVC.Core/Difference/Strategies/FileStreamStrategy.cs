@@ -3,15 +3,15 @@ using System.IO;
 
 namespace MediaVC.Difference.Strategies
 {
-    internal sealed class FileStreamStrategy : IInputSourceStrategy
+    internal sealed class StreamStrategy : IInputSourceStrategy
     {
         #region Constructor
 
-        public FileStreamStrategy(FileStream file)
+        public StreamStrategy(Stream stream)
         {
-            File = file ?? throw new ArgumentNullException(nameof(file));
+            Stream = stream ?? throw new ArgumentNullException(nameof(stream));
 
-            if (!File.CanRead)
+            if (!Stream.CanRead)
                 throw new IOException("Stream is not readable.");
         }
 
@@ -19,14 +19,14 @@ namespace MediaVC.Difference.Strategies
 
         #region Properties
 
-        public FileStream File { get; }
+        public Stream Stream { get; }
 
-        public long Length => File.Length;
+        public long Length => Stream.Length;
 
         public long Position
         {
-            get => File.Position;
-            set => File.Position = value;
+            get => Stream.Position;
+            set => Stream.Position = value;
         }
 
         #endregion
@@ -34,22 +34,31 @@ namespace MediaVC.Difference.Strategies
         #region Methods
 
         public int Read(byte[] buffer, int offset, int count) =>
-            File.Read(buffer, offset, count);
+            Stream.Read(buffer, offset, count);
 
         public int Read(Memory<byte> buffer, int offset, int count) =>
-            File.Read(buffer.Slice(offset, count).Span);
+            Stream.Read(buffer.Slice(offset, count).Span);
 
         public byte ReadByte()
         {
-            var value = File.ReadByte();
+            var value = Stream.ReadByte();
 
             return value >= 0 ? (byte)value : throw new InvalidOperationException();
         }
 
-        public bool Equals(IInputSourceStrategy? other) =>
-            other is FileStreamStrategy strategy &&
-            strategy.File?.Name == File.Name &&
-            strategy.Length == File.Length;
+        public bool Equals(IInputSourceStrategy? other)
+        {
+            var result =
+                other is StreamStrategy strategy &&
+                strategy.Length == Stream.Length;
+
+            if(Stream is FileStream file1)
+            {
+                return result &&
+                    strategy.Stream is FileStream file2 &&
+                    file1.Name == file2.Name;
+            }
+        }
 
         #endregion
     }
