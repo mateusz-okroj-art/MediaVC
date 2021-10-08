@@ -1,38 +1,34 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 using Xunit;
 
 namespace MediaVC.Core.Tests.Difference.Strategies
 {
-    public class FileStreamStrategy
+    public class StreamStrategy
     {
         [Fact]
         public void Constructor_WhenArgumentIsNull_ShouldThrowException()
         {
             FileStream file = null;
 
-            Assert.Throws<ArgumentNullException>(() => new MediaVC.Difference.Strategies.FileStreamStrategy(file));
+            Assert.Throws<ArgumentNullException>(() => new MediaVC.Difference.Strategies.StreamStrategy(file));
         }
 
         [Fact]
         public void File_ShouldReturnValid()
         {
             using var file = GenerateTempFile();
-            var result = new MediaVC.Difference.Strategies.FileStreamStrategy(file);
+            var result = new MediaVC.Difference.Strategies.StreamStrategy(file);
 
-            Assert.Equal(file, result.File);
+            Assert.Equal(file, result.Stream);
         }
 
         [Fact]
         public void Length_ShouldReturnValid()
         {
             using var file = GenerateTempFile();
-            var result = new MediaVC.Difference.Strategies.FileStreamStrategy(file);
+            var result = new MediaVC.Difference.Strategies.StreamStrategy(file);
 
             Assert.Equal(file.Length, result.Length);
         }
@@ -41,7 +37,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         public void Position_ShouldSetAndReturnValid()
         {
             using var file = GenerateTempFile();
-            var result = new MediaVC.Difference.Strategies.FileStreamStrategy(file);
+            var result = new MediaVC.Difference.Strategies.StreamStrategy(file);
 
             var halfPosition = (long)Math.Floor(file.Length / 2.0);
 

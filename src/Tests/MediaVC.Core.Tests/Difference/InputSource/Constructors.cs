@@ -53,7 +53,7 @@ namespace MediaVC.Core.Tests.Difference.InputSource
 
             var result = new MediaVC.Difference.InputSource(argument);
 
-            Assert.IsType<FileStreamStrategy>(result?.Strategy);
+            Assert.IsType<StreamStrategy>(result?.Strategy);
         }
     }
 }

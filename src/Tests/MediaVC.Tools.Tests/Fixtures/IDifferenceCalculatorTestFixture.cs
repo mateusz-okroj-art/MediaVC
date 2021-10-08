@@ -7,5 +7,7 @@ namespace MediaVC.Tools.Tests
         IInputSource OneZero { get; }
 
         IInputSource ThousandFullBytes { get; }
+
+        InputSource[] ExampleSources { get; }
     }
 }

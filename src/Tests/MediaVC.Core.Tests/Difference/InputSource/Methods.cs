@@ -13,14 +13,14 @@ namespace MediaVC.Core.Tests.Difference.InputSource
         public void Read_ShouldInvokeInStrategy()
         {
             var mock = new Mock<IInputSourceStrategy>();
-            mock.Setup(mocked => mocked.Read(It.IsAny<Memory<byte>>(), It.IsAny<int>(), It.IsAny<int>()))
+            mock.Setup(mocked => mocked.Read(It.IsAny<Memory<byte>>()))
                 .Returns(0);
 
             var result = new MediaVC.Difference.InputSource(mock.Object);
 
-            Assert.Equal(0, result.Read(Memory<byte>.Empty, 0, 0));
+            Assert.Equal(0, result.Read(Memory<byte>.Empty));
 
-            mock.Verify(mocked => mocked.Read(It.IsAny<Memory<byte>>(), It.IsAny<int>(), It.IsAny<int>()));
+            mock.Verify(mocked => mocked.Read(It.IsAny<Memory<byte>>()));
         }
     }
 }

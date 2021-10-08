@@ -1,23 +1,34 @@
-﻿using MediaVC.Difference;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
+
+using MediaVC.Difference;
+using MediaVC.Difference.Strategies;
 using MediaVC.Tools.Tests.Fixtures;
 
 namespace MediaVC.Tools.Tests
 {
-    public sealed class DifferenceCalculatorTestFixture : IDifferenceCalculatorTestFixture
+    public sealed class DifferenceCalculatorTestFixture : IDifferenceCalculatorTestFixture, IAsyncDisposable
     {
         #region Constructor
 
         public DifferenceCalculatorTestFixture()
         {
-            ExampleSources = new IInputSource[4];
+            ExampleSources = new InputSource[examplesCount];
 
-            new InputSource()
+            for(var index = 0; 0 < examplesCount; ++index)
+            {
+                this.examplesMemoryStreams[index] = new MemoryStream(this.dataCollection[index]);
+
+                ExampleSources[index] = new InputSource(new StreamStrategy(this.examplesMemoryStreams[index]));
+            }
         }
 
         #endregion
 
         #region Fields
 
+        private const int examplesCount = 4;
         private readonly byte[][] dataCollection = new byte[][]
         {
             new byte[]
@@ -42,6 +53,8 @@ namespace MediaVC.Tools.Tests
             }
         };
 
+        private readonly MemoryStream[] examplesMemoryStreams = new MemoryStream[examplesCount];
+
         #endregion
 
         #region Properties
@@ -50,7 +63,16 @@ namespace MediaVC.Tools.Tests
 
         public IInputSource ThousandFullBytes { get; } = new ThousandFullBytesReadonlyStream();
 
-        public IInputSource[] ExampleSources { get; }
+        public InputSource[] ExampleSources { get; }
+
+        public async ValueTask DisposeAsync()
+        {
+            for(var index = 0; index < examplesCount; ++index)
+            {
+                await ExampleSources[index].DisposeAsync();
+                await this.examplesMemoryStreams[index].DisposeAsync();
+            }
+        }
 
         #endregion
     }

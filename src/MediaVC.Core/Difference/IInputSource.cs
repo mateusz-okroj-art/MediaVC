@@ -12,6 +12,6 @@ namespace MediaVC.Difference
 
         int Read(byte[] buffer, int offset, int count);
 
-        int Read(Memory<byte> buffer, int offset, int count);
+        int Read(Memory<byte> buffer);
     }
 }

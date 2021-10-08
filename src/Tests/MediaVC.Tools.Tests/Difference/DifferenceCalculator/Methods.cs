@@ -133,7 +133,9 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         [Fact]
         public async Task Calculate_WhenFileIsDifferent()
         {
-            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.);
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[0], this.fixture.ExampleSources[1]);
+
+            await calculator.CalculateAsync();
         }
 
         #endregion

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading.Tasks;
 
 using MediaVC.Difference.Strategies;
 
@@ -15,7 +16,7 @@ namespace MediaVC.Difference
             if (file is null)
                 throw new ArgumentNullException(nameof(file));
 
-            Strategy = new FileStreamStrategy(file);
+            Strategy = new StreamStrategy(file);
         }
 
         public InputSource(IEnumerable<IFileSegmentInfo> segments)
@@ -58,8 +59,8 @@ namespace MediaVC.Difference
         public override int Read(byte[] buffer, int offset, int count) =>
             Strategy.Read(buffer, offset, count);
 
-        public int Read(Memory<byte> buffer, int offset, int count) =>
-            Strategy.Read(buffer, offset, count);
+        public int Read(Memory<byte> buffer) =>
+            Strategy.Read(buffer);
 
         public override long Seek(long offset, SeekOrigin origin)
         {
@@ -83,6 +84,18 @@ namespace MediaVC.Difference
         public override bool Equals(object? obj) => Equals(obj as InputSource);
 
         public override int GetHashCode() => Strategy.GetHashCode();
+
+        protected override void Dispose(bool disposing)
+        {
+            if(disposing && Strategy is IDisposable disposable)
+                disposable.Dispose();
+        }
+
+        public override async ValueTask DisposeAsync()
+        {
+            if(Strategy is IAsyncDisposable disposable)
+                await disposable.DisposeAsync();
+        }
 
         #region Obsoletes
 
