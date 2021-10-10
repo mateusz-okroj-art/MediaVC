@@ -16,7 +16,7 @@ namespace MediaVC.Tools.Tests
         {
             ExampleSources = new InputSource[examplesCount];
 
-            for(var index = 0; 0 < examplesCount; ++index)
+            for(var index = 0; index < examplesCount; ++index)
             {
                 this.examplesMemoryStreams[index] = new MemoryStream(this.dataCollection[index]);
 

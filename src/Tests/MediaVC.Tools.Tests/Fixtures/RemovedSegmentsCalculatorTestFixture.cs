@@ -89,8 +89,8 @@ namespace MediaVC.Tools.Tests.Fixtures
             mock.Setup(mocked => mocked.Read(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()))
                 .Returns<byte[], int, int>((buffer, offset, count) => stream1.Read(buffer, offset, count));
 
-            mock.Setup(mocked => mocked.Read(It.IsAny<Memory<byte>>(), It.IsAny<int>(), It.IsAny<int>()))
-                .Returns<Memory<byte>, int, int>((buffer, offset, count) => stream1.Read(buffer.Slice(offset, count).Span));
+            mock.Setup(mocked => mocked.Read(It.IsAny<Memory<byte>>()))
+                .Returns<Memory<byte>>((buffer) => stream1.Read(buffer.Span));
 
             InputSource1 = mock.Object;
         }
@@ -116,8 +116,8 @@ namespace MediaVC.Tools.Tests.Fixtures
             mock.Setup(mocked => mocked.Read(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()))
                 .Returns<byte[], int, int>((buffer, offset, count) => stream2.Read(buffer, offset, count));
 
-            mock.Setup(mocked => mocked.Read(It.IsAny<Memory<byte>>(), It.IsAny<int>(), It.IsAny<int>()))
-                .Returns<Memory<byte>, int, int>((buffer, offset, count) => stream2.Read(buffer.Slice(offset, count).Span));
+            mock.Setup(mocked => mocked.Read(It.IsAny<Memory<byte>>()))
+                .Returns<Memory<byte>>((buffer) => stream2.Read(buffer.Span));
 
             InputSource2 = mock.Object;
         }

@@ -39,7 +39,7 @@ namespace MediaVC.Difference.Strategies
             set
             {
                 if(value >= Length)
-                    throw new ArgumentOutOfRangeException("Position is out of length.");
+                    throw new ArgumentOutOfRangeException(nameof(Position), $"{nameof(Position)} is out of length.");
 
                 this.position = value;
             }
@@ -67,30 +67,42 @@ namespace MediaVC.Difference.Strategies
 
         private IFileSegmentMappingInfo? GetSegmentForCurrentPosition() =>
             this.mappings
-                    .Where(mapping => mapping.CheckPositionIsInRange(Position))
-                    .SingleOrDefault();
+                    .SingleOrDefault(mapping => mapping?.CheckPositionIsInRange(Position) ?? false);
+
+        private void SetPositionOnMappedSegment(ref IFileSegmentMappingInfo mappingInfo) =>
+            mappingInfo.Segment.Source.Position = Position -
+                                                  mappingInfo.StartIndex +
+                                                  mappingInfo.Segment.StartPosition;
 
         public bool Equals(IInputSourceStrategy? other) =>
             other is FileSegmentStrategy strategy ?
             GetHashCode() == strategy.GetHashCode() :
-            Equals(this, other);
+            Equals(other as object);
+
+        public override bool Equals(object? obj) =>
+            obj is IInputSourceStrategy strategy ?
+            Equals(strategy) :
+            Equals(this, obj);
 
         public override int GetHashCode()
         {
             if(this.segments?.Count() < 1)
-                return base.GetHashCode();
+                return 0;
 
             var query = from segment in this.segments
                     where segment is not null
                     select segment;
-
             
             var hashes = query.AsParallel().Select(segment => segment.GetHashCode()).ToArray();
 
-            if(hashes.Length <= 0)
+            if(hashes is null || hashes.Length <= 0)
+            {
                 return 0;
+            }
             else if(hashes.Length == 1)
+            {
                 return hashes[0];
+            }
             else
             {
                 var result = HashCode.Combine(hashes[0], hashes[1]);
@@ -102,59 +114,63 @@ namespace MediaVC.Difference.Strategies
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="buffer"></param>
+        /// <param name="offset"></param>
+        /// <param name="count"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentOutOfRangeException" />
         public int Read(byte[] buffer, int offset, int count) =>
-            Read(buffer.AsMemory(), offset, count);
+            Read(buffer.AsMemory().Slice(offset, count));
 
-        public int Read(Memory<byte> buffer, int offset, int count)
+        public int Read(Memory<byte> buffer)
         {
-            if(offset < 0)
-                throw new ArgumentOutOfRangeException(nameof(offset));
-
-            var bufferPosition = offset;
-
             var counter = 0;
 
-            while(bufferPosition < buffer.Length - 1 && counter < count)
+            if(buffer.IsEmpty || buffer.Length < 1)
+                return counter;
+
+            for(var bufferPosition = 0; bufferPosition < buffer.Length;)
             {
                 var mappedSegment = GetSegmentForCurrentPosition();
 
                 if(mappedSegment is null)
                     break;
 
-                var source = mappedSegment.Segment.Source;
-                source.Position = mappedSegment.Segment.StartPosition;
+                SetPositionOnMappedSegment(ref mappedSegment);
 
-                var currentCount = Math.Min(count, (int)mappedSegment.Segment.Length);
+                var subBuffer = buffer[bufferPosition..];
 
-                currentCount = source.Read(buffer, bufferPosition, currentCount);
+                var readedBytesCount = mappedSegment.Segment.Source.Read(subBuffer);
 
-                counter += currentCount;
-                bufferPosition += currentCount;
-
-                Position += currentCount;
+                bufferPosition += readedBytesCount;
+                Position += readedBytesCount;
+                counter += readedBytesCount;
             }
 
             return counter;
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException" />
         public byte ReadByte()
         {
             var mappedSegment = this.mappings
-                    .Where(mapping => mapping.CheckPositionIsInRange(Position))
-                    .SingleOrDefault();
+                    .SingleOrDefault(mapping => mapping?.CheckPositionIsInRange(Position) ?? false);
 
             if(mappedSegment is null)
                 throw new InvalidOperationException();
 
-            var source = mappedSegment.Segment.Source;
-
-            source.Position = mappedSegment.Segment.StartPosition +
-                                                    Position -
-                                                    mappedSegment.StartIndex;
+            SetPositionOnMappedSegment(ref mappedSegment);
 
             ++this.position;
 
-            return source.ReadByte();
+            return mappedSegment.Segment.Source.ReadByte();
         }
 
         #endregion

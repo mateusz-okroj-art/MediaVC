@@ -1,8 +1,13 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reactive;
 using System.Threading.Tasks;
 
 using MediaVC.Difference;
+
+using Microsoft.Reactive.Testing;
+
+using Moq;
 
 using Xunit;
 
@@ -131,12 +136,148 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         }
 
         [Fact]
-        public async Task Calculate_WhenFileIsDifferent()
+        public async Task Calculate_WhenFileIsDifferent_Variant1()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[0], this.fixture.ExampleSources[1]);
 
-            await calculator.CalculateAsync();
+            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+
+            var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+
+            using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
+            {
+                using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
+                {
+                    await calculator.CalculateAsync();
+
+                    Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
+                    Assert.Equal(this.fixture.ExampleSources[1], calculator.NewVersion);
+
+                    Assert.NotNull(calculator.Result);
+                    Assert.Equal(1, calculator.Result.Count);
+
+                    var result = calculator.Result[0];
+
+                    Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+                    Assert.Equal(4L, result.StartPosition);
+                    Assert.Equal(7L, result.EndPosition);
+                    Assert.Equal(4L, (long)result.Length);
+
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                }
+            }
         }
+
+        [Fact]
+        public async Task Calculate_WhenFileIsDifferent_Variant2()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[0], this.fixture.ExampleSources[2]);
+
+            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+
+            var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+
+            using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
+            {
+                using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
+                {
+                    await calculator.CalculateAsync();
+
+                    Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
+                    Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+
+                    Assert.NotNull(calculator.Result);
+                    Assert.Equal(1, calculator.Result.Count);
+
+                    var result = calculator.Result[0];
+
+                    Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+                    Assert.Equal(4L, result.StartPosition);
+                    Assert.Equal(7L, result.EndPosition);
+                    Assert.Equal(4L, (long)result.Length);
+
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                }
+            }
+        }
+
+        [Fact]
+        public async Task Calculate_WhenFileIsDifferent_Variant3()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[1], this.fixture.ExampleSources[2]);
+
+            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+
+            var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+
+            using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
+            {
+                using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
+                {
+                    await calculator.CalculateAsync();
+
+                    Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
+                    Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+
+                    Assert.NotNull(calculator.Result);
+                    Assert.Equal(1, calculator.Result.Count);
+
+                    var result = calculator.Result[0];
+
+                    Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+                    Assert.Equal(0L, result.StartPosition);
+                    Assert.Equal(7L, result.EndPosition);
+                    Assert.Equal(8L, (long)result.Length);
+
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                }
+            }
+        }
+
+        /*[Fact] ENDLESS LOOP IN TESTED METHOD
+        public async Task Calculate_WhenFileIsDifferent_Variant4()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[1], this.fixture.ExampleSources[3]);
+
+            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+
+            var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+
+            using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
+            {
+                using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
+                {
+                    await calculator.CalculateAsync();
+
+                    Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
+                    Assert.Equal(this.fixture.ExampleSources[3], calculator.NewVersion);
+
+                    Assert.NotNull(calculator.Result);
+                    Assert.Equal(1, calculator.Result.Count);
+
+                    var result = calculator.Result[0];
+
+                    Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+                    Assert.Equal(0L, result.StartPosition);
+                    Assert.Equal(7L, result.EndPosition);
+                    Assert.Equal(8L, (long)result.Length);
+
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                }
+            }
+        }*/
 
         #endregion
     }

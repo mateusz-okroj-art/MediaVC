@@ -49,30 +49,26 @@ namespace MediaVC.Tools.Tests.Fixtures
         public void Dispose() { }
 
         public int Read(byte[] buffer, int offset, int count) =>
-            Read(buffer.AsMemory(), offset, count);
+            Read(buffer.AsMemory().Slice(offset,count));
 
-        public int Read(Memory<byte> buffer, int offset, int count)
+        public int Read(Memory<byte> buffer)
         {
-            if(buffer.IsEmpty)
-                throw new ArgumentException("Buffer is empty");
+            if(buffer.IsEmpty || buffer.Length < 1)
+                return 0;
 
-            if(Position + offset >= Length)
-                throw new ArgumentOutOfRangeException(nameof(offset));
+            this.buffer[(int)Position..].CopyTo(buffer);
 
-            if(count < 1 || Position + offset + count - 1 >= Length)
-                throw new ArgumentOutOfRangeException(nameof(count));
-
-            var destinationBufferArea = buffer.Slice(offset, count);
-
-            this.buffer[(int)Position..].CopyTo(destinationBufferArea);
-
-            var readedBytes = Math.Min(Length - Position, destinationBufferArea.Length);
+            var readedBytes = Math.Min(Length - Position, buffer.Length);
 
             Position += readedBytes;
 
             return (int)readedBytes;
         }
 
+        /// <summary>
+        /// Returns current byte and increments position.
+        /// </summary>
+        /// <returns></returns>
         public byte ReadByte() =>
             Position >= Length
                 ? throw new InvalidOperationException("Stream is on the end.")

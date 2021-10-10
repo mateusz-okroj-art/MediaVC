@@ -26,19 +26,16 @@ namespace MediaVC.Tools.Tests.Fixtures
         public void Dispose() { }
 
         public int Read(byte[] buffer, int offset, int count) =>
-            buffer is not null ? Read(buffer.AsMemory(), offset, count) : throw new ArgumentNullException(nameof(buffer));
+            buffer is not null ?
+            Read(buffer.AsMemory().Slice(offset, count)) :
+            throw new ArgumentNullException(nameof(buffer));
 
-        public int Read(Memory<byte> buffer, int offset, int count)
+        public int Read(Memory<byte> buffer)
         {
-            if(buffer.IsEmpty)
-                throw new ArgumentException("Buffer is empty");
-
-            var sliced = buffer.Slice(offset, count);
-
-            if(sliced.Length < 1)
+            if(buffer.IsEmpty || buffer.Length < 1)
                 return 0;
 
-            sliced.Span[0] = 0;
+            buffer.Span[0] = 0;
 
             return 1;
         }

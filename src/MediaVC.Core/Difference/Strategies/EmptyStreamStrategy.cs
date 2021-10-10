@@ -16,7 +16,7 @@ namespace MediaVC.Difference.Strategies
 
         public int Read(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
 
-        public int Read(Memory<byte> buffer, int offset, int count) => throw new InvalidOperationException();
+        public int Read(Memory<byte> buffer) => throw new InvalidOperationException();
 
         public byte ReadByte() => throw new InvalidOperationException();
     }
