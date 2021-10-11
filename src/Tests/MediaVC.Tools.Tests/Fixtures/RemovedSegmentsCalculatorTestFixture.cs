@@ -23,8 +23,8 @@ namespace MediaVC.Tools.Tests.Fixtures
                 new FileSegmentInfo
                 {
                     Source = InputSource1,
-                    StartPosition = 0,
-                    EndPosition = InputSource1.Length - 1
+                    StartPositionInSource = 0,
+                    EndPositionInSource = InputSource1.Length - 1
                 }
             };
 
@@ -33,14 +33,14 @@ namespace MediaVC.Tools.Tests.Fixtures
                 new FileSegmentInfo
                 {
                     Source = InputSource1,
-                    StartPosition = 0,
-                    EndPosition = 1
+                    StartPositionInSource = 0,
+                    EndPositionInSource = 1
                 },
                 new FileSegmentInfo
                 {
                     Source = InputSource2,
-                    StartPosition = 2,
-                    EndPosition = 3
+                    StartPositionInSource = 2,
+                    EndPositionInSource = 3
                 }
             };
         }

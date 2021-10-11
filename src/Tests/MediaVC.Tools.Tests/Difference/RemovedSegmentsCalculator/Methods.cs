@@ -42,7 +42,7 @@ namespace MediaVC.Tools.Tests.Difference.RemovedSegmentsCalculator
 
             Assert.Single(result.Result);
             Assert.Equal(this.fixture.InputSource2, result.Result[0].Source);
-            Assert.Equal(0, result.Result[0].StartPosition);
+            Assert.Equal(0, result.Result[0].StartPositionInSource);
             Assert.Equal(4, (long)result.Result[0].Length);
         }
 
@@ -55,8 +55,8 @@ namespace MediaVC.Tools.Tests.Difference.RemovedSegmentsCalculator
 
             Assert.Single(result.Result);
             Assert.Equal(this.fixture.InputSource1, result.Result[0].Source);
-            Assert.Equal(2, result.Result[0].StartPosition);
-            Assert.Equal(3, result.Result[0].EndPosition);
+            Assert.Equal(2, result.Result[0].StartPositionInSource);
+            Assert.Equal(3, result.Result[0].EndPositionInSource);
         }
 
         [Fact]
@@ -68,8 +68,8 @@ namespace MediaVC.Tools.Tests.Difference.RemovedSegmentsCalculator
 
             Assert.Single(result.Result);
             Assert.Equal(this.fixture.InputSource2, result.Result[0].Source);
-            Assert.Equal(0, result.Result[0].StartPosition);
-            Assert.Equal(1, result.Result[0].EndPosition);
+            Assert.Equal(0, result.Result[0].StartPositionInSource);
+            Assert.Equal(1, result.Result[0].EndPositionInSource);
         }
 
         #endregion

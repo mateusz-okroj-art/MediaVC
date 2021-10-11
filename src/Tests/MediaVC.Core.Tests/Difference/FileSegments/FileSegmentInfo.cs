@@ -15,9 +15,9 @@ namespace MediaVC.Core.Tests.Difference.FileSegments
 
             const long testValue = long.MaxValue;
 
-            result.StartPosition = testValue;
+            result.StartPositionInSource = testValue;
 
-            Assert.Equal(testValue, result.StartPosition);
+            Assert.Equal(testValue, result.StartPositionInSource);
         }
 
         [Fact]
@@ -27,9 +27,9 @@ namespace MediaVC.Core.Tests.Difference.FileSegments
 
             const long testValue = 1_000_000;
 
-            result.EndPosition = testValue;
+            result.EndPositionInSource = testValue;
 
-            Assert.Equal(testValue, result.EndPosition);
+            Assert.Equal(testValue, result.EndPositionInSource);
         }
 
         [Fact]
@@ -54,11 +54,11 @@ namespace MediaVC.Core.Tests.Difference.FileSegments
         {
             MediaVC.Difference.FileSegmentInfo result = default;
 
-            result.StartPosition = start;
-            result.EndPosition = end;
+            result.StartPositionInSource = start;
+            result.EndPositionInSource = end;
             
             Assert.Equal(
-                result.StartPosition >= 0 && result.StartPosition <= result.EndPosition && result.EndPosition >= result.StartPosition ? (ulong)(result.EndPosition - result.StartPosition + 1) : 0,
+                result.StartPositionInSource >= 0 && result.StartPositionInSource <= result.EndPositionInSource && result.EndPositionInSource >= result.StartPositionInSource ? (ulong)(result.EndPositionInSource - result.StartPositionInSource + 1) : 0,
                 result.Length);
         }
     }

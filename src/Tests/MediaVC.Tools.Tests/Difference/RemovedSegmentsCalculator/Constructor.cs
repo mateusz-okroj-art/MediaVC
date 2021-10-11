@@ -44,8 +44,8 @@ namespace MediaVC.Tools.Tests.Difference.RemovedSegmentsCalculator
                 new FileSegmentInfo
                 {
                     Source = source,
-                    StartPosition = 0,
-                    EndPosition = 0
+                    StartPositionInSource = 0,
+                    EndPositionInSource = 0
                 }
             };
 

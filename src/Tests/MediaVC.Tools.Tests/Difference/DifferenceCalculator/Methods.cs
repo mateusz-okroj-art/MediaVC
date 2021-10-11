@@ -46,8 +46,8 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Single(calculator.Result);
 
             Assert.Equal(this.fixture.OneZero, calculator.Result[0].Source);
-            Assert.Equal(0, calculator.Result[0].StartPosition);
-            Assert.Equal(0, calculator.Result[0].EndPosition);
+            Assert.Equal(0, calculator.Result[0].StartPositionInSource);
+            Assert.Equal(0, calculator.Result[0].EndPositionInSource);
             Assert.Equal(1U, calculator.Result[0].Length);
         }
 
@@ -65,8 +65,8 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Single(calculator.Result);
 
             Assert.Equal(this.fixture.ThousandFullBytes, calculator.Result[0].Source);
-            Assert.Equal(0, calculator.Result[0].StartPosition);
-            Assert.Equal(this.fixture.ThousandFullBytes.Length-1, calculator.Result[0].EndPosition);
+            Assert.Equal(0, calculator.Result[0].StartPositionInSource);
+            Assert.Equal(this.fixture.ThousandFullBytes.Length-1, calculator.Result[0].EndPositionInSource);
             Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, calculator.Result[0].Length);
         }
 
@@ -84,8 +84,8 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Single(calculator.Result);
 
             Assert.Equal(this.fixture.OneZero, calculator.Result[0].Source);
-            Assert.Equal(0, calculator.Result[0].StartPosition);
-            Assert.Equal(this.fixture.OneZero.Length-1, calculator.Result[0].EndPosition);
+            Assert.Equal(0, calculator.Result[0].StartPositionInSource);
+            Assert.Equal(this.fixture.OneZero.Length-1, calculator.Result[0].EndPositionInSource);
             Assert.Equal(this.fixture.OneZero.Length, (long)calculator.Result[0].Length);
         }
 

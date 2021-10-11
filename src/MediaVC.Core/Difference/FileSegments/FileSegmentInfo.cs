@@ -2,15 +2,17 @@
 {
     public struct FileSegmentInfo : IFileSegmentInfo
     {
-        public long StartPosition { get; set; }
+        public long StartPositionInSource { get; set; }
 
-        public long EndPosition { get; set; }
+        public long EndPositionInSource { get; set; }
 
-        public readonly ulong Length => IsPositionsValid() ? (ulong)(EndPosition - StartPosition + 1) : 0;
+        public long MappedPosition { get; set; }
+
+        public readonly ulong Length => IsPositionsValid() ? (ulong)(EndPositionInSource - StartPositionInSource + 1) : 0;
 
         public IInputSource Source { get; set; }
 
         private readonly bool IsPositionsValid() =>
-            StartPosition >= 0 && StartPosition <= EndPosition && EndPosition >= StartPosition;
+            StartPositionInSource >= 0 && StartPositionInSource <= EndPositionInSource && EndPositionInSource >= StartPositionInSource;
     }
 }

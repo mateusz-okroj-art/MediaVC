@@ -2,12 +2,14 @@
 {
     public interface IFileSegmentInfo
     {
-        long StartPosition { get; set; }
+        long StartPositionInSource { get; set; }
 
-        long EndPosition { get; set; }
+        long EndPositionInSource { get; set; }
 
         IInputSource Source { get; set; }
 
         ulong Length { get; }
+
+        long MappedPosition { get; set; }
     }
 }

@@ -17,8 +17,10 @@ namespace MediaVC.Tools.Difference
 
         IInputSource NewVersion { get; }
 
-        IList<IFileSegmentInfo> Result { get; }
+        IObservableEnumerable<IFileSegmentInfo> Result { get; }
 
-        SynchronizationContext SynchronizationContext { get; }
+        IObservableEnumerable<IFileSegmentInfo> Removed { get; }
+
+        SynchronizationContext? SynchronizationContext { get; }
     }
 }
