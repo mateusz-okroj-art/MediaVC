@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Reactive;
-using System.Reactive.Linq;
-using System.Reactive.Subjects;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -73,9 +69,66 @@ namespace MediaVC.Tools.Difference
 
             if(CurrentVersion?.Length > 0 && NewVersion.Length > 0)
             {
-                for(long newVersionPosition = 0; newVersionPosition < NewVersion.Length; ++newVersionPosition)
-                {
+                FileSegmentInfo fileSegmentInfo = default;
 
+                long newVersionPosition = 0, oldVersionPosition = 0;
+                while(newVersionPosition < NewVersion.Length)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    NewVersion.Position = newVersionPosition;
+
+                    Synchronize(() => progress?.Report((float)newVersionPosition/NewVersion.Length));
+
+                    while(oldVersionPosition < CurrentVersion.Length)
+                    {
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        CurrentVersion.Position = oldVersionPosition;
+
+                        for(long offset = 0; newVersionPosition + offset < NewVersion.Length && oldVersionPosition + offset < CurrentVersion.Length; ++offset)
+                        {
+                            CurrentVersion.Position = oldVersionPosition + offset;
+                            NewVersion.Position = newVersionPosition + offset;
+
+                            if(CurrentVersion.ReadByte() == NewVersion.ReadByte())
+                            {
+                                if(fileSegmentInfo.Source is null)
+                                {
+
+                                }
+                                else if(fileSegmentInfo.Source == NewVersion)
+                                {
+
+                                }
+                                else if(fileSegmentInfo.Source == CurrentVersion)
+                                {
+
+                                }
+                                else
+                                    throw new InvalidOperationException("Unknown source of file segment.");
+                            }
+                            else
+                            {
+                                if(fileSegmentInfo.Source is null)
+                                {
+
+                                }
+                                else if(fileSegmentInfo.Source == CurrentVersion)
+                                {
+
+                                }
+                                else if(fileSegmentInfo.Source == NewVersion)
+                                {
+
+                                }
+                                else
+                                    throw new InvalidOperationException("Unknown source of file segment.");
+                            }
+                        }
+                    }
+
+                    ++newVersionPosition;
                 }
             }
             else if(CurrentVersion?.Length < 1 && NewVersion.Length > 0)
