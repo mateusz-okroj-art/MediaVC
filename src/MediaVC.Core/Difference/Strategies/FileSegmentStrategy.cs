@@ -11,9 +11,7 @@ namespace MediaVC.Difference.Strategies
         public FileSegmentStrategy(IEnumerable<IFileSegmentInfo> segments)
         {
             this.segments = segments ?? throw new ArgumentNullException(nameof(segments));
-            this.mappings = new IFileSegmentMappingInfo[segments.Count()];
-
-            InitMappings();
+            Length = this.segments.Select(segment => (long)segment.Length).Sum();
         }
 
         #endregion
@@ -21,17 +19,13 @@ namespace MediaVC.Difference.Strategies
         #region Fields
 
         private readonly IEnumerable<IFileSegmentInfo> segments;
-        private readonly IFileSegmentMappingInfo[] mappings;
         private long position;
 
         #endregion
 
         #region Properties
 
-        public long Length => this.mappings
-            .TakeLast(1)
-            .Select(item => item.StartIndex + (long)item.Segment.Length)
-            .FirstOrDefault();
+        public long Length { get; }
 
         public long Position
         {
@@ -49,30 +43,14 @@ namespace MediaVC.Difference.Strategies
 
         #region Methods
 
-        private void InitMappings()
-        {
-            var calculatedPosition = 0L;
-
-            for(var i = 0; i < this.mappings.Length; ++i)
-            {
-                this.mappings[i] = new FileSegmentMappingInfo
-                {
-                    StartIndex = calculatedPosition,
-                    Segment = this.segments.ElementAt(i)
-                };
-
-                calculatedPosition += (long)this.mappings[i].Segment.Length;
-            }
-        }
-
-        private IFileSegmentMappingInfo? GetSegmentForCurrentPosition() =>
+        /*private IFileSegmentMappingInfo? GetSegmentForCurrentPosition() =>
             this.mappings
                     .SingleOrDefault(mapping => mapping?.CheckPositionIsInRange(Position) ?? false);
 
         private void SetPositionOnMappedSegment(ref IFileSegmentMappingInfo mappingInfo) =>
             mappingInfo.Segment.Source.Position = Position -
                                                   mappingInfo.StartIndex +
-                                                  mappingInfo.Segment.StartPosition;
+                                                  mappingInfo.Segment.StartPosition;*/
 
         public bool Equals(IInputSourceStrategy? other) =>
             other is FileSegmentStrategy strategy ?
@@ -127,7 +105,7 @@ namespace MediaVC.Difference.Strategies
 
         public int Read(Memory<byte> buffer)
         {
-            var counter = 0;
+            /*var counter = 0;
 
             if(buffer.IsEmpty || buffer.Length < 1)
                 return counter;
@@ -150,7 +128,8 @@ namespace MediaVC.Difference.Strategies
                 counter += readedBytesCount;
             }
 
-            return counter;
+            return counter;*/
+            throw new NotImplementedException();
         }
 
         /// <summary>
@@ -160,7 +139,7 @@ namespace MediaVC.Difference.Strategies
         /// <exception cref="InvalidOperationException" />
         public byte ReadByte()
         {
-            var mappedSegment = this.mappings
+            /*var mappedSegment = this.mappings
                     .SingleOrDefault(mapping => mapping?.CheckPositionIsInRange(Position) ?? false);
 
             if(mappedSegment is null)
@@ -170,7 +149,8 @@ namespace MediaVC.Difference.Strategies
 
             ++this.position;
 
-            return mappedSegment.Segment.Source.ReadByte();
+            return mappedSegment.Segment.Source.ReadByte();*/
+            throw new NotImplementedException();
         }
 
         #endregion
