@@ -7,7 +7,7 @@ using System.Reactive.Subjects;
 
 namespace MediaVC
 {
-    public class ObservableList<T> : IObservableEnumerable<T>
+    public class ObservableList<T> : IObservableEnumerable<T>, ICollection<T>
     {
         #region Fields
 
@@ -30,6 +30,10 @@ namespace MediaVC
 
         public object Locker { get; set; } = new object();
 
+        public int Count { get; }
+
+        public bool IsReadOnly { get; }
+
         public T? this[int index]
         {
             get => this.list[index];
@@ -50,26 +54,38 @@ namespace MediaVC
             }
         }
 
-        public void Remove(T item)
+        public bool Remove(T item)
         {
+            bool result;
+
             lock(Locker)
             {
-                this.list.Remove(item);
+                result = this.list.Remove(item);
 
                 this.removed.OnNext(item);
             }
+
+            return result;
         }
 
-        public void RemoveAt(int index)
+        public bool RemoveAt(int index)
         {
+            bool result;
+
             lock(Locker)
             {
                 var item = this.list[index];
-                this.list.Remove(item);
+                result = this.list.Remove(item);
 
                 this.removed.OnNext(item);
             }
+
+            return result;
         }
+
+        public bool Contains(T item) => this.list.Contains(item);
+
+        public void CopyTo(T[] array, int arrayIndex) => this.list.CopyTo(array, arrayIndex);
 
         public void Clear()
         {

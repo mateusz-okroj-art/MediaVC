@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaVC.Difference
 {
@@ -8,10 +10,10 @@ namespace MediaVC.Difference
 
         long Length { get; }
 
-        byte ReadByte();
+        ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default);
 
         int Read(byte[] buffer, int offset, int count);
 
-        int Read(Memory<byte> buffer);
+        ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default);
     }
 }

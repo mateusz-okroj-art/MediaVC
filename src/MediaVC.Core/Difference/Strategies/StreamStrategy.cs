@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MediaVC.Difference.Strategies
@@ -37,15 +38,20 @@ namespace MediaVC.Difference.Strategies
         public int Read(byte[] buffer, int offset, int count) =>
             Stream.Read(buffer, offset, count);
 
-        public int Read(Memory<byte> buffer) =>
-            Stream.Read(buffer.Span);
+        public ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            Stream.ReadAsync(buffer, cancellationToken);
 
-        public byte ReadByte()
-        {
-            var value = Stream.ReadByte();
+        public async ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default) =>
+            await Task.Run(() =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            return value >= 0 ? (byte)value : throw new InvalidOperationException();
-        }
+                var value = Stream.ReadByte();
+
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return value >= 0 ? (byte)value : throw new InvalidOperationException();
+            });
 
         public bool Equals(IInputSourceStrategy? other)
         {

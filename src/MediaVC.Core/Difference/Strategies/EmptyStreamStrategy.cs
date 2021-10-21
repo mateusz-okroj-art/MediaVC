@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaVC.Difference.Strategies
 {
@@ -16,8 +18,8 @@ namespace MediaVC.Difference.Strategies
 
         public int Read(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
 
-        public int Read(Memory<byte> buffer) => throw new InvalidOperationException();
+        public ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new InvalidOperationException();
 
-        public byte ReadByte() => throw new InvalidOperationException();
+        public ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default) => throw new InvalidOperationException();
     }
 }

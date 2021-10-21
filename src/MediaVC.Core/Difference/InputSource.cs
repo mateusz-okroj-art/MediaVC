@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference.Strategies;
@@ -59,9 +60,6 @@ namespace MediaVC.Difference
         public override int Read(byte[] buffer, int offset, int count) =>
             Strategy.Read(buffer, offset, count);
 
-        public int Read(Memory<byte> buffer) =>
-            Strategy.Read(buffer);
-
         public override long Seek(long offset, SeekOrigin origin)
         {
             var calculatedPosition = origin switch
@@ -77,7 +75,10 @@ namespace MediaVC.Difference
             return calculatedPosition;
         }
 
-        public new byte ReadByte() => Strategy.ReadByte();
+        public ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default) => Strategy.ReadByteAsync(cancellationToken);
+
+        public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            Strategy.ReadAsync(buffer, cancellationToken);
 
         public bool Equals(InputSource? other) => Strategy.Equals(other?.Strategy);
 

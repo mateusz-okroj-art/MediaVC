@@ -48,10 +48,7 @@ namespace MediaVC.Tools.Difference
         /// </summary>
         /// <param name="cancellation"></param>
         /// <exception cref="OperationCanceledException" />
-        public async ValueTask CalculateAsync(CancellationToken cancellation, IProgress<float>? progress) =>
-            await Task.Run(() => Calculate(cancellation, progress));
-
-        private void Calculate(CancellationToken cancellationToken, IProgress<float>? progress)
+        public async ValueTask CalculateAsync(CancellationToken cancellationToken, IProgress<float>? progress)
         {
             Synchronize(() =>
             {
@@ -91,19 +88,28 @@ namespace MediaVC.Tools.Difference
                             CurrentVersion.Position = oldVersionPosition + offset;
                             NewVersion.Position = newVersionPosition + offset;
 
-                            if(CurrentVersion.ReadByte() == NewVersion.ReadByte())
+                            if(await CurrentVersion.ReadByteAsync() == await NewVersion.ReadByteAsync())
                             {
                                 if(fileSegmentInfo.Source is null)
                                 {
-
+                                    fileSegmentInfo = new FileSegmentInfo
+                                    {
+                                        Source = CurrentVersion,
+                                        StartPositionInSource = oldVersionPosition + offset,
+                                        EndPositionInSource = oldVersionPosition + offset,
+                                        MappedPosition = newVersionPosition + offset
+                                    };
                                 }
                                 else if(fileSegmentInfo.Source == NewVersion)
                                 {
+                                    Synchronize(() => this.result.Add(fileSegmentInfo));
 
+                                    fileSegmentInfo = default;
+                                    break;
                                 }
                                 else if(fileSegmentInfo.Source == CurrentVersion)
                                 {
-
+                                    fileSegmentInfo.EndPositionInSource = oldVersionPosition + offset;
                                 }
                                 else
                                     throw new InvalidOperationException("Unknown source of file segment.");
@@ -112,24 +118,47 @@ namespace MediaVC.Tools.Difference
                             {
                                 if(fileSegmentInfo.Source is null)
                                 {
+                                    fileSegmentInfo = new FileSegmentInfo
+                                    {
+                                        Source = NewVersion,
+                                        MappedPosition = newVersionPosition + offset,
+                                        StartPositionInSource = newVersionPosition + offset,
+                                        EndPositionInSource = newVersionPosition + offset
+                                    };
 
+                                    ++newVersionPosition;
+                                    break;
                                 }
                                 else if(fileSegmentInfo.Source == CurrentVersion)
                                 {
+                                    Synchronize(() => this.result.Add(fileSegmentInfo));
 
+                                    fileSegmentInfo = default;
+                                    break;
                                 }
                                 else if(fileSegmentInfo.Source == NewVersion)
                                 {
-
+                                    fileSegmentInfo.EndPositionInSource = newVersionPosition + offset;
                                 }
                                 else
                                     throw new InvalidOperationException("Unknown source of file segment.");
                             }
                         }
                     }
-
-                    ++newVersionPosition;
                 }
+
+                if(newVersionPosition < NewVersion.Length - 1)
+                {
+                    Synchronize(() => this.result.Add(new FileSegmentInfo
+                    {
+                        Source = NewVersion,
+                        MappedPosition = newVersionPosition,
+                        StartPositionInSource = newVersionPosition,
+                        EndPositionInSource = NewVersion.Length - 1
+                    }));
+                }
+
+                Synchronize(() => RemovedSegmentsDetector.Detect(this.result, CurrentVersion, this.removed, cancellationToken));
             }
             else if(CurrentVersion?.Length < 1 && NewVersion.Length > 0)
             {
