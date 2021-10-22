@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaVC.Difference.Strategies
 {
@@ -20,6 +22,8 @@ namespace MediaVC.Difference.Strategies
 
         private readonly IEnumerable<IFileSegmentInfo> segments;
         private long position;
+        private readonly Memory<byte> readerBuffer = new byte[2048];
+        private int bufferStartPosition = -1;
 
         #endregion
 
@@ -42,15 +46,6 @@ namespace MediaVC.Difference.Strategies
         #endregion
 
         #region Methods
-
-        /*private IFileSegmentMappingInfo? GetSegmentForCurrentPosition() =>
-            this.mappings
-                    .SingleOrDefault(mapping => mapping?.CheckPositionIsInRange(Position) ?? false);
-
-        private void SetPositionOnMappedSegment(ref IFileSegmentMappingInfo mappingInfo) =>
-            mappingInfo.Segment.Source.Position = Position -
-                                                  mappingInfo.StartIndex +
-                                                  mappingInfo.Segment.StartPosition;*/
 
         public bool Equals(IInputSourceStrategy? other) =>
             other is FileSegmentStrategy strategy ?
@@ -101,56 +96,66 @@ namespace MediaVC.Difference.Strategies
         /// <returns></returns>
         /// <exception cref="ArgumentOutOfRangeException" />
         public int Read(byte[] buffer, int offset, int count) =>
-            Read(buffer.AsMemory().Slice(offset, count));
+            ReadAsync(buffer.AsMemory().Slice(offset, count)).GetAwaiter().GetResult();
 
-        public int Read(Memory<byte> buffer)
+        public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
-            /*var counter = 0;
+            var counter = 0;
 
             if(buffer.IsEmpty || buffer.Length < 1)
                 return counter;
 
-            for(var bufferPosition = 0; bufferPosition < buffer.Length;)
+            var currentSegment = SelectMappedSegmentForCurrentPosition();
+            while(currentSegment?.Length > 0 && counter < buffer.Length)
             {
-                var mappedSegment = GetSegmentForCurrentPosition();
+                cancellationToken.ThrowIfCancellationRequested();
 
-                if(mappedSegment is null)
-                    break;
+                currentSegment.Source.Position = Position - currentSegment.MappedPosition + currentSegment.StartPositionInSource;
 
-                SetPositionOnMappedSegment(ref mappedSegment);
+                counter += await currentSegment.Source.ReadAsync(buffer[counter..], cancellationToken);
 
-                var subBuffer = buffer[bufferPosition..];
-
-                var readedBytesCount = mappedSegment.Segment.Source.Read(subBuffer);
-
-                bufferPosition += readedBytesCount;
-                Position += readedBytesCount;
-                counter += readedBytesCount;
+                currentSegment = SelectMappedSegmentForCurrentPosition();
             }
 
-            return counter;*/
-            throw new NotImplementedException();
+            return counter;
         }
+
+        private IFileSegmentInfo? SelectMappedSegmentForCurrentPosition() => this.segments.OrderBy(segment => segment.MappedPosition)
+                .FirstOrDefault(segment =>
+                    segment.MappedPosition < Position &&
+                    segment.MappedPosition + (long)segment.Length >= Position
+                );
 
         /// <summary>
         /// 
         /// </summary>
         /// <returns></returns>
         /// <exception cref="InvalidOperationException" />
-        public byte ReadByte()
+        /// <exception cref="OperationCanceledException" />
+        public async ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default)
         {
-            /*var mappedSegment = this.mappings
-                    .SingleOrDefault(mapping => mapping?.CheckPositionIsInRange(Position) ?? false);
-
-            if(mappedSegment is null)
+            if(Position < 0 || Position >= Length)
                 throw new InvalidOperationException();
 
-            SetPositionOnMappedSegment(ref mappedSegment);
+            if(Position > int.MaxValue)
+            {
+                Memory<byte> buffer = new byte[1];
 
-            ++this.position;
+                _ = await ReadAsync(buffer, cancellationToken);
 
-            return mappedSegment.Segment.Source.ReadByte();*/
-            throw new NotImplementedException();
+                return buffer.Span[0];
+            }
+
+            if(this.bufferStartPosition < 0 || this.bufferStartPosition > Position)
+            {
+                this.bufferStartPosition = (int)Position;
+
+                var currentPosition = Position;
+                _ = await ReadAsync(this.readerBuffer, cancellationToken);
+                Position = currentPosition;
+            }
+
+            return this.readerBuffer.Span[(int)Position - this.bufferStartPosition];
         }
 
         #endregion
