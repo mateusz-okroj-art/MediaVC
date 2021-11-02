@@ -1,5 +1,7 @@
 ﻿
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 using MediaVC.Difference;
 
@@ -15,7 +17,7 @@ namespace MediaVC.Tools.Tests.Fixtures
             set
             {
                 if(value != 0)
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(Position));
 
                 this.position = value;
             }
@@ -27,27 +29,32 @@ namespace MediaVC.Tools.Tests.Fixtures
 
         public int Read(byte[] buffer, int offset, int count) =>
             buffer is not null ?
-            Read(buffer.AsMemory().Slice(offset, count)) :
+            ReadAsync(buffer.AsMemory().Slice(offset, count)).GetAwaiter().GetResult() :
             throw new ArgumentNullException(nameof(buffer));
 
-        public int Read(Memory<byte> buffer)
+        public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            await Task.Run(() =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                if(buffer.IsEmpty || buffer.Length < 1)
+                    return 0;
+
+                buffer.Span[0] = 0;
+
+                return 1;
+            });
+
+        public ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default)
         {
-            if(buffer.IsEmpty || buffer.Length < 1)
-                return 0;
+            cancellationToken.ThrowIfCancellationRequested();
 
-            buffer.Span[0] = 0;
-
-            return 1;
-        }
-
-        public byte ReadByte()
-        {
             if(Position != 0)
                 throw new InvalidOperationException("Stream is on end.");
 
             ++this.position;
 
-            return 0;
+            return ValueTask.FromResult<byte>(0);
         }
     }
 }

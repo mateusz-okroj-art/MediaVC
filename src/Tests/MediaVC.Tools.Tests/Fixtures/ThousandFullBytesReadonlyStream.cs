@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 using MediaVC.Difference;
 
@@ -34,7 +36,7 @@ namespace MediaVC.Tools.Tests.Fixtures
             set
             {
                 if(value is >= count or < 0)
-                    throw new ArgumentOutOfRangeException();
+                    throw new ArgumentOutOfRangeException(nameof(Position));
 
                 this.position = value;
             }
@@ -49,30 +51,36 @@ namespace MediaVC.Tools.Tests.Fixtures
         public void Dispose() { }
 
         public int Read(byte[] buffer, int offset, int count) =>
-            Read(buffer.AsMemory().Slice(offset,count));
+            ReadAsync(buffer.AsMemory().Slice(offset,count)).GetAwaiter().GetResult();
 
-        public int Read(Memory<byte> buffer)
-        {
-            if(buffer.IsEmpty || buffer.Length < 1)
-                return 0;
+        public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
+            await Task.Run(() =>
+            {
+                if(buffer.IsEmpty || buffer.Length < 1)
+                    return 0;
 
-            this.buffer[(int)Position..].CopyTo(buffer);
+                this.buffer[(int)Position..].CopyTo(buffer);
 
-            var readedBytes = Math.Min(Length - Position, buffer.Length);
+                var readedBytes = Math.Min(Length - Position, buffer.Length);
 
-            Position += readedBytes;
+                Position += readedBytes;
 
-            return (int)readedBytes;
-        }
+                return (int)readedBytes;
+            });
 
         /// <summary>
         /// Returns current byte and increments position.
         /// </summary>
         /// <returns></returns>
-        public byte ReadByte() =>
-            Position >= Length
-                ? throw new InvalidOperationException("Stream is on the end.")
-                : this.buffer.Span[(int)this.position++..][0];
+        public async ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default) =>
+            await Task.Run(() =>
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                return Position >= Length
+                    ? throw new InvalidOperationException("Stream is on the end.")
+                    : this.buffer.Span[(int)this.position++..][0];
+            });
 
         #endregion
     }

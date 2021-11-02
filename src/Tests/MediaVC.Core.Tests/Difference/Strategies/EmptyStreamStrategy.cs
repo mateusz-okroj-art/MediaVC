@@ -58,9 +58,15 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         }
 
         [Fact]
-        public void ReadByte_ShouldThrowException()
+        public void ReadByteAsync_ShouldThrowException()
         {
-            Assert.Throws<InvalidOperationException>(() => this.fixture.ReadByte());
+            Assert.ThrowsAsync<InvalidOperationException>(() => this.fixture.ReadByteAsync().AsTask());
+        }
+
+        [Fact]
+        public void ReadAsync_ShouldThrowException()
+        {
+            Assert.ThrowsAsync<InvalidOperationException>(() => this.fixture.ReadAsync(Array.Empty<byte>()).AsTask());
         }
     }
 }

@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 using MediaVC.Difference;
 
@@ -83,14 +85,14 @@ namespace MediaVC.Tools.Tests.Fixtures
             mock.SetupGet(mocked => mocked.Length)
                 .Returns(stream1.Length);
 
-            mock.Setup(mocked => mocked.ReadByte())
-                .Returns(ReadByteFromStream1());
+            mock.Setup(mocked => mocked.ReadByteAsync(It.IsAny<CancellationToken>()))
+                .Returns(new Func<CancellationToken, ValueTask<byte>>(cancellationToken => ReadByteFromStream1(cancellationToken)));
 
             mock.Setup(mocked => mocked.Read(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()))
                 .Returns<byte[], int, int>((buffer, offset, count) => stream1.Read(buffer, offset, count));
 
-            mock.Setup(mocked => mocked.Read(It.IsAny<Memory<byte>>()))
-                .Returns<Memory<byte>>((buffer) => stream1.Read(buffer.Span));
+            mock.Setup(mocked => mocked.ReadAsync(It.IsAny<Memory<byte>>(), It.IsAny<CancellationToken>()))
+                .Returns(new Func<Memory<byte>, CancellationToken, ValueTask<int>>((buffer, cancellationToken) => stream1.ReadAsync(buffer, cancellationToken)));
 
             InputSource1 = mock.Object;
         }
@@ -110,30 +112,34 @@ namespace MediaVC.Tools.Tests.Fixtures
             mock.SetupGet(mocked => mocked.Length)
                 .Returns(stream2.Length);
 
-            mock.Setup(mocked => mocked.ReadByte())
-                .Returns(ReadByteFromStream2());
+            mock.Setup(mocked => mocked.ReadByteAsync(It.IsAny<CancellationToken>()))
+                .Returns(new Func<CancellationToken, ValueTask<byte>>( cancellationToken => ReadByteFromStream2(cancellationToken)));
 
             mock.Setup(mocked => mocked.Read(It.IsAny<byte[]>(), It.IsAny<int>(), It.IsAny<int>()))
                 .Returns<byte[], int, int>((buffer, offset, count) => stream2.Read(buffer, offset, count));
 
-            mock.Setup(mocked => mocked.Read(It.IsAny<Memory<byte>>()))
-                .Returns<Memory<byte>>((buffer) => stream2.Read(buffer.Span));
+            mock.Setup(mocked => mocked.ReadAsync(It.IsAny<Memory<byte>>(), It.IsAny<CancellationToken>()))
+                .Returns(new Func<Memory<byte>, CancellationToken, ValueTask<int>>((buffer, cancellationToken) => stream2.ReadAsync(buffer, cancellationToken)));
 
             InputSource2 = mock.Object;
         }
 
-        private byte ReadByteFromStream1()
+        private ValueTask<byte> ReadByteFromStream1(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var result = this.stream1.ReadByte();
 
-            return result != -1 ? (byte)result : throw new InvalidOperationException();
+            return result != -1 ? ValueTask.FromResult((byte)result) : throw new InvalidOperationException();
         }
 
-        private byte ReadByteFromStream2()
+        private ValueTask<byte> ReadByteFromStream2(CancellationToken cancellationToken)
         {
+            cancellationToken.ThrowIfCancellationRequested();
+
             var result = this.stream2.ReadByte();
 
-            return result != -1 ? (byte)result : throw new InvalidOperationException();
+            return result != -1 ? ValueTask.FromResult((byte)result) : throw new InvalidOperationException();
         }
 
         public void Dispose()
