@@ -41,14 +41,12 @@ namespace MediaVC.Tools.Difference
 
         #region Methods
 
-        public ValueTask CalculateAsync() => CalculateAsync(default, null);
-
         /// <summary>
         /// Calculates differences between sources
         /// </summary>
         /// <param name="cancellation"></param>
         /// <exception cref="OperationCanceledException" />
-        public async ValueTask CalculateAsync(CancellationToken cancellationToken, IProgress<float>? progress)
+        public async ValueTask CalculateAsync(CancellationToken cancellationToken = default, IProgress<float>? progress = null)
         {
             Synchronize(() =>
             {

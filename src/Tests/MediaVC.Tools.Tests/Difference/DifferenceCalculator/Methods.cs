@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 
 using MediaVC.Difference;
 
-using Microsoft.Reactive.Testing;
-
 using Moq;
 
 using Xunit;
@@ -14,271 +12,265 @@ using Xunit;
 namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 {
     public class Methods : IClassFixture<DifferenceCalculatorTestFixture>
-    {// TODO
-        //#region Constructor
+    {
+        #region Constructor
 
-        //public Methods(DifferenceCalculatorTestFixture fixture)
-        //{
-        //    this.fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
-        //}
+        public Methods(DifferenceCalculatorTestFixture fixture)
+        {
+            this.fixture = fixture ?? throw new ArgumentNullException(nameof(fixture));
+        }
 
-        //#endregion
+        #endregion
 
-        //#region Fields
+        #region Fields
 
-        //private readonly IDifferenceCalculatorTestFixture fixture;
+        private readonly IDifferenceCalculatorTestFixture fixture;
 
-        //#endregion
+        #endregion
 
-        //#region Tests
+        #region Tests
 
-        //[Fact]
-        //public async Task Calculate_WhenNewFile_Variant1_ShouldReturnOneSegment()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero);
+        [Fact]
+        public async Task Calculate_WhenNewFile_Variant1_ShouldReturnOneSegment()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero);
 
-        //    await calculator.CalculateAsync();
+            await calculator.CalculateAsync();
 
-        //    Assert.Null(calculator.CurrentVersion);
-        //    Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.Null(calculator.CurrentVersion);
+            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
 
-        //    Assert.NotNull(calculator.Result);
-        //    Assert.Single(calculator.Result);
+            Assert.NotNull(calculator.Result);
+            var first = Assert.Single(calculator.Result);
+            
+            Assert.Equal(this.fixture.OneZero, first.Source);
+            Assert.Equal(0, first.StartPositionInSource);
+            Assert.Equal(0, first.EndPositionInSource);
+            Assert.Equal(1U, first.Length);
+        }
 
-        //    Assert.Equal(this.fixture.OneZero, calculator.Result[0].Source);
-        //    Assert.Equal(0, calculator.Result[0].StartPositionInSource);
-        //    Assert.Equal(0, calculator.Result[0].EndPositionInSource);
-        //    Assert.Equal(1U, calculator.Result[0].Length);
-        //}
+        [Fact]
+        public async Task Calculate_WhenNewFile_Variant2_ShouldReturnOneSegment()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes);
 
-        //[Fact]
-        //public async Task Calculate_WhenNewFile_Variant2_ShouldReturnOneSegment()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes);
+            await calculator.CalculateAsync();
 
-        //    await calculator.CalculateAsync();
+            Assert.Null(calculator.CurrentVersion);
+            Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
 
-        //    Assert.Null(calculator.CurrentVersion);
-        //    Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
+            Assert.NotNull(calculator.Result);
+            var first = Assert.Single(calculator.Result);
 
-        //    Assert.NotNull(calculator.Result);
-        //    Assert.Single(calculator.Result);
+            Assert.Equal(this.fixture.ThousandFullBytes, first.Source);
+            Assert.Equal(0, first.StartPositionInSource);
+            Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, first.EndPositionInSource);
+            Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, first.Length);
+        }
 
-        //    Assert.Equal(this.fixture.ThousandFullBytes, calculator.Result[0].Source);
-        //    Assert.Equal(0, calculator.Result[0].StartPositionInSource);
-        //    Assert.Equal(this.fixture.ThousandFullBytes.Length-1, calculator.Result[0].EndPositionInSource);
-        //    Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, calculator.Result[0].Length);
-        //}
+        [Fact]
+        public async Task Calculate_WhenNewFile_Variant3_ShouldReturnOneSegment()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(InputSource.Empty, this.fixture.OneZero);
 
-        //[Fact]
-        //public async Task Calculate_WhenNewFile_Variant3_ShouldReturnOneSegment()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(InputSource.Empty, this.fixture.OneZero);
+            await calculator.CalculateAsync();
 
-        //    await calculator.CalculateAsync();
+            Assert.Equal(InputSource.Empty, calculator.CurrentVersion);
+            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
 
-        //    Assert.Equal(InputSource.Empty, calculator.CurrentVersion);
-        //    Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.NotNull(calculator.Result);
+            var first = Assert.Single(calculator.Result);
 
-        //    Assert.NotNull(calculator.Result);
-        //    Assert.Single(calculator.Result);
+            Assert.Equal(this.fixture.OneZero, first.Source);
+            Assert.Equal(0, first.StartPositionInSource);
+            Assert.Equal(this.fixture.OneZero.Length - 1, first.EndPositionInSource);
+            Assert.Equal(this.fixture.OneZero.Length, (long)first.Length);
+        }
 
-        //    Assert.Equal(this.fixture.OneZero, calculator.Result[0].Source);
-        //    Assert.Equal(0, calculator.Result[0].StartPositionInSource);
-        //    Assert.Equal(this.fixture.OneZero.Length-1, calculator.Result[0].EndPositionInSource);
-        //    Assert.Equal(this.fixture.OneZero.Length, (long)calculator.Result[0].Length);
-        //}
+        [Fact]
+        public async Task Calculate_WhenVersionEqual_Variant1_ShouldReturnEmpty()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero, this.fixture.OneZero);
 
-        //[Fact]
-        //public async Task Calculate_WhenVersionEqual_Variant1_ShouldReturnEmpty()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero, this.fixture.OneZero);
+            await calculator.CalculateAsync();
 
-        //    await calculator.CalculateAsync();
+            Assert.Equal(this.fixture.OneZero, calculator.CurrentVersion);
+            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
 
-        //    Assert.Equal(this.fixture.OneZero, calculator.CurrentVersion);
-        //    Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.NotNull(calculator.Result);
+            Assert.Empty(calculator.Result);
+        }
 
-        //    Assert.NotNull(calculator.Result);
-        //    Assert.Empty(calculator.Result);
-        //}
+        /*[Fact]
+        public async Task Calculate_WhenVersionEqual_Variant2_ShouldReturnEmpty()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes, this.fixture.ThousandFullBytes);
 
-        //[Fact]
-        //public async Task Calculate_WhenVersionEqual_Variant2_ShouldReturnEmpty()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes, this.fixture.ThousandFullBytes);
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
 
-        //    var stopwatch = new Stopwatch();
-        //    stopwatch.Start();
+            await calculator.CalculateAsync();
 
-        //    await calculator.CalculateAsync();
+            stopwatch.Stop();
 
-        //    stopwatch.Stop();
+            Assert.Equal(this.fixture.ThousandFullBytes, calculator.CurrentVersion);
+            Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
 
-        //    Assert.Equal(this.fixture.ThousandFullBytes, calculator.CurrentVersion);
-        //    Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
+            Assert.NotNull(calculator.Result);
+            Assert.Empty(calculator.Result);
 
-        //    Assert.NotNull(calculator.Result);
-        //    Assert.Empty(calculator.Result);
+            Debug.WriteLine($"Calculating difference for 1000 bytes: {stopwatch.ElapsedMilliseconds} ms.");
+        }*/
 
-        //    Debug.WriteLine($"Calculating difference for 1000 bytes: {stopwatch.ElapsedMilliseconds} ms.");
-        //}
+        [Fact]
+        public async Task Calculate_WhenFileCleared_Variant1_ShouldReturnEmpty()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes, InputSource.Empty);
 
-        //[Fact]
-        //public async Task Calculate_WhenFileCleared_Variant1_ShouldReturnEmpty()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes, InputSource.Empty);
+            await calculator.CalculateAsync();
 
-        //    await calculator.CalculateAsync();
+            Assert.NotNull(calculator.Result);
+            Assert.Empty(calculator.Result);
+        }
 
-        //    Assert.NotNull(calculator.Result);
-        //    Assert.Empty(calculator.Result);
-        //}
+        /*[Fact]
+        public async Task Calculate_WhenFileIsDifferent_Variant1()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[0], this.fixture.ExampleSources[1]);
+
+            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
 
-        //[Fact]
-        //public async Task Calculate_WhenFileIsDifferent_Variant1()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[0], this.fixture.ExampleSources[1]);
+            var observer2Mock = new Mock<IObserver<IFileSegmentInfo>>(MockBehavior.Loose);
+            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>())).Verifiable();
 
-        //    var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-        //    observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+            using(calculator.Result.Cleared.Subscribe(observer1Mock.Object))
+            {
+                using(calculator.Result.Added.Subscribe(observer2Mock.Object))
+                {
+                    await calculator.CalculateAsync();
+
+                    Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
+                    Assert.Equal(this.fixture.ExampleSources[1], calculator.NewVersion);
 
-        //    var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-        //    observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+                    Assert.NotNull(calculator.Result);
+                    var first = Assert.Single(calculator.Result);
 
-        //    using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
-        //    {
-        //        using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
-        //        {
-        //            await calculator.CalculateAsync();
+                    Assert.Equal(this.fixture.ExampleSources[1], first.Source);
+                    Assert.Equal(4L, first.StartPositionInSource);
+                    Assert.Equal(7L, first.EndPositionInSource);
+                    Assert.Equal(4L, (long)first.Length);
 
-        //            Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
-        //            Assert.Equal(this.fixture.ExampleSources[1], calculator.NewVersion);
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                    observer2Mock.Verify(mocked => mocked.OnNext(first));
+                }
+            }
+        }*/
 
-        //            Assert.NotNull(calculator.Result);
-        //            Assert.Equal(1, calculator.Result.Count);
+        /*[Fact] ENDLESS LOOP
+        public async Task Calculate_WhenFileIsDifferent_Variant2()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[0], this.fixture.ExampleSources[2]);
 
-        //            var result = calculator.Result[0];
+            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
 
-        //            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
-        //            Assert.Equal(4L, result.StartPosition);
-        //            Assert.Equal(7L, result.EndPosition);
-        //            Assert.Equal(4L, (long)result.Length);
+            var observer2Mock = new Mock<IObserver<IFileSegmentInfo>>(MockBehavior.Loose);
+            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>())).Verifiable();
 
-        //            observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-        //            observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-        //        }
-        //    }
-        //}
+            using(calculator.Result.Cleared.Subscribe(observer1Mock.Object))
+            {
+                using(calculator.Result.Added.Subscribe(observer2Mock.Object))
+                {
+                    await calculator.CalculateAsync();
 
-        //[Fact]
-        //public async Task Calculate_WhenFileIsDifferent_Variant2()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[0], this.fixture.ExampleSources[2]);
+                    Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
+                    Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
 
-        //    var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-        //    observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+                    Assert.NotNull(calculator.Result);
+                    var result = Assert.Single(calculator.Result);
 
-        //    var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-        //    observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+                    Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+                    Assert.Equal(4L, result.StartPositionInSource);
+                    Assert.Equal(7L, result.EndPositionInSource);
+                    Assert.Equal(4L, (long)result.Length);
 
-        //    using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
-        //    {
-        //        using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
-        //        {
-        //            await calculator.CalculateAsync();
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                    observer2Mock.Verify(mocked => mocked.OnNext(result));
+                }
+            }
+        }*/
 
-        //            Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
-        //            Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+        /*[Fact]
+        public async Task Calculate_WhenFileIsDifferent_Variant3()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[1], this.fixture.ExampleSources[2]);
 
-        //            Assert.NotNull(calculator.Result);
-        //            Assert.Equal(1, calculator.Result.Count);
+            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
 
-        //            var result = calculator.Result[0];
+            var observer2Mock = new Mock<IObserver<IFileSegmentInfo>>(MockBehavior.Loose);
+            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>())).Verifiable();
 
-        //            Assert.Equal(this.fixture.ExampleSources[2], result.Source);
-        //            Assert.Equal(4L, result.StartPosition);
-        //            Assert.Equal(7L, result.EndPosition);
-        //            Assert.Equal(4L, (long)result.Length);
+            using(calculator.Result.Cleared.Subscribe(observer1Mock.Object))
+            {
+                using(calculator.Result.Added.Subscribe(observer2Mock.Object))
+                {
+                    await calculator.CalculateAsync();
 
-        //            observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-        //            observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-        //        }
-        //    }
-        //}
+                    Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
+                    Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
 
-        //[Fact]
-        //public async Task Calculate_WhenFileIsDifferent_Variant3()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[1], this.fixture.ExampleSources[2]);
+                    Assert.NotNull(calculator.Result);
+                    var result = Assert.Single(calculator.Result);
 
-        //    var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-        //    observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+                    Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+                    Assert.Equal(0L, result.StartPositionInSource);
+                    Assert.Equal(7L, result.EndPositionInSource);
+                    Assert.Equal(8L, (long)result.Length);
 
-        //    var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-        //    observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                    observer2Mock.Verify(mocked => mocked.OnNext(result));
+                }
+            }
+        }*/
 
-        //    using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
-        //    {
-        //        using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
-        //        {
-        //            await calculator.CalculateAsync();
+        /*[Fact] ENDLESS LOOP IN TESTED METHOD
+        public async Task Calculate_WhenFileIsDifferent_Variant4()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[1], this.fixture.ExampleSources[3]);
 
-        //            Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
-        //            Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
 
-        //            Assert.NotNull(calculator.Result);
-        //            Assert.Equal(1, calculator.Result.Count);
+            var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
+            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
 
-        //            var result = calculator.Result[0];
+            using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
+            {
+                using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
+                {
+                    await calculator.CalculateAsync();
 
-        //            Assert.Equal(this.fixture.ExampleSources[2], result.Source);
-        //            Assert.Equal(0L, result.StartPosition);
-        //            Assert.Equal(7L, result.EndPosition);
-        //            Assert.Equal(8L, (long)result.Length);
+                    Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
+                    Assert.Equal(this.fixture.ExampleSources[3], calculator.NewVersion);
 
-        //            observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-        //            observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-        //        }
-        //    }
-        //}
+                    Assert.NotNull(calculator.Result);
+                    Assert.Equal(1, calculator.Result.Count);
 
-        ///*[Fact] ENDLESS LOOP IN TESTED METHOD
-        //public async Task Calculate_WhenFileIsDifferent_Variant4()
-        //{
-        //    var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[1], this.fixture.ExampleSources[3]);
+                    var result = calculator.Result[0];
 
-        //    var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-        //    observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+                    Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+                    Assert.Equal(0L, result.StartPosition);
+                    Assert.Equal(7L, result.EndPosition);
+                    Assert.Equal(8L, (long)result.Length);
 
-        //    var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-        //    observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                }
+            }
+        }*/
 
-        //    using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
-        //    {
-        //        using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
-        //        {
-        //            await calculator.CalculateAsync();
-
-        //            Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
-        //            Assert.Equal(this.fixture.ExampleSources[3], calculator.NewVersion);
-
-        //            Assert.NotNull(calculator.Result);
-        //            Assert.Equal(1, calculator.Result.Count);
-
-        //            var result = calculator.Result[0];
-
-        //            Assert.Equal(this.fixture.ExampleSources[2], result.Source);
-        //            Assert.Equal(0L, result.StartPosition);
-        //            Assert.Equal(7L, result.EndPosition);
-        //            Assert.Equal(8L, (long)result.Length);
-
-        //            observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-        //            observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-        //        }
-        //    }
-        //}*/
-
-        //#endregion
+        #endregion
     }
 }
