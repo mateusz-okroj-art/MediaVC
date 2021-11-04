@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Reactive;
+using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference;
@@ -87,18 +88,38 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Equal(this.fixture.OneZero.Length, (long)first.Length);
         }
 
-        [Fact]
-        public async Task Calculate_WhenVersionEqual_Variant1_ShouldReturnEmpty()
+        [Theory]
+        [InlineData(false)]
+        [InlineData(true)]
+        public async Task Calculate_WhenVersionEqual_Variant1_ShouldReturnEmpty(bool isCanceled)
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero, this.fixture.OneZero);
+            var cancellationSource = new CancellationTokenSource();
+            if(isCanceled)
+            {
+                cancellationSource.Cancel();
 
-            await calculator.CalculateAsync();
+                await Assert.ThrowsAsync<OperationCanceledException>(() => calculator.CalculateAsync(cancellationSource.Token).AsTask());
+            }
+            else
+            {
+                await calculator.CalculateAsync(cancellationSource.Token);
 
-            Assert.Equal(this.fixture.OneZero, calculator.CurrentVersion);
-            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+                Assert.Equal(this.fixture.OneZero, calculator.CurrentVersion);
+                Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
 
-            Assert.NotNull(calculator.Result);
-            Assert.Empty(calculator.Result);
+                Assert.NotNull(calculator.Result);
+                var result = Assert.Single(calculator.Result);
+
+                Assert.Equal(this.fixture.OneZero, result.Source);
+                Assert.Equal(0, result.StartPositionInSource);
+                Assert.Equal(0, result.EndPositionInSource);
+                Assert.Equal((ulong)1, result.Length);
+                Assert.Equal(0, result.MappedPosition);
+
+                Assert.NotNull(calculator.Removed);
+                Assert.Empty(calculator.Removed);
+            }
         }
 
         /*[Fact]
