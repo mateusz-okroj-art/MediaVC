@@ -32,6 +32,16 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
         #region Tests
 
         [Fact]
+        public async Task Calculate_WhenCancellationRequested()
+        {
+            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero);
+            var cancellationSource = new CancellationTokenSource();
+            cancellationSource.Cancel();
+
+            await Assert.ThrowsAsync<OperationCanceledException>(() => calculator.CalculateAsync(cancellationSource.Token).AsTask());
+        }
+
+        [Fact]
         public async Task Calculate_WhenNewFile_Variant1_ShouldReturnOneSegment()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero);
@@ -48,6 +58,9 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Equal(0, first.StartPositionInSource);
             Assert.Equal(0, first.EndPositionInSource);
             Assert.Equal(1U, first.Length);
+
+            Assert.NotNull(calculator.Removed);
+            Assert.Empty(calculator.Removed);
         }
 
         [Fact]
@@ -67,6 +80,9 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Equal(0, first.StartPositionInSource);
             Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, first.EndPositionInSource);
             Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, first.Length);
+
+            Assert.NotNull(calculator.Removed);
+            Assert.Empty(calculator.Removed);
         }
 
         [Fact]
@@ -86,65 +102,59 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Equal(0, first.StartPositionInSource);
             Assert.Equal(this.fixture.OneZero.Length - 1, first.EndPositionInSource);
             Assert.Equal(this.fixture.OneZero.Length, (long)first.Length);
+
+            Assert.NotNull(calculator.Removed);
+            Assert.Empty(calculator.Removed);
         }
 
-        [Theory]
-        [InlineData(false)]
-        [InlineData(true)]
-        public async Task Calculate_WhenVersionEqual_Variant1_ShouldReturnEmpty(bool isCanceled)
+        [Fact]
+        public async Task Calculate_WhenVersionEqual_Variant1_ShouldReturnOneSegment()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.OneZero, this.fixture.OneZero);
-            var cancellationSource = new CancellationTokenSource();
-            if(isCanceled)
-            {
-                cancellationSource.Cancel();
+                
+            await calculator.CalculateAsync();
 
-                await Assert.ThrowsAsync<OperationCanceledException>(() => calculator.CalculateAsync(cancellationSource.Token).AsTask());
-            }
-            else
-            {
-                await calculator.CalculateAsync(cancellationSource.Token);
+            Assert.Equal(this.fixture.OneZero, calculator.CurrentVersion);
+            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
 
-                Assert.Equal(this.fixture.OneZero, calculator.CurrentVersion);
-                Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.NotNull(calculator.Result);
+            var result = Assert.Single(calculator.Result);
 
-                Assert.NotNull(calculator.Result);
-                var result = Assert.Single(calculator.Result);
+            Assert.Equal(this.fixture.OneZero, result.Source);
+            Assert.Equal(0, result.StartPositionInSource);
+            Assert.Equal(0, result.EndPositionInSource);
+            Assert.Equal((ulong)1, result.Length);
+            Assert.Equal(0, result.MappedPosition);
 
-                Assert.Equal(this.fixture.OneZero, result.Source);
-                Assert.Equal(0, result.StartPositionInSource);
-                Assert.Equal(0, result.EndPositionInSource);
-                Assert.Equal((ulong)1, result.Length);
-                Assert.Equal(0, result.MappedPosition);
-
-                Assert.NotNull(calculator.Removed);
-                Assert.Empty(calculator.Removed);
-            }
+            Assert.NotNull(calculator.Removed);
+            Assert.Empty(calculator.Removed);
         }
 
-        /*[Fact]
-        public async Task Calculate_WhenVersionEqual_Variant2_ShouldReturnEmpty()
+        [Fact]
+        public async Task Calculate_WhenVersionEqual_Variant2_ShouldReturnOneSegment()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes, this.fixture.ThousandFullBytes);
 
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-
             await calculator.CalculateAsync();
-
-            stopwatch.Stop();
 
             Assert.Equal(this.fixture.ThousandFullBytes, calculator.CurrentVersion);
             Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
 
             Assert.NotNull(calculator.Result);
-            Assert.Empty(calculator.Result);
+            var result = Assert.Single(calculator.Result);
 
-            Debug.WriteLine($"Calculating difference for 1000 bytes: {stopwatch.ElapsedMilliseconds} ms.");
-        }*/
+            Assert.Equal(this.fixture.ThousandFullBytes, result.Source);
+            Assert.Equal(0, result.StartPositionInSource);
+            Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, result.EndPositionInSource);
+            Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, result.Length);
+            Assert.Equal(0, result.MappedPosition);
+
+            Assert.NotNull(calculator.Removed);
+            Assert.Empty(calculator.Removed);
+        }
 
         [Fact]
-        public async Task Calculate_WhenFileCleared_Variant1_ShouldReturnEmpty()
+        public async Task Calculate_WhenFileCleared_Variant1_ShouldReturnOneSegment()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ThousandFullBytes, InputSource.Empty);
 
@@ -152,9 +162,18 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 
             Assert.NotNull(calculator.Result);
             Assert.Empty(calculator.Result);
+
+            Assert.NotNull(calculator.Removed);
+            var result = Assert.Single(calculator.Removed);
+
+            Assert.Equal(this.fixture.ThousandFullBytes, result.Source);
+            Assert.Equal(0, result.StartPositionInSource);
+            Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, result.EndPositionInSource);
+            Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, result.Length);
+            
         }
 
-        /*[Fact]
+        [Fact]
         public async Task Calculate_WhenFileIsDifferent_Variant1()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[0], this.fixture.ExampleSources[1]);
@@ -186,7 +205,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
                     observer2Mock.Verify(mocked => mocked.OnNext(first));
                 }
             }
-        }*/
+        }
 
         /*[Fact] ENDLESS LOOP
         public async Task Calculate_WhenFileIsDifferent_Variant2()

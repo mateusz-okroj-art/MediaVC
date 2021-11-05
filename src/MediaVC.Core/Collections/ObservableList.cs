@@ -30,9 +30,9 @@ namespace MediaVC
 
         public object Locker { get; set; } = new object();
 
-        public int Count { get; }
+        public int Count => this.list.Count;
 
-        public bool IsReadOnly { get; }
+        public bool IsReadOnly => false;
 
         public T? this[int index]
         {

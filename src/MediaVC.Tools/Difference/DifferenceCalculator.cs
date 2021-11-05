@@ -73,7 +73,7 @@ namespace MediaVC.Tools.Difference
 
                     NewVersion.Position = newVersionPosition;
 
-                    Synchronize(() => progress?.Report((float)newVersionPosition/NewVersion.Length));
+                    Synchronize(() => progress?.Report((float)(newVersionPosition + 1) / NewVersion.Length));
 
                     long lastOffset = 0;
                     while(oldVersionPosition < CurrentVersion.Length)
@@ -107,6 +107,22 @@ namespace MediaVC.Tools.Difference
                                         MappedPosition = newVersionPosition + offset
                                     };
                                 }
+                                else if(fileSegmentInfo.Source == CurrentVersion)
+                                {
+                                    if(offset <= lastOffset)
+                                    {
+                                        Synchronize(() => this.result.Add(fileSegmentInfo));
+
+                                        fileSegmentInfo = default;
+
+                                        oldVersionPosition += lastOffset + 1;
+                                        newVersionPosition += lastOffset + 1;
+
+                                        break;
+                                    }
+
+                                    fileSegmentInfo.EndPositionInSource = oldVersionPosition + offset;
+                                }
                                 else if(fileSegmentInfo.Source == NewVersion)
                                 {
                                     Synchronize(() => this.result.Add(fileSegmentInfo));
@@ -114,15 +130,11 @@ namespace MediaVC.Tools.Difference
                                     fileSegmentInfo = default;
                                     if(offset <= lastOffset)
                                     {
-                                        newVersionPosition += offset + 1;
-                                        oldVersionPosition += offset + 1;
+                                        newVersionPosition += lastOffset + 1;
+                                        oldVersionPosition += lastOffset + 1;
                                     }
 
                                     break;
-                                }
-                                else if(fileSegmentInfo.Source == CurrentVersion)
-                                {
-                                    fileSegmentInfo.EndPositionInSource = oldVersionPosition + offset;
                                 }
                                 else
                                     throw new InvalidOperationException("Unknown source of file segment.");
@@ -176,7 +188,7 @@ namespace MediaVC.Tools.Difference
 
                 Synchronize(() => RemovedSegmentsDetector.Detect(this.result, CurrentVersion, this.removed, cancellationToken));
             }
-            else if(CurrentVersion?.Length < 1 && NewVersion.Length > 0)
+            else if((CurrentVersion?.Length ?? 0) < 1 && NewVersion.Length > 0)
             {
                 Synchronize(() => progress?.Report(0));
 
