@@ -84,7 +84,10 @@ namespace MediaVC.Tools.Difference
 
                         for(long offset = 0; newVersionPosition + offset < NewVersion.Length && oldVersionPosition + offset < CurrentVersion.Length; ++offset)
                         {
-                            CurrentVersion.Position = oldVersionPosition + offset;
+                            CurrentVersion.Position = Equals(fileSegmentInfo.Source, CurrentVersion) ?
+                                oldVersionPosition :
+                                oldVersionPosition + offset;
+
                             NewVersion.Position = newVersionPosition + offset;
 
                             byte left, right;
@@ -133,6 +136,10 @@ namespace MediaVC.Tools.Difference
                                         newVersionPosition += lastOffset + 1;
                                         oldVersionPosition += lastOffset + 1;
                                     }
+                                    else if(CurrentVersion.Position == oldVersionPosition + 1)
+                                    {
+                                        newVersionPosition += lastOffset + 1;
+                                    }
 
                                     break;
                                 }
@@ -150,9 +157,6 @@ namespace MediaVC.Tools.Difference
                                         StartPositionInSource = newVersionPosition + offset,
                                         EndPositionInSource = newVersionPosition + offset
                                     };
-
-                                    ++newVersionPosition;
-                                    break;
                                 }
                                 else if(fileSegmentInfo.Source == CurrentVersion)
                                 {
@@ -164,6 +168,16 @@ namespace MediaVC.Tools.Difference
                                 }
                                 else if(fileSegmentInfo.Source == NewVersion)
                                 {
+                                    if(offset <= lastOffset)
+                                    {
+                                        newVersionPosition += lastOffset + 1;
+
+                                        Synchronize(() => this.result.Add(fileSegmentInfo));
+                                        fileSegmentInfo = default;
+
+                                        break;
+                                    }
+
                                     fileSegmentInfo.EndPositionInSource = newVersionPosition + offset;
                                 }
                                 else
@@ -172,7 +186,13 @@ namespace MediaVC.Tools.Difference
 
                             lastOffset = offset;
                         }
+
+                        if(newVersionPosition >= NewVersion.Length)
+                            break;
                     }
+
+                    if(oldVersionPosition >= CurrentVersion.Length)
+                        break;
                 }
 
                 if(newVersionPosition < NewVersion.Length - 1)
