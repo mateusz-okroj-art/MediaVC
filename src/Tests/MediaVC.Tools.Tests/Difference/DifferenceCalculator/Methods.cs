@@ -314,7 +314,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             }
         }
 
-        /*[Fact] ENDLESS LOOP IN TESTED METHOD
+        [Fact]
         public async Task Calculate_WhenFileIsDifferent_Variant4()
         {
             var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[1], this.fixture.ExampleSources[3]);
@@ -322,12 +322,12 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
             observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
 
-            var observer2Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+            var observer2Mock = new Mock<IObserver<IFileSegmentInfo>>(MockBehavior.Loose);
+            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>())).Verifiable();
 
-            using(calculator.ResultCleared.Subscribe(observer1Mock.Object))
+            using(calculator.Result.Cleared.Subscribe(observer1Mock.Object))
             {
-                using(calculator.ResultAdded.Subscribe(observer2Mock.Object))
+                using(calculator.Result.Added.Subscribe(observer2Mock.Object))
                 {
                     await calculator.CalculateAsync();
 
@@ -335,20 +335,23 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
                     Assert.Equal(this.fixture.ExampleSources[3], calculator.NewVersion);
 
                     Assert.NotNull(calculator.Result);
-                    Assert.Equal(1, calculator.Result.Count);
+                    //Assert.Equal(1, calculator.Result.Count);
 
-                    var result = calculator.Result[0];
+                    /*var result = calculator.Result[0];
 
                     Assert.Equal(this.fixture.ExampleSources[2], result.Source);
                     Assert.Equal(0L, result.StartPosition);
                     Assert.Equal(7L, result.EndPosition);
-                    Assert.Equal(8L, (long)result.Length);
+                    Assert.Equal(8L, (long)result.Length);*/
+
+                    Assert.NotNull(calculator.Removed);
+                    Assert.Single(calculator.Removed);
 
                     observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
+                    observer2Mock.Verify(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>()), Times.Exactly(3));
                 }
             }
-        }*/
+        }
 
         #endregion
     }
