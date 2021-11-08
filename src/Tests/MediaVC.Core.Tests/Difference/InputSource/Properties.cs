@@ -38,51 +38,42 @@ namespace MediaVC.Core.Tests.Difference.InputSource
             Assert.True(result.CanSeek);
         }
 
-        [Theory]
-        [InlineData(1)]
-        [InlineData(-10)]
-        [InlineData(2000)]
-        [InlineData(long.MaxValue)]
-        public void Length_ShouldGetFromStrategy(long testValue)
+        [Fact]
+        public void Length_ShouldGetFromStrategy()
         {
-            var result = new MediaVC.Difference.InputSource
-            (
-                Mock.Of<IInputSourceStrategy>(mock => mock.Length == testValue)
-            );
-
-            Assert.Equal(result.Strategy.Length, result.Length);
-        }
-
-        [Theory]
-        [InlineData(1)]
-        [InlineData(-10)]
-        [InlineData(2000)]
-        [InlineData(long.MaxValue)]
-        public void Position_ShouldGetFromStrategy(long testValue)
-        {
-            var result = new MediaVC.Difference.InputSource
-            (
-                Mock.Of<IInputSourceStrategy>(mock => mock.Position == testValue)
-            );
-
-            Assert.Equal(result.Strategy.Position, result.Position);
-        }
-
-        [Theory]
-        [InlineData(1)]
-        [InlineData(-10)]
-        [InlineData(2000)]
-        [InlineData(long.MaxValue)]
-        public void Position_ShouldSetInStrategy(long testValue)
-        {
-            var mock = new Mock<IInputSourceStrategy>();
-            mock.SetupProperty(mocked => mocked.Position);
+            var mock = new Mock<IInputSourceStrategy>(MockBehavior.Loose);
+            mock.SetupGet(mocked => mocked.Length);
 
             var result = new MediaVC.Difference.InputSource(mock.Object);
 
-            result.Position = testValue;
+            _ = result.Length;
 
-            mock.VerifySet(mocked => mocked.Position = testValue);
+            mock.VerifyGet(mocked => mocked.Length);
+        }
+
+        [Fact]
+        public void Position_ShouldGetFromStrategy()
+        {
+            var mock = new Mock<IInputSourceStrategy>(MockBehavior.Loose);
+            mock.SetupGet(mocked => mocked.Position);
+
+            var result = new MediaVC.Difference.InputSource(mock.Object);
+
+            _ = result.Position;
+
+            mock.VerifyGet(mocked => mocked.Position);
+        }
+
+        [Fact]
+        public void Position_ShouldSetInStrategy()
+        {
+            var mock = new Mock<IInputSourceStrategy>(MockBehavior.Loose);
+            mock.SetupProperty(mocked => mocked.Position);
+
+            var result = new MediaVC.Difference.InputSource(mock.Object);
+            result.Position = 1;
+
+            mock.VerifySet(mocked => mocked.Position = It.IsAny<long>());
         }
     }
 }
