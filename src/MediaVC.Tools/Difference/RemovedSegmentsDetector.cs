@@ -55,7 +55,7 @@ namespace MediaVC.Tools.Difference
                         EndPositionInSource = currentSegment.StartPositionInSource - 1
                     });
                 }
-                else if(segments.Length > 1)
+                else if(index > 0 && currentSegment.StartPositionInSource - segments[index - 1].EndPositionInSource > 1)
                 {
                     result.Add(new FileSegmentInfo
                     {

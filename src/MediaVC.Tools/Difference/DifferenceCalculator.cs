@@ -84,9 +84,9 @@ namespace MediaVC.Tools.Difference
 
                         for(long offset = 0; newVersionPosition + offset < NewVersion.Length && oldVersionPosition + offset < CurrentVersion.Length; ++offset)
                         {
-                            CurrentVersion.Position = Equals(fileSegmentInfo.Source, CurrentVersion) ?
-                                oldVersionPosition :
-                                oldVersionPosition + offset;
+                            CurrentVersion.Position = ReferenceEquals(fileSegmentInfo.Source, CurrentVersion) ?
+                                oldVersionPosition + offset :
+                                oldVersionPosition;
 
                             NewVersion.Position = newVersionPosition + offset;
 
@@ -163,6 +163,8 @@ namespace MediaVC.Tools.Difference
                                     Synchronize(() => this.result.Add(fileSegmentInfo));
 
                                     fileSegmentInfo = default;
+                                    oldVersionPosition += lastOffset + 1;
+                                    newVersionPosition += lastOffset + 1;
 
                                     break;
                                 }
