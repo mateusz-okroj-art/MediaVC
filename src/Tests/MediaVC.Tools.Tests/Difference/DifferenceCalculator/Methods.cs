@@ -206,43 +206,28 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+            await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            var observer2Mock = new Mock<IObserver<IFileSegmentInfo>>(MockBehavior.Loose);
-            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>())).Verifiable();
+            Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
+            Assert.Equal(this.fixture.ExampleSources[1], calculator.NewVersion);
 
-            using(calculator.Result.Cleared.Subscribe(observer1Mock.Object))
-            {
-                using(calculator.Result.Added.Subscribe(observer2Mock.Object))
-                {
-                    await calculator.CalculateAsync(cancelationTokenSource.Token);
+            Assert.NotNull(calculator.Result);
+            Assert.Equal(2, calculator.Result.Count());
 
-                    Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
-                    Assert.Equal(this.fixture.ExampleSources[1], calculator.NewVersion);
+            var result = calculator.Result.ElementAt(0);
+            Assert.Equal(this.fixture.ExampleSources[0], result.Source);
+            Assert.Equal(0, result.StartPositionInSource);
+            Assert.Equal(3L, result.EndPositionInSource);
+            Assert.Equal(4L, (long)result.Length);
 
-                    Assert.NotNull(calculator.Result);
-                    Assert.Equal(2, calculator.Result.Count());
+            result = calculator.Result.ElementAt(1);
+            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.Equal(4L, result.StartPositionInSource);
+            Assert.Equal(7L, result.EndPositionInSource);
+            Assert.Equal(4L, (long)result.Length);
 
-                    var result = calculator.Result.ElementAt(0);
-                    Assert.Equal(this.fixture.ExampleSources[0], result.Source);
-                    Assert.Equal(0, result.StartPositionInSource);
-                    Assert.Equal(3L, result.EndPositionInSource);
-                    Assert.Equal(4L, (long)result.Length);
-
-                    result = calculator.Result.ElementAt(1);
-                    Assert.Equal(this.fixture.ExampleSources[1], result.Source);
-                    Assert.Equal(4L, result.StartPositionInSource);
-                    Assert.Equal(7L, result.EndPositionInSource);
-                    Assert.Equal(4L, (long)result.Length);
-
-                    Assert.NotNull(calculator.Removed);
-                    Assert.Empty(calculator.Removed);
-
-                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-                    observer2Mock.Verify(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>()), Times.Exactly(2));
-                }
-            }
+            Assert.NotNull(calculator.Removed);
+            Assert.Empty(calculator.Removed);
         }
 
         [Fact]
@@ -254,45 +239,30 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+            await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            var observer2Mock = new Mock<IObserver<IFileSegmentInfo>>(MockBehavior.Loose);
-            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>())).Verifiable();
+            Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
+            Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
 
-            using(calculator.Result.Cleared.Subscribe(observer1Mock.Object))
-            {
-                using(calculator.Result.Added.Subscribe(observer2Mock.Object))
-                {
-                    await calculator.CalculateAsync(cancelationTokenSource.Token);
+            Assert.NotNull(calculator.Result);
+            Assert.Equal(2, calculator.Result.Count());
 
-                    Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
-                    Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+            var result = calculator.Result.ElementAt(0);
+            Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+            Assert.Equal(0L, result.StartPositionInSource);
+            Assert.Equal(3L, result.EndPositionInSource);
+            Assert.Equal(0, result.MappedPosition);
+            Assert.Equal(4L, (long)result.Length);
 
-                    Assert.NotNull(calculator.Result);
-                    Assert.Equal(2, calculator.Result.Count());
+            result = calculator.Result.ElementAt(1);
+            Assert.Equal(this.fixture.ExampleSources[0], result.Source);
+            Assert.Equal(0, result.StartPositionInSource);
+            Assert.Equal(3L, result.EndPositionInSource);
+            Assert.Equal(4L, result.MappedPosition);
+            Assert.Equal(4L, (long)result.Length);
 
-                    var result = calculator.Result.ElementAt(0);
-                    Assert.Equal(this.fixture.ExampleSources[2], result.Source);
-                    Assert.Equal(0L, result.StartPositionInSource);
-                    Assert.Equal(3L, result.EndPositionInSource);
-                    Assert.Equal(0, result.MappedPosition);
-                    Assert.Equal(4L, (long)result.Length);
-
-                    result = calculator.Result.ElementAt(1);
-                    Assert.Equal(this.fixture.ExampleSources[0], result.Source);
-                    Assert.Equal(0, result.StartPositionInSource);
-                    Assert.Equal(3L, result.EndPositionInSource);
-                    Assert.Equal(4L, result.MappedPosition);
-                    Assert.Equal(4L, (long)result.Length);
-
-                    Assert.NotNull(calculator.Removed);
-                    Assert.Empty(calculator.Removed);
-
-                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-                    observer2Mock.Verify(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>()), Times.Exactly(2));
-                }
-            }
+            Assert.NotNull(calculator.Removed);
+            Assert.Empty(calculator.Removed);
         }
 
         [Fact]
@@ -304,50 +274,35 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+            await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            var observer2Mock = new Mock<IObserver<IFileSegmentInfo>>(MockBehavior.Loose);
-            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>())).Verifiable();
+            Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
+            Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
 
-            using(calculator.Result.Cleared.Subscribe(observer1Mock.Object))
-            {
-                using(calculator.Result.Added.Subscribe(observer2Mock.Object))
-                {
-                    await calculator.CalculateAsync(cancelationTokenSource.Token);
+            Assert.NotNull(calculator.Result);
+            Assert.Equal(2, calculator.Result.Count());
 
-                    Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
-                    Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+            var result = calculator.Result.ElementAt(0);
+            Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+            Assert.Equal(0L, result.StartPositionInSource);
+            Assert.Equal(3L, result.EndPositionInSource);
+            Assert.Equal(0, result.MappedPosition);
+            Assert.Equal(4L, (long)result.Length);
 
-                    Assert.NotNull(calculator.Result);
-                    Assert.Equal(2, calculator.Result.Count());
+            result = calculator.Result.ElementAt(1);
+            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.Equal(0L, result.StartPositionInSource);
+            Assert.Equal(3L, result.EndPositionInSource);
+            Assert.Equal(4L, result.MappedPosition);
+            Assert.Equal(4L, (long)result.Length);
 
-                    var result = calculator.Result.ElementAt(0);
-                    Assert.Equal(this.fixture.ExampleSources[2], result.Source);
-                    Assert.Equal(0L, result.StartPositionInSource);
-                    Assert.Equal(3L, result.EndPositionInSource);
-                    Assert.Equal(0, result.MappedPosition);
-                    Assert.Equal(4L, (long)result.Length);
+            Assert.NotNull(calculator.Removed);
 
-                    result = calculator.Result.ElementAt(1);
-                    Assert.Equal(this.fixture.ExampleSources[1], result.Source);
-                    Assert.Equal(0L, result.StartPositionInSource);
-                    Assert.Equal(3L, result.EndPositionInSource);
-                    Assert.Equal(4L, result.MappedPosition);
-                    Assert.Equal(4L, (long)result.Length);
-
-                    Assert.NotNull(calculator.Removed);
-
-                    result = Assert.Single(calculator.Removed);
-                    Assert.Equal(this.fixture.ExampleSources[1], result.Source);
-                    Assert.Equal(4L, result.StartPositionInSource);
-                    Assert.Equal(7L, result.EndPositionInSource);
-                    Assert.Equal(4L, (long)result.Length);
-
-                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-                    observer2Mock.Verify(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>()), Times.Exactly(2));
-                }
-            }
+            result = Assert.Single(calculator.Removed);
+            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.Equal(4L, result.StartPositionInSource);
+            Assert.Equal(7L, result.EndPositionInSource);
+            Assert.Equal(4L, (long)result.Length);
         }
 
         [Fact]
@@ -359,57 +314,42 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            var observer1Mock = new Mock<IObserver<Unit>>(MockBehavior.Loose);
-            observer1Mock.Setup(mocked => mocked.OnNext(It.IsAny<Unit>())).Verifiable();
+            await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            var observer2Mock = new Mock<IObserver<IFileSegmentInfo>>(MockBehavior.Loose);
-            observer2Mock.Setup(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>())).Verifiable();
+            Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
+            Assert.Equal(this.fixture.ExampleSources[3], calculator.NewVersion);
 
-            using(calculator.Result.Cleared.Subscribe(observer1Mock.Object))
-            {
-                using(calculator.Result.Added.Subscribe(observer2Mock.Object))
-                {
-                    await calculator.CalculateAsync(cancelationTokenSource.Token);
+            Assert.NotNull(calculator.Result);
+            Assert.Equal(3, calculator.Result.Count());
 
-                    Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
-                    Assert.Equal(this.fixture.ExampleSources[3], calculator.NewVersion);
+            var result = calculator.Result.ElementAt(0);
+            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.Equal(0L, result.StartPositionInSource);
+            Assert.Equal(1L, result.EndPositionInSource);
+            Assert.Equal(2L, (long)result.Length);
+            Assert.Equal(0, result.MappedPosition);
 
-                    Assert.NotNull(calculator.Result);
-                    Assert.Equal(3, calculator.Result.Count());
+            result = calculator.Result.ElementAt(1);
+            Assert.Equal(this.fixture.ExampleSources[3], result.Source);
+            Assert.Equal(2L, result.StartPositionInSource);
+            Assert.Equal(2L, result.EndPositionInSource);
+            Assert.Equal(1L, (long)result.Length);
+            Assert.Equal(2, result.MappedPosition);
 
-                    var result = calculator.Result.ElementAt(0);
-                    Assert.Equal(this.fixture.ExampleSources[1], result.Source);
-                    Assert.Equal(0L, result.StartPositionInSource);
-                    Assert.Equal(1L, result.EndPositionInSource);
-                    Assert.Equal(2L, (long)result.Length);
-                    Assert.Equal(0, result.MappedPosition);
+            result = calculator.Result.ElementAt(2);
+            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.Equal(2L, result.StartPositionInSource);
+            Assert.Equal(3L, result.EndPositionInSource);
+            Assert.Equal(2L, (long)result.Length);
+            Assert.Equal(3, result.MappedPosition);
 
-                    result = calculator.Result.ElementAt(1);
-                    Assert.Equal(this.fixture.ExampleSources[3], result.Source);
-                    Assert.Equal(2L, result.StartPositionInSource);
-                    Assert.Equal(2L, result.EndPositionInSource);
-                    Assert.Equal(1L, (long)result.Length);
-                    Assert.Equal(2, result.MappedPosition);
+            Assert.NotNull(calculator.Removed);
 
-                    result = calculator.Result.ElementAt(2);
-                    Assert.Equal(this.fixture.ExampleSources[1], result.Source);
-                    Assert.Equal(2L, result.StartPositionInSource);
-                    Assert.Equal(3L, result.EndPositionInSource);
-                    Assert.Equal(2L, (long)result.Length);
-                    Assert.Equal(3, result.MappedPosition);
-
-                    Assert.NotNull(calculator.Removed);
-
-                    result = Assert.Single(calculator.Removed);
-                    Assert.Equal(this.fixture.ExampleSources[1], result.Source);
-                    Assert.Equal(4L, result.StartPositionInSource);
-                    Assert.Equal(7L, result.EndPositionInSource);
-                    Assert.Equal(4L, (long)result.Length);
-
-                    observer1Mock.Verify(mocked => mocked.OnNext(It.IsAny<Unit>()));
-                    observer2Mock.Verify(mocked => mocked.OnNext(It.IsAny<IFileSegmentInfo>()), Times.Exactly(3));
-                }
-            }
+            result = Assert.Single(calculator.Removed);
+            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.Equal(4L, result.StartPositionInSource);
+            Assert.Equal(7L, result.EndPositionInSource);
+            Assert.Equal(4L, (long)result.Length);
         }
 
         #endregion
