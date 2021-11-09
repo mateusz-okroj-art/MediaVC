@@ -176,24 +176,6 @@ namespace MediaVC.Tools.Difference
             Synchronize(() => RemovedSegmentsDetector.Detect(this.result, CurrentVersion!, this.removed, cancellationToken));
         }
 
-        /// <summary>
-        /// Adds last segment when NewVersion is not on end.
-        /// </summary>
-        /// <param name="newVersionPosition"></param>
-        private void AddSegmentForNewVersionEnding(long newVersionPosition)
-        {
-            if(newVersionPosition < NewVersion.Length - 1)
-            {
-                Synchronize(() => this.result.Add(new FileSegmentInfo
-                {
-                    Source = NewVersion,
-                    MappedPosition = newVersionPosition,
-                    StartPositionInSource = newVersionPosition,
-                    EndPositionInSource = NewVersion.Length - 1
-                }));
-            }
-        }
-
         private bool CalculateWhenBytesAreDifferent(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, ref long oldVersionPosition, long lastOffset, long offset)
         {
             if(fileSegmentInfo.Source is null)
@@ -208,27 +190,15 @@ namespace MediaVC.Tools.Difference
             }
             else if(ReferenceEquals(fileSegmentInfo.Source, CurrentVersion))
             {
-                var currentSegment = fileSegmentInfo;
-                Synchronize(() => this.result.Add(currentSegment));
-
-                fileSegmentInfo = default;
+                SaveSegmentAndClear(ref fileSegmentInfo, ref newVersionPosition, lastOffset);
                 oldVersionPosition += lastOffset + 1;
-                newVersionPosition += lastOffset + 1;
 
                 return false;
             }
             else if(ReferenceEquals(fileSegmentInfo.Source, NewVersion))
             {
-                if(offset <= lastOffset)
-                {
-                    newVersionPosition += lastOffset + 1;
-
-                    var currentSegment = fileSegmentInfo;
-                    Synchronize(() => this.result.Add(currentSegment));
-                    fileSegmentInfo = default;
-
+                if(SaveCurrentSegmentAndClear(ref fileSegmentInfo, ref newVersionPosition, lastOffset, offset))
                     return false;
-                }
 
                 fileSegmentInfo.EndPositionInSource = newVersionPosition + offset;
             }
@@ -254,13 +224,8 @@ namespace MediaVC.Tools.Difference
             {
                 if(offset <= lastOffset)
                 {
-                    var currentSegment = fileSegmentInfo;
-                    Synchronize(() => this.result.Add(currentSegment));
-
-                    fileSegmentInfo = default;
-
+                    SaveSegmentAndClear(ref fileSegmentInfo, ref newVersionPosition, lastOffset);
                     oldVersionPosition += lastOffset + 1;
-                    newVersionPosition += lastOffset + 1;
 
                     return false;
                 }
@@ -269,26 +234,69 @@ namespace MediaVC.Tools.Difference
             }
             else if(ReferenceEquals(fileSegmentInfo.Source, NewVersion))
             {
-                var currentSegment = fileSegmentInfo;
-                Synchronize(() => this.result.Add(currentSegment));
-
-                fileSegmentInfo = default;
-                if(offset <= lastOffset)
-                {
-                    newVersionPosition += lastOffset + 1;
-                    oldVersionPosition += lastOffset + 1;
-                }
-                else if(CurrentVersion!.Position == oldVersionPosition + 1)
-                {
-                    newVersionPosition += lastOffset + 1;
-                }
-
+                SaveSegmentForCurrentVersionAndClear(ref fileSegmentInfo, ref newVersionPosition, ref oldVersionPosition, lastOffset, offset);
                 return false;
             }
             else
                 throw new InvalidOperationException("Unknown source of file segment.");
 
             return true;
+        }
+
+        /// <summary>
+        /// Adds last segment when NewVersion is not on end.
+        /// </summary>
+        /// <param name="newVersionPosition"></param>
+        private void AddSegmentForNewVersionEnding(long newVersionPosition)
+        {
+            if(newVersionPosition < NewVersion.Length - 1)
+            {
+                Synchronize(() => this.result.Add(new FileSegmentInfo
+                {
+                    Source = NewVersion,
+                    MappedPosition = newVersionPosition,
+                    StartPositionInSource = newVersionPosition,
+                    EndPositionInSource = NewVersion.Length - 1
+                }));
+            }
+        }
+
+        private bool SaveCurrentSegmentAndClear(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, long lastOffset, long offset)
+        {
+            if(offset <= lastOffset)
+            {
+                SaveSegmentAndClear(ref fileSegmentInfo, ref newVersionPosition, lastOffset);
+                return true;
+            }
+
+            return false;
+        }
+
+        private void SaveSegmentAndClear(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, long lastOffset)
+        {
+            var currentSegment = fileSegmentInfo;
+            Synchronize(() => this.result.Add(currentSegment));
+
+            fileSegmentInfo = default;
+            
+            newVersionPosition += lastOffset + 1;
+        }
+
+        private void SaveSegmentForCurrentVersionAndClear(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, ref long oldVersionPosition, long lastOffset, long offset)
+        {
+            var currentSegment = fileSegmentInfo;
+            Synchronize(() => this.result.Add(currentSegment));
+
+            fileSegmentInfo = default;
+            if(offset <= lastOffset)
+            {
+                newVersionPosition += lastOffset + 1;
+                oldVersionPosition += lastOffset + 1;
+            }
+            else if(CurrentVersion!.Position == oldVersionPosition + 1)
+            {
+                newVersionPosition += lastOffset + 1;
+            }
         }
 
         /// <summary>
