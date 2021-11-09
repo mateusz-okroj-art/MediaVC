@@ -28,57 +28,58 @@ namespace MediaVC.Tools.Detection.Strategies
 
         #region Methods
 
-        public async ValueTask<bool> CheckIsTextAsync(CancellationToken cancellationToken = default)
-        {
-            var input = MemoryMarshal.ToEnumerable(Memory);
-
-            var length = input.Count();
-
-            var isText = true;
-
-            if(length < 1)
-                isText = false;
-            else if(length < 100_000)
+        public async ValueTask<bool> CheckIsTextAsync(CancellationToken cancellationToken = default) =>
+            await Task.Run(() =>
             {
-                foreach(var value in input)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
+                var input = MemoryMarshal.ToEnumerable(Memory);
 
-                    if(!CheckSingleCharacter(value))
+                var length = input.Count();
+
+                var isText = true;
+
+                if(length < 1)
+                    isText = false;
+                else if(length < 100_000)
+                {
+                    foreach(var value in input)
                     {
-                        isText = false;
-                        break;
+                        cancellationToken.ThrowIfCancellationRequested();
+
+                        if(!CheckSingleCharacter(value))
+                        {
+                            isText = false;
+                            break;
+                        }
                     }
                 }
-            }
-            else
-            {
-                var locker = new object();
-
-                _ = Parallel.ForEach(input, (value, state) =>
+                else
                 {
+                    var locker = new object();
+
+                    _ = Parallel.ForEach(input, (value, state) =>
+                    {
+                        if(cancellationToken.IsCancellationRequested)
+                        {
+                            state.Break();
+
+                            return;
+                        }
+
+                        if(!CheckSingleCharacter(value))
+                        {
+                            lock(locker)
+                                isText = false;
+
+                            state.Break();
+                        }
+                    });
+
                     if(cancellationToken.IsCancellationRequested)
-                    {
-                        state.Break();
+                        throw new OperationCanceledException();
+                }
 
-                        return;
-                    }
-
-                    if(!CheckSingleCharacter(value))
-                    {
-                        lock(locker)
-                            isText = false;
-
-                        state.Break();
-                    }
-                });
-
-                if(cancellationToken.IsCancellationRequested)
-                    throw new OperationCanceledException();
-            }
-
-            return isText;
-        }
+                return isText;
+            });
 
         private static bool CheckSingleCharacter(byte character) =>
             character is >= 0 and <= 127;

@@ -52,7 +52,7 @@ namespace MediaVC.Tools.Detection.Strategies
 
         public async ValueTask<bool> CheckIsTextAsync(CancellationToken cancellationToken = default)
         {
-            if(Stream.Length < 1)
+            if(Stream.Length < 1 && Stream.Length > int.MaxValue)
                 return false;
 
             if(this.canReadAll)
@@ -69,7 +69,7 @@ namespace MediaVC.Tools.Detection.Strategies
                 var bufferA = this.buffer.Slice(0, 250_000_000);
                 var bufferB = this.buffer.Slice(249_000_000, 250_000_000);
 
-                var streamLocker = new object();
+                var streamLocker = new SemaphoreSlim(1,1);
 
                 MemoryTextDetectionStrategy detector1, detector2;
                 var activeActions = new List<Task>();
@@ -88,7 +88,7 @@ namespace MediaVC.Tools.Detection.Strategies
                         return result.Value;
                     }
 
-                    Monitor.Enter(streamLocker);
+                    await streamLocker.WaitAsync(cancellationToken);
 
                     var countReaded = await Stream.ReadAsync(bufferA, cancellationToken);
                     canContinue = countReaded == 250_000_000;
@@ -102,7 +102,7 @@ namespace MediaVC.Tools.Detection.Strategies
                             .GetAwaiter()
                             .OnCompleted(async () =>
                             {
-                                Monitor.Exit(streamLocker);
+                                streamLocker.Release();
 
                                 detector2 = new MemoryTextDetectionStrategy(bufferB);
 
@@ -117,7 +117,7 @@ namespace MediaVC.Tools.Detection.Strategies
                             });
                     }
                     else
-                        Monitor.Exit(streamLocker);
+                        streamLocker.Release();
 
                     if(result.HasValue)
                     {
@@ -128,7 +128,7 @@ namespace MediaVC.Tools.Detection.Strategies
                     detector1 = new MemoryTextDetectionStrategy(bufferA.Slice(0, countReaded));
 
                     if(!await detector1.CheckIsTextAsync(cancellationToken))
-                        return false;
+                        result = false;
                 }
                 while(Stream.Position < Stream.Length);
 

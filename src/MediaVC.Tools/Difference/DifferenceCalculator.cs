@@ -64,181 +64,241 @@ namespace MediaVC.Tools.Difference
 
             if(CurrentVersion?.Length > 0 && NewVersion.Length > 0)
             {
-                FileSegmentInfo fileSegmentInfo = default;
-
-                long newVersionPosition = 0, oldVersionPosition = 0;
-                while(newVersionPosition < NewVersion.Length)
-                {
-                    cancellationToken.ThrowIfCancellationRequested();
-
-                    NewVersion.Position = newVersionPosition;
-
-                    Synchronize(() => progress?.Report((float)(newVersionPosition + 1) / NewVersion.Length));
-
-                    long lastOffset = 0;
-                    while(oldVersionPosition < CurrentVersion.Length)
-                    {
-                        cancellationToken.ThrowIfCancellationRequested();
-
-                        CurrentVersion.Position = oldVersionPosition;
-
-                        for(long offset = 0; newVersionPosition + offset < NewVersion.Length && oldVersionPosition + offset < CurrentVersion.Length; ++offset)
-                        {
-                            CurrentVersion.Position = ReferenceEquals(fileSegmentInfo.Source, CurrentVersion) ?
-                                oldVersionPosition + offset :
-                                oldVersionPosition;
-
-                            NewVersion.Position = newVersionPosition + offset;
-
-                            byte left, right;
-                            left = await CurrentVersion.ReadByteAsync();
-
-                            if(ReferenceEquals(CurrentVersion, NewVersion))
-                                --CurrentVersion.Position;
-
-                            right = await NewVersion.ReadByteAsync();
-
-                            if(left == right)
-                            {
-                                if(fileSegmentInfo.Source is null)
-                                {
-                                    fileSegmentInfo = new FileSegmentInfo
-                                    {
-                                        Source = CurrentVersion,
-                                        StartPositionInSource = oldVersionPosition + offset,
-                                        EndPositionInSource = oldVersionPosition + offset,
-                                        MappedPosition = newVersionPosition + offset
-                                    };
-                                }
-                                else if(fileSegmentInfo.Source == CurrentVersion)
-                                {
-                                    if(offset <= lastOffset)
-                                    {
-                                        Synchronize(() => this.result.Add(fileSegmentInfo));
-
-                                        fileSegmentInfo = default;
-
-                                        oldVersionPosition += lastOffset + 1;
-                                        newVersionPosition += lastOffset + 1;
-
-                                        break;
-                                    }
-
-                                    fileSegmentInfo.EndPositionInSource = oldVersionPosition + offset;
-                                }
-                                else if(fileSegmentInfo.Source == NewVersion)
-                                {
-                                    Synchronize(() => this.result.Add(fileSegmentInfo));
-
-                                    fileSegmentInfo = default;
-                                    if(offset <= lastOffset)
-                                    {
-                                        newVersionPosition += lastOffset + 1;
-                                        oldVersionPosition += lastOffset + 1;
-                                    }
-                                    else if(CurrentVersion.Position == oldVersionPosition + 1)
-                                    {
-                                        newVersionPosition += lastOffset + 1;
-                                    }
-
-                                    break;
-                                }
-                                else
-                                    throw new InvalidOperationException("Unknown source of file segment.");
-                            }
-                            else
-                            {
-                                if(fileSegmentInfo.Source is null)
-                                {
-                                    fileSegmentInfo = new FileSegmentInfo
-                                    {
-                                        Source = NewVersion,
-                                        MappedPosition = newVersionPosition + offset,
-                                        StartPositionInSource = newVersionPosition + offset,
-                                        EndPositionInSource = newVersionPosition + offset
-                                    };
-                                }
-                                else if(fileSegmentInfo.Source == CurrentVersion)
-                                {
-                                    Synchronize(() => this.result.Add(fileSegmentInfo));
-
-                                    fileSegmentInfo = default;
-                                    oldVersionPosition += lastOffset + 1;
-                                    newVersionPosition += lastOffset + 1;
-
-                                    break;
-                                }
-                                else if(fileSegmentInfo.Source == NewVersion)
-                                {
-                                    if(offset <= lastOffset)
-                                    {
-                                        newVersionPosition += lastOffset + 1;
-
-                                        Synchronize(() => this.result.Add(fileSegmentInfo));
-                                        fileSegmentInfo = default;
-
-                                        break;
-                                    }
-
-                                    fileSegmentInfo.EndPositionInSource = newVersionPosition + offset;
-                                }
-                                else
-                                    throw new InvalidOperationException("Unknown source of file segment.");
-                            }
-
-                            lastOffset = offset;
-                        }
-
-                        if(newVersionPosition >= NewVersion.Length)
-                            break;
-                    }
-
-                    if(oldVersionPosition >= CurrentVersion.Length)
-                        break;
-                }
-
-                if(newVersionPosition < NewVersion.Length - 1)
-                {
-                    Synchronize(() => this.result.Add(new FileSegmentInfo
-                    {
-                        Source = NewVersion,
-                        MappedPosition = newVersionPosition,
-                        StartPositionInSource = newVersionPosition,
-                        EndPositionInSource = NewVersion.Length - 1
-                    }));
-                }
-
-                Synchronize(() => RemovedSegmentsDetector.Detect(this.result, CurrentVersion, this.removed, cancellationToken));
+                await CalculateWhenBothFilesNotEmpty(progress, cancellationToken);
             }
             else if((CurrentVersion?.Length ?? 0) < 1 && NewVersion.Length > 0)
             {
-                Synchronize(() => progress?.Report(0));
-
-                Synchronize(() => this.result.Add(new FileSegmentInfo
-                    {
-                        MappedPosition = 0,
-                        Source = NewVersion,
-                        StartPositionInSource = 0,
-                        EndPositionInSource = NewVersion.Length - 1
-                    }));
-
-                Synchronize(() => progress?.Report(1));
+                AddSegmentForFullNewFile(progress);
             }
             else if(CurrentVersion?.Length > 0 && NewVersion.Length < 1)
             {
-                Synchronize(() => progress?.Report(0));
-
-                Synchronize(() => this.removed.Add(new FileSegmentInfo
-                {
-                    MappedPosition = 0,
-                    Source = CurrentVersion,
-                    StartPositionInSource = 0,
-                    EndPositionInSource = CurrentVersion.Length - 1
-                }));
-
-                Synchronize(() => progress?.Report(1));
+                AddSegmentAsRemoved(progress);
             }
         }
+
+        /// <summary>
+        /// Adds segment for full CurrentVersion to removed.
+        /// </summary>
+        /// <param name="progress"></param>
+        private void AddSegmentAsRemoved(IProgress<float>? progress)
+        {
+            Synchronize(() => progress?.Report(0));
+
+            Synchronize(() => this.removed.Add(new FileSegmentInfo
+            {
+                MappedPosition = 0,
+                Source = CurrentVersion!,
+                StartPositionInSource = 0,
+                EndPositionInSource = CurrentVersion!.Length - 1
+            }));
+
+            Synchronize(() => progress?.Report(1));
+        }
+
+        /// <summary>
+        /// Adds segment with full NewVersion to result when CurrentVersion is empty
+        /// </summary>
+        /// <param name="progress"></param>
+        private void AddSegmentForFullNewFile(IProgress<float>? progress)
+        {
+            Synchronize(() => progress?.Report(0));
+
+            Synchronize(() => this.result.Add(new FileSegmentInfo
+            {
+                MappedPosition = 0,
+                Source = NewVersion,
+                StartPositionInSource = 0,
+                EndPositionInSource = NewVersion.Length - 1
+            }));
+
+            Synchronize(() => progress?.Report(1));
+        }
+
+        /// <summary>
+        /// Calculates difference when two versions are not empty
+        /// </summary>
+        /// <exception cref="InvalidOperationException"/>
+        private async Task CalculateWhenBothFilesNotEmpty(IProgress<float>? progress, CancellationToken cancellationToken)
+        {
+            FileSegmentInfo fileSegmentInfo = default;
+
+            long newVersionPosition = 0, oldVersionPosition = 0;
+            while(newVersionPosition < NewVersion.Length)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                NewVersion.Position = newVersionPosition;
+
+                Synchronize(() => progress?.Report((float)(newVersionPosition + 1) / NewVersion.Length));
+
+                long lastOffset = 0;
+                while(oldVersionPosition < CurrentVersion!.Length)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+
+                    CurrentVersion.Position = oldVersionPosition;
+
+                    for(long offset = 0; newVersionPosition + offset < NewVersion.Length && oldVersionPosition + offset < CurrentVersion.Length; ++offset)
+                    {
+                        CurrentVersion.Position = AdjustCurrentVersionPosition(fileSegmentInfo, offset, oldVersionPosition);
+
+                        NewVersion.Position = newVersionPosition + offset;
+
+                        byte left, right;
+                        left = await CurrentVersion.ReadByteAsync(cancellationToken);
+
+                        if(ReferenceEquals(CurrentVersion, NewVersion))
+                            --CurrentVersion.Position;
+
+                        right = await NewVersion.ReadByteAsync(cancellationToken);
+
+                        var completed =
+                            left == right
+                            ? CalculateWhenBytesAreEquals(ref fileSegmentInfo, ref newVersionPosition, ref oldVersionPosition, lastOffset, offset)
+                            : CalculateWhenBytesAreDifferent(ref fileSegmentInfo, ref newVersionPosition, ref oldVersionPosition, lastOffset, offset);
+
+                        if(!completed)
+                            break;
+
+                        lastOffset = offset;
+                    }
+
+                    if(newVersionPosition >= NewVersion.Length)
+                        break;
+                }
+
+                if(oldVersionPosition >= CurrentVersion.Length)
+                    break;
+            }
+
+            AddSegmentForNewVersionEnding(newVersionPosition);
+
+            Synchronize(() => RemovedSegmentsDetector.Detect(this.result, CurrentVersion!, this.removed, cancellationToken));
+        }
+
+        /// <summary>
+        /// Adds last segment when NewVersion is not on end.
+        /// </summary>
+        /// <param name="newVersionPosition"></param>
+        private void AddSegmentForNewVersionEnding(long newVersionPosition)
+        {
+            if(newVersionPosition < NewVersion.Length - 1)
+            {
+                Synchronize(() => this.result.Add(new FileSegmentInfo
+                {
+                    Source = NewVersion,
+                    MappedPosition = newVersionPosition,
+                    StartPositionInSource = newVersionPosition,
+                    EndPositionInSource = NewVersion.Length - 1
+                }));
+            }
+        }
+
+        private bool CalculateWhenBytesAreDifferent(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, ref long oldVersionPosition, long lastOffset, long offset)
+        {
+            if(fileSegmentInfo.Source is null)
+            {
+                fileSegmentInfo = new FileSegmentInfo
+                {
+                    Source = NewVersion,
+                    MappedPosition = newVersionPosition + offset,
+                    StartPositionInSource = newVersionPosition + offset,
+                    EndPositionInSource = newVersionPosition + offset
+                };
+            }
+            else if(ReferenceEquals(fileSegmentInfo.Source, CurrentVersion))
+            {
+                var currentSegment = fileSegmentInfo;
+                Synchronize(() => this.result.Add(currentSegment));
+
+                fileSegmentInfo = default;
+                oldVersionPosition += lastOffset + 1;
+                newVersionPosition += lastOffset + 1;
+
+                return false;
+            }
+            else if(ReferenceEquals(fileSegmentInfo.Source, NewVersion))
+            {
+                if(offset <= lastOffset)
+                {
+                    newVersionPosition += lastOffset + 1;
+
+                    var currentSegment = fileSegmentInfo;
+                    Synchronize(() => this.result.Add(currentSegment));
+                    fileSegmentInfo = default;
+
+                    return false;
+                }
+
+                fileSegmentInfo.EndPositionInSource = newVersionPosition + offset;
+            }
+            else
+                throw new InvalidOperationException("Unknown source of file segment.");
+
+            return true;
+        }
+
+        private bool CalculateWhenBytesAreEquals(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, ref long oldVersionPosition, long lastOffset, long offset)
+        {
+            if(fileSegmentInfo.Source is null)
+            {
+                fileSegmentInfo = new FileSegmentInfo
+                {
+                    Source = CurrentVersion!,
+                    StartPositionInSource = oldVersionPosition + offset,
+                    EndPositionInSource = oldVersionPosition + offset,
+                    MappedPosition = newVersionPosition + offset
+                };
+            }
+            else if(ReferenceEquals(fileSegmentInfo.Source, CurrentVersion))
+            {
+                if(offset <= lastOffset)
+                {
+                    var currentSegment = fileSegmentInfo;
+                    Synchronize(() => this.result.Add(currentSegment));
+
+                    fileSegmentInfo = default;
+
+                    oldVersionPosition += lastOffset + 1;
+                    newVersionPosition += lastOffset + 1;
+
+                    return false;
+                }
+
+                fileSegmentInfo.EndPositionInSource = oldVersionPosition + offset;
+            }
+            else if(ReferenceEquals(fileSegmentInfo.Source, NewVersion))
+            {
+                var currentSegment = fileSegmentInfo;
+                Synchronize(() => this.result.Add(currentSegment));
+
+                fileSegmentInfo = default;
+                if(offset <= lastOffset)
+                {
+                    newVersionPosition += lastOffset + 1;
+                    oldVersionPosition += lastOffset + 1;
+                }
+                else if(CurrentVersion!.Position == oldVersionPosition + 1)
+                {
+                    newVersionPosition += lastOffset + 1;
+                }
+
+                return false;
+            }
+            else
+                throw new InvalidOperationException("Unknown source of file segment.");
+
+            return true;
+        }
+
+        /// <summary>
+        /// When current segment source is not CurrentVersion, then CurrentVersion should not be moved by offset.
+        /// </summary>
+        /// <returns>Adjusted stream position</returns>
+        private long AdjustCurrentVersionPosition(IFileSegmentInfo fileSegmentInfo, long offset, long oldVersionPosition) =>
+            ReferenceEquals(fileSegmentInfo.Source, CurrentVersion) ?
+            oldVersionPosition + offset :
+            oldVersionPosition;
 
         private void Synchronize(Action workToDo)
         {

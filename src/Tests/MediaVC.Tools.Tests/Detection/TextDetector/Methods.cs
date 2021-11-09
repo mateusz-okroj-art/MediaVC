@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Threading;
 
 using MediaVC.Tools.Tests.Fixtures;
 
@@ -27,64 +29,96 @@ namespace MediaVC.Tools.Tests.Detection.TextDetector
         public async void CheckIsText_ArgumentIsMemoryText1_ShouldReturnTrue()
         {
             var detector = new Tools.Detection.TextDetector(fixture.Memory_Text1);
+            var cancellationTokenSource = new CancellationTokenSource();
 
-            Assert.True(await detector.CheckIsTextAsync());
+            if(!Debugger.IsAttached)
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(10));
+
+            Assert.True(await detector.CheckIsTextAsync(cancellationTokenSource.Token));
         }
 
         [Fact]
         public async void CheckIsText_ArgumentIsMemoryText2_ShouldReturnTrue()
         {
             var detector = new Tools.Detection.TextDetector(fixture.Memory_Text2);
+            var cancellationTokenSource = new CancellationTokenSource();
 
-            Assert.True(await detector.CheckIsTextAsync());
+            if(!Debugger.IsAttached)
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(10));
+
+            Assert.True(await detector.CheckIsTextAsync(cancellationTokenSource.Token));
         }
 
         [Fact]
         public async void CheckIsText_ArgumentIsMemoryNonText1_ShouldReturnFalse()
         {
             var detector = new Tools.Detection.TextDetector(fixture.Memory_NonText1);
+            var cancellationTokenSource = new CancellationTokenSource();
 
-            Assert.False(await detector.CheckIsTextAsync());
+            if(!Debugger.IsAttached)
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(10));
+
+            Assert.False(await detector.CheckIsTextAsync(cancellationTokenSource.Token));
         }
 
         [Fact]
         public async void CheckIsText_ArgumentIsMemoryNonText2_ShouldReturnFalse()
         {
             var detector = new Tools.Detection.TextDetector(fixture.Memory_NonText2);
+            var cancellationTokenSource = new CancellationTokenSource();
 
-            Assert.False(await detector.CheckIsTextAsync());
+            if(!Debugger.IsAttached)
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(10));
+
+            Assert.False(await detector.CheckIsTextAsync(cancellationTokenSource.Token));
         }
 
         [Fact]
         public async void CheckIsText_ArgumentIsStreamText1_ShouldReturnTrue()
         {
             var detector = new Tools.Detection.TextDetector(fixture.Stream_Text1);
+            var cancellationTokenSource = new CancellationTokenSource();
 
-            Assert.True(await detector.CheckIsTextAsync());
+            if(!Debugger.IsAttached)
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(10));
+
+            Assert.True(await detector.CheckIsTextAsync(cancellationTokenSource.Token));
         }
 
         [Fact]
         public async void CheckIsText_ArgumentIsStreamText2_ShouldReturnTrue()
         {
             var detector = new Tools.Detection.TextDetector(fixture.Stream_Text2);
+            var cancellationTokenSource = new CancellationTokenSource();
 
-            Assert.True(await detector.CheckIsTextAsync());
+            if(!Debugger.IsAttached)
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(10));
+
+            Assert.True(await detector.CheckIsTextAsync(cancellationTokenSource.Token));
         }
 
         [Fact]
         public async void CheckIsText_ArgumentIsStreamNonText1_ShouldReturnFalse()
         {
             var detector = new Tools.Detection.TextDetector(fixture.Stream_NonText1);
+            var cancellationTokenSource = new CancellationTokenSource();
 
-            Assert.False(await detector.CheckIsTextAsync());
+            if(!Debugger.IsAttached)
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(10));
+
+            Assert.False(await detector.CheckIsTextAsync(cancellationTokenSource.Token));
         }
 
         [Fact]
         public async void CheckIsText_ArgumentIsStreamNonText2_ShouldReturnFalse()
         {
             var detector = new Tools.Detection.TextDetector(fixture.Stream_NonText2);
+            var cancellationTokenSource = new CancellationTokenSource();
 
-            Assert.False(await detector.CheckIsTextAsync());
+            if(!Debugger.IsAttached)
+                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(10));
+
+            Assert.False(await detector.CheckIsTextAsync(cancellationTokenSource.Token));
         }
 
         #endregion
