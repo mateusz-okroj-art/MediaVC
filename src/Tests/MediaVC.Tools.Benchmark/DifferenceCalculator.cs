@@ -15,9 +15,11 @@ namespace MediaVC.Tools.Benchmark
 {
     internal static class DifferenceCalculator
     {
+        private const int TestedFileLength = 200_000_000;
+
         public static void Run()
         {
-            var files = Array.Empty<FileStream>();
+            FileStream[] files = null;
 
             try
             {
@@ -26,7 +28,7 @@ namespace MediaVC.Tools.Benchmark
                 files = GenerateFiles();
 
                 WriteLine("Test with two files.");
-
+                Calc1(files[0], files[1]);
             }
             finally
             {
@@ -43,14 +45,42 @@ namespace MediaVC.Tools.Benchmark
             var files = new FileStream[2];
             var tempDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "temp");
 
-            for(byte count = 0; count < 2; ++count)
+            for(var index = 0; index < files.Length; ++index)
             {
                 var filename = Path.Combine(tempDirectory, $"{Guid.NewGuid()}.tmp");
 
-                var file = new FileStream(filename, FileMode.Create, FileAccess.ReadWrite, FileShare.None);
-                file.SetLength(2_000_000_000);
+                var file = File.Create(filename, 2000, FileOptions.DeleteOnClose);
+                file.SetLength(TestedFileLength);
+                file.Lock(0, TestedFileLength);
 
-                files[count] = file;
+                files[index] = file;
+
+                //var streamLocker = new object();
+
+                /*var lastPercentage = 0.0;
+
+                Parallel.For(0, 125_000_001, posIndex =>
+                {
+                    var bytes = Guid.NewGuid().ToByteArray();
+
+                    lock(streamLocker)
+                    {
+                        file.Position = 16 * posIndex;
+
+                        var percentage = Math.Round(((double)posIndex / 125_000_000) * 100, 1);
+
+                        if(Math.Abs(lastPercentage - percentage) > 0.1)
+                        {
+                            WriteLine($"File {index + 1}: {percentage}%");
+                            lastPercentage = percentage;
+                        }
+
+                        file.Write(bytes, 0, bytes.Length);
+                    }
+                });*/
+
+                file.Flush();
+                file.Unlock(0, TestedFileLength);
             }
 
             return files;
@@ -64,6 +94,9 @@ namespace MediaVC.Tools.Benchmark
             var progressReporter = new ConsoleProgressReporter();
             var calculator = new Difference.DifferenceCalculator(currentVersionSource, newVersionSource);
             var stopwatch = new Stopwatch();
+
+            progressReporter.ReportLeftLength(file1.Length);
+            progressReporter.ReportRightLength(file2.Length);
 
             stopwatch.Start();
 

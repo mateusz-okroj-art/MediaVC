@@ -46,33 +46,46 @@ namespace MediaVC.Tools.Difference
         /// </summary>
         /// <param name="cancellation"></param>
         /// <exception cref="OperationCanceledException" />
-        public async ValueTask CalculateAsync(CancellationToken cancellationToken = default, IProgress<float>? progress = null)
+        public async ValueTask CalculateAsync(CancellationToken cancellationToken = default, IDifferenceCalculatorProgress? progress = null)
         {
-            Synchronize(() =>
+            try
             {
-                this.result.Clear();
-                this.removed.Clear();
-            });
+                Synchronize(() =>
+                {
+                    this.result.Clear();
+                    this.removed.Clear();
+                });
 
-            cancellationToken.ThrowIfCancellationRequested();
+                cancellationToken.ThrowIfCancellationRequested();
 
-            if(CurrentVersion?.Length > 0)
-                CurrentVersion.Position = 0;
+                if(CurrentVersion?.Length > 0)
+                    CurrentVersion.Position = 0;
 
-            if(NewVersion.Length > 0)
-                NewVersion.Position = 0;
+                if(NewVersion.Length > 0)
+                    NewVersion.Position = 0;
 
-            if(CurrentVersion?.Length > 0 && NewVersion.Length > 0)
-            {
-                await CalculateWhenBothFilesNotEmpty(progress, cancellationToken);
+                Synchronize(() => progress?.ReportProcessState(ProcessState.Started));
+
+                if(CurrentVersion?.Length > 0 && NewVersion.Length > 0)
+                {
+                    await CalculateWhenBothFilesNotEmpty(progress, cancellationToken);
+                }
+                else if((CurrentVersion?.Length ?? 0) < 1 && NewVersion.Length > 0)
+                {
+                    AddSegmentForFullNewFile(progress);
+                }
+                else if(CurrentVersion?.Length > 0 && NewVersion.Length < 1)
+                {
+                    AddSegmentAsRemoved(progress);
+                }
+
+                Synchronize(() => progress?.ReportProcessState(ProcessState.Completed));
             }
-            else if((CurrentVersion?.Length ?? 0) < 1 && NewVersion.Length > 0)
+            catch(OperationCanceledException ex)
             {
-                AddSegmentForFullNewFile(progress);
-            }
-            else if(CurrentVersion?.Length > 0 && NewVersion.Length < 1)
-            {
-                AddSegmentAsRemoved(progress);
+                Synchronize(() => progress?.ReportProcessState(ProcessState.Cancelled));
+
+                throw ex;
             }
         }
 
@@ -80,9 +93,9 @@ namespace MediaVC.Tools.Difference
         /// Adds segment for full CurrentVersion to removed.
         /// </summary>
         /// <param name="progress"></param>
-        private void AddSegmentAsRemoved(IProgress<float>? progress)
+        private void AddSegmentAsRemoved(IDifferenceCalculatorProgress? progress)
         {
-            Synchronize(() => progress?.Report(0));
+            Synchronize(() => progress?.ReportLeftMainPosition(0));
 
             Synchronize(() => this.removed.Add(new FileSegmentInfo
             {
@@ -92,16 +105,17 @@ namespace MediaVC.Tools.Difference
                 EndPositionInSource = CurrentVersion!.Length - 1
             }));
 
-            Synchronize(() => progress?.Report(1));
+            if(CurrentVersion is not null)
+                Synchronize(() => progress?.ReportLeftMainPosition(CurrentVersion.Length - 1));
         }
 
         /// <summary>
         /// Adds segment with full NewVersion to result when CurrentVersion is empty
         /// </summary>
         /// <param name="progress"></param>
-        private void AddSegmentForFullNewFile(IProgress<float>? progress)
+        private void AddSegmentForFullNewFile(IDifferenceCalculatorProgress? progress)
         {
-            Synchronize(() => progress?.Report(0));
+            Synchronize(() => progress?.ReportRightMainPosition(0));
 
             Synchronize(() => this.result.Add(new FileSegmentInfo
             {
@@ -111,16 +125,22 @@ namespace MediaVC.Tools.Difference
                 EndPositionInSource = NewVersion.Length - 1
             }));
 
-            Synchronize(() => progress?.Report(1));
+            Synchronize(() => progress?.ReportRightMainPosition(NewVersion.Length - 1));
         }
 
         /// <summary>
         /// Calculates difference when two versions are not empty
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
-        private async Task CalculateWhenBothFilesNotEmpty(IProgress<float>? progress, CancellationToken cancellationToken)
+        private async Task CalculateWhenBothFilesNotEmpty(IDifferenceCalculatorProgress? progress, CancellationToken cancellationToken)
         {
             FileSegmentInfo fileSegmentInfo = default;
+
+            Synchronize(() =>
+            {
+                progress?.ReportLeftMainPosition(0);
+                progress?.ReportRightMainPosition(0);
+            });
 
             long newVersionPosition = 0, oldVersionPosition = 0;
             while(newVersionPosition < NewVersion.Length)
@@ -129,7 +149,7 @@ namespace MediaVC.Tools.Difference
 
                 NewVersion.Position = newVersionPosition;
 
-                Synchronize(() => progress?.Report((float)(newVersionPosition + 1) / NewVersion.Length));
+                Synchronize(() => progress?.ReportRightMainPosition(newVersionPosition));
 
                 long lastOffset = 0;
                 while(oldVersionPosition < CurrentVersion!.Length)
@@ -138,9 +158,17 @@ namespace MediaVC.Tools.Difference
 
                     CurrentVersion.Position = oldVersionPosition;
 
+                    Synchronize(() => progress?.ReportLeftMainPosition(oldVersionPosition));
+
                     for(long offset = 0; newVersionPosition + offset < NewVersion.Length && oldVersionPosition + offset < CurrentVersion.Length; ++offset)
                     {
                         CurrentVersion.Position = AdjustCurrentVersionPosition(fileSegmentInfo, offset, oldVersionPosition);
+
+                        Synchronize(() =>
+                        {
+                            progress?.ReportLeftOffsetedPosition(CurrentVersion.Position);
+                            progress?.ReportRightOffsetedPosition(newVersionPosition + offset);
+                        });
 
                         NewVersion.Position = newVersionPosition + offset;
 
@@ -203,7 +231,9 @@ namespace MediaVC.Tools.Difference
                 fileSegmentInfo.EndPositionInSource = newVersionPosition + offset;
             }
             else
+            {
                 throw new InvalidOperationException("Unknown source of file segment.");
+            }
 
             return true;
         }
@@ -238,7 +268,9 @@ namespace MediaVC.Tools.Difference
                 return false;
             }
             else
+            {
                 throw new InvalidOperationException("Unknown source of file segment.");
+            }
 
             return true;
         }

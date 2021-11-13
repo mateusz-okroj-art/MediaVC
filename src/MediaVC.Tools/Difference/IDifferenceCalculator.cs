@@ -8,7 +8,7 @@ namespace MediaVC.Tools.Difference
 {
     public interface IDifferenceCalculator
     {
-        ValueTask CalculateAsync(CancellationToken cancellationToken = default, IProgress<float>? progress = null);
+        ValueTask CalculateAsync(CancellationToken cancellationToken = default, IDifferenceCalculatorProgress? progress = null);
 
         IInputSource? CurrentVersion { get; }
 
