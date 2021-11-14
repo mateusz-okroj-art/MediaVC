@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace MediaVC.Tools.Tests.Detection.TextDetector
+namespace MediaVC.Tools.Tests.Fixtures
 {
     public interface ITextDetectorFixture : IDisposable
     {

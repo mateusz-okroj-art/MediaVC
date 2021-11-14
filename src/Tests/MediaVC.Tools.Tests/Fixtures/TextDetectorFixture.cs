@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-namespace MediaVC.Tools.Tests.Detection.TextDetector
+namespace MediaVC.Tools.Tests.Fixtures
 {
     public sealed class TextDetectorFixture : ITextDetectorFixture
     {

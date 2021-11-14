@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net5.0;netcoreapp3.1;netstandard2.1</TargetFrameworks>
+		<TargetFrameworks>net5.0</TargetFrameworks>
 		<Version>0.9.0</Version>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 		<NeutralLanguage>en-US</NeutralLanguage>
@@ -13,6 +13,7 @@
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<Configurations>Debug;Release;NightlyBuild</Configurations>
+		<RootNamespace>MediaVC</RootNamespace>
 	</PropertyGroup>
 
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -21,6 +22,10 @@
 
 	<ItemGroup>
 		<None Include="..\..\LICENSE" Link="LICENSE" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <PackageReference Include="System.Reactive" Version="5.*" />
 	</ItemGroup>
 
 </Project>
