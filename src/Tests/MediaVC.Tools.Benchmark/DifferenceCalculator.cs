@@ -1,9 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -15,7 +12,7 @@ namespace MediaVC.Tools.Benchmark
 {
     internal static class DifferenceCalculator
     {
-        private const int TestedFileLength = 200_000_000;
+        private const int TestedFileLength = 500_000;
 
         public static void Run()
         {
@@ -45,7 +42,7 @@ namespace MediaVC.Tools.Benchmark
             var files = new FileStream[2];
             var tempDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "temp");
 
-            for(var index = 0; index < files.Length; ++index)
+            Parallel.For(0, files.Length, index =>
             {
                 var filename = Path.Combine(tempDirectory, $"{Guid.NewGuid()}.tmp");
 
@@ -55,33 +52,21 @@ namespace MediaVC.Tools.Benchmark
 
                 files[index] = file;
 
-                //var streamLocker = new object();
-
-                /*var lastPercentage = 0.0;
-
-                Parallel.For(0, 125_000_001, posIndex =>
+                for(long pos = 0; pos < 500_000; pos += 16)
                 {
                     var bytes = Guid.NewGuid().ToByteArray();
 
-                    lock(streamLocker)
-                    {
-                        file.Position = 16 * posIndex;
+                    file.Position = pos;
 
-                        var percentage = Math.Round(((double)posIndex / 125_000_000) * 100, 1);
+                    var percentage = MathF.Round((float)pos / 500_000 * 100, 1);
+                    WriteLine($"File {index + 1}: {percentage}%");
 
-                        if(Math.Abs(lastPercentage - percentage) > 0.1)
-                        {
-                            WriteLine($"File {index + 1}: {percentage}%");
-                            lastPercentage = percentage;
-                        }
-
-                        file.Write(bytes, 0, bytes.Length);
-                    }
-                });*/
+                    file.Write(bytes, 0, bytes.Length);
+                }
 
                 file.Flush();
                 file.Unlock(0, TestedFileLength);
-            }
+            });
 
             return files;
         }
@@ -104,7 +89,7 @@ namespace MediaVC.Tools.Benchmark
 
             stopwatch.Stop();
 
-            WriteLine($"Time: {stopwatch.ElapsedMilliseconds} ms");
+            WriteLine($"Time: {stopwatch.Elapsed.TotalSeconds} s");
         }
     }
 }

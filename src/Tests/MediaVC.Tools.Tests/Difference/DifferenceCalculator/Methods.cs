@@ -351,22 +351,6 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Equal(4L, (long)result.Length);
         }
 
-        [Fact]
-        public async Task Calculate_ShouldReportProgress()
-        {
-            var calculator = new Tools.Difference.DifferenceCalculator(this.fixture.ExampleSources[1], this.fixture.ExampleSources[3]);
-            var progressMock = new Mock<IProgress<float>>();
-            progressMock.Setup(mocked => mocked.Report(It.IsAny<float>())).Verifiable();
-            var cancellationTokenSource = new CancellationTokenSource();
-
-            if(!Debugger.IsAttached)
-                cancellationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
-
-            await calculator.CalculateAsync(cancellationTokenSource.Token, progressMock.Object);
-
-            progressMock.Verify(mocked => mocked.Report(It.IsInRange(0f, 1f, Moq.Range.Inclusive)));
-        }
-
         #endregion
     }
 }
