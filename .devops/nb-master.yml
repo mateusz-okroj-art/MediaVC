@@ -5,6 +5,10 @@
 
 name: MediaVC - NB master
 
+variables:
+
+  - template: templates/variables.yml
+
 trigger: none
 
 schedules:
@@ -29,16 +33,16 @@ pool:
 steps:
 
     - task: UseDotNet@2
-      displayName: Install .NET 5
+      displayName: Install .NET 6
       inputs:
         packageType: 'sdk'
-        version: '5.0.x'
+        version: '6.0.x'
 
     - task: DotNetCoreCLI@2
       displayName: Restore solution
       inputs:
         command: 'restore'
-        projects: '**/*.csproj'
+        projects: '$(SourceDirectory)/**/*.csproj'
         feedsToUse: 'select'
         configuration: NightlyBuild
 
@@ -46,7 +50,7 @@ steps:
       displayName: Build solution
       inputs:
         command: 'build'
-        projects: '**/*.csproj'
+        projects: '$(SourceDirectory)/**/*.csproj'
         configuration: NightlyBuild
 
     - task: VSTest@2
@@ -80,7 +84,7 @@ steps:
       continueOnError: true
       inputs:
         command: 'pack'
-        packagesToPack: 'src/MediaVC.Core/MediaVC.Core.csproj'
+        packagesToPack: '$(SourceDirectory)/MediaVC.Core/MediaVC.Core.csproj'
         configuration: 'NightlyBuild'
         versioningScheme: 'byPrereleaseNumber'
         majorVersion: '0'
@@ -92,7 +96,7 @@ steps:
       continueOnError: true
       inputs:
         command: 'pack'
-        packagesToPack: 'src/MediaVC/MediaVC.csproj'
+        packagesToPack: '$(SourceDirectory)/MediaVC/MediaVC.csproj'
         configuration: 'NightlyBuild'
         versioningScheme: 'byPrereleaseNumber'
         majorVersion: '0'
@@ -103,7 +107,7 @@ steps:
       displayName: Pack MediaVC.Tools
       inputs:
         command: 'pack'
-        packagesToPack: 'src/MediaVC.Tools/MediaVC.Tools.csproj'
+        packagesToPack: '$(SourceDirectory)/MediaVC.Tools/MediaVC.Tools.csproj'
         configuration: 'NightlyBuild'
         versioningScheme: 'byPrereleaseNumber'
         majorVersion: '0'
@@ -117,3 +121,11 @@ steps:
         packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
         nuGetFeedType: 'external'
         publishFeedCredentials: 'Nuget.org mateuszokroj1'
+
+    - task: DotNetCoreCLI@2
+      displayName: Benchmark test
+      continueOnError: true
+      timeoutInMinutes: 30
+      inputs:
+        command: 'run'
+        projects: '$(TestsDirectory)/MediaVC.Tools.Benchmark/MediaVC.Tools.Benchmark.csproj'
