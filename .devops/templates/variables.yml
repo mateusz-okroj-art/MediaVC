@@ -1,0 +1,9 @@
+variables:
+
+  - name: SourceDirectory
+    value: '$(Build.SourcesDirectory)/src'
+    readonly: true
+
+  - name: TestsDirectory
+    value: '$(Build.SourcesDirectory)/src/Tests'
+    readonly: true

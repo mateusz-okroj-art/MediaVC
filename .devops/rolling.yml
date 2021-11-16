@@ -5,6 +5,10 @@
 
 name: MediaVC - rolling build
 
+variables:
+
+  - template: templates/variables.yml
+
 trigger:
 - master
 - features/*
@@ -17,16 +21,16 @@ pool:
 steps:
 
 - task: UseDotNet@2
-  displayName: Install .NET 5
+  displayName: Install .NET 6
   inputs:
     packageType: 'sdk'
-    version: '5.0.x'
+    version: '6.0.x'
 
 - task: DotNetCoreCLI@2
   displayName: Restore solution
   inputs:
     command: 'restore'
-    projects: '**/*.csproj'
+    projects: '$(SourceDirectory)/**/*.csproj'
     feedsToUse: 'select'
     configuration: Debug
 
@@ -34,5 +38,5 @@ steps:
   displayName: Build solution
   inputs:
     command: 'build'
-    projects: '**/*.csproj'
+    projects: '$(SourceDirectory)/**/*.csproj'
     configuration: Debug
