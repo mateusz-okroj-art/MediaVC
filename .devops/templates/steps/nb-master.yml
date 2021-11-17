@@ -1,0 +1,58 @@
+steps:
+
+  - template: sdk-installation.yml
+
+  - task: DotNetCoreCLI@2
+    displayName: Restore project
+    inputs:
+      command: 'restore'
+      projects: $(ProjectDirectory)
+      feedsToUse: 'config'
+      nugetConfigPath: '$(SourceDirectory)/nuget.config'
+      configuration: NightlyBuild
+
+  - task: DotNetCoreCLI@2
+    displayName: Build project
+    inputs:
+      command: 'build'
+      projects: $(ProjectDirectory)
+      configuration: NightlyBuild
+
+  - task: DotNetCoreCLI@2
+    displayName: Build tests
+    inputs:
+      command: 'build'
+      projects: $(TestDirectory)
+
+  - task: DotNetCoreCLI@2
+    displayName: Test solution
+    inputs:
+      command: 'test'
+      projects: $(TestDirectory)
+
+  - task: PublishTestResults@2
+    displayName: Fail if tests are failed
+    inputs:
+      testResultsFormat: 'XUnit'
+      testResultsFiles: '$(Agent.TempDirectory)\*.trx'
+      failTaskOnFailedTests: true
+      buildConfiguration: 'NightlyBuild'
+
+  - task: DotNetCoreCLI@2
+    displayName: Nuget pack
+    inputs:
+      command: 'pack'
+      packagesToPack: $(ProjectDirectory)
+      configuration: 'NightlyBuild'
+      versioningScheme: 'byPrereleaseNumber'
+      majorVersion: '0'
+      minorVersion: '9'
+      patchVersion: '0'
+
+  - task: NuGetCommand@2
+    displayName: Publish packages to Nuget.org
+    inputs:
+      command: 'push'
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+      nuGetFeedType: 'external'
+      publishFeedCredentials: 'Nuget.org mateuszokroj1'
