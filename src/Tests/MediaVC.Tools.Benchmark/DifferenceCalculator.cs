@@ -40,7 +40,7 @@ namespace MediaVC.Tools.Benchmark
         private static FileStream[] GenerateFiles()
         {
             var files = new FileStream[2];
-            var tempDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "temp");
+            var tempDirectory = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Personal));
 
             Parallel.For(0, files.Length, index =>
             {
@@ -48,7 +48,6 @@ namespace MediaVC.Tools.Benchmark
 
                 var file = File.Create(filename, 2000, FileOptions.DeleteOnClose);
                 file.SetLength(TestedFileLength);
-                file.Lock(0, TestedFileLength);
 
                 files[index] = file;
 
@@ -65,7 +64,6 @@ namespace MediaVC.Tools.Benchmark
                 }
 
                 file.Flush();
-                file.Unlock(0, TestedFileLength);
             });
 
             return files;
