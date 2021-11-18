@@ -70,11 +70,6 @@ stages:
 
         steps:
 
-          - task: Delay@1
-            displayName: Delay for Nuget.org package verification
-            inputs:
-              delayForMinutes: '1'
-          
           - template: templates/steps/nb-master.yml
 
   - stage: Build_Main
@@ -92,11 +87,6 @@ stages:
             value: '$(TestsDirectory)/MediaVC.Tests/MediaVC.Tests.csproj'
 
         steps:
-
-          - task: Delay@1
-            displayName: Delay for Nuget.org package verification
-            inputs:
-              delayForMinutes: '1'
 
           - template: templates/steps/nb-master.yml
 
