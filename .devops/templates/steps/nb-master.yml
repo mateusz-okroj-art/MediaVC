@@ -27,13 +27,12 @@ steps:
     inputs:
       command: 'test'
       projects: $(TestDirectory)
-      arguments: '-l:trx;LogFileName=$(Agent.TempDirectory)\TestOutput.xml'
 
   - task: PublishTestResults@2
     displayName: Fail if tests are failed
     inputs:
       testResultsFormat: 'XUnit'
-      testResultsFiles: '$(Agent.TempDirectory)\TestOutput.xml'
+      testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
       failTaskOnFailedTests: true
       buildConfiguration: 'NightlyBuild'
 
