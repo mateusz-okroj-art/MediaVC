@@ -3,13 +3,11 @@ steps:
   - template: sdk-installation.yml
 
   - task: DotNetCoreCLI@2
-    displayName: Restore project
     inputs:
       command: 'restore'
-      projects: $(ProjectDirectory)
-      feedsToUse: 'config'
-      nugetConfigPath: '$(Build.SourcesDirectory)/nuget.config'
-      configuration: NightlyBuild
+      projects: '$(ProjectDirectory)'
+      feedsToUse: 'select'
+      vstsFeed: '38bc0da1-3319-433c-a904-026e89025e23/ee6b9c5d-1dfb-404c-ad78-604066a68c11'
 
   - task: DotNetCoreCLI@2
     displayName: Build project
@@ -49,6 +47,14 @@ steps:
       majorVersion: '0'
       minorVersion: '9'
       patchVersion: '0'
+
+  - task: DotNetCoreCLI@2
+    displayName: Publish packages to Artifacts
+    inputs:
+      command: 'push'
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+      nuGetFeedType: 'internal'
+      publishVstsFeed: '38bc0da1-3319-433c-a904-026e89025e23/ee6b9c5d-1dfb-404c-ad78-604066a68c11'
 
   - task: NuGetCommand@2
     displayName: Publish packages to Nuget.org
