@@ -10,33 +10,40 @@ variables:
   - template: templates/variables.yml
 
 trigger:
-- master
-- features/*
-- releases/*
-- bugfixes/*
+  paths:
+    exclude:
+      - .devops/*
+      - LICENSE
+
+  branches:
+    include:
+      - master
+      - features/*
+      - releases/*
+      - bugfixes/*
 
 pool:
   vmImage: windows-latest
 
 steps:
 
-- task: UseDotNet@2
-  displayName: Install .NET 6
-  inputs:
-    packageType: 'sdk'
-    version: '6.0.x'
+  - task: UseDotNet@2
+    displayName: Install .NET 6
+    inputs:
+      packageType: 'sdk'
+      version: '6.0.x'
 
-- task: DotNetCoreCLI@2
-  displayName: Restore solution
-  inputs:
-    command: 'restore'
-    projects: '$(SourceDirectory)/**/*.csproj'
-    feedsToUse: 'select'
-    configuration: Debug
+  - task: DotNetCoreCLI@2
+    displayName: Restore solution
+    inputs:
+      command: 'restore'
+      projects: '$(SourceDirectory)/**/*.csproj'
+      feedsToUse: 'select'
+      configuration: Debug
 
-- task: DotNetCoreCLI@2
-  displayName: Build solution
-  inputs:
-    command: 'build'
-    projects: '$(SourceDirectory)/**/*.csproj'
-    configuration: Debug
+  - task: DotNetCoreCLI@2
+    displayName: Build solution
+    inputs:
+      command: 'build'
+      projects: '$(SourceDirectory)/**/*.csproj'
+      configuration: Debug
