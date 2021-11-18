@@ -20,7 +20,7 @@ pr:
   drafts: false
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
 steps:
 
@@ -63,6 +63,6 @@ steps:
     displayName: Fail if tests are failed
     inputs:
           testResultsFormat: 'XUnit'
-          testResultsFiles: 'D:\a\_temp\*.trx'
+          testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
           failTaskOnFailedTests: true
           buildConfiguration: 'Debug'
