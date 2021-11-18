@@ -9,34 +9,34 @@ variables:
 
   - template: templates/variables.yml
 
+  - name: Configuration
+    value: Debug
+
 trigger:
-- master
-- features/*
-- releases/*
-- bugfixes/*
+  paths:
+    exclude:
+      - LICENSE
+      - .devops/*
+  branches:
+    include:
+      - master
+      - features/*
+      - releases/*
+      - fixes/*
+
+pr:
+  branches:
+    exclude:
+      - master
+      - fixes/*
+      - features/*
+      - releases/*
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
 steps:
 
-- task: UseDotNet@2
-  displayName: Install .NET 6
-  inputs:
-    packageType: 'sdk'
-    version: '6.0.x'
+  - template: templates/steps/sdk-installation.yml
 
-- task: DotNetCoreCLI@2
-  displayName: Restore solution
-  inputs:
-    command: 'restore'
-    projects: '$(SourceDirectory)/**/*.csproj'
-    feedsToUse: 'select'
-    configuration: Debug
-
-- task: DotNetCoreCLI@2
-  displayName: Build solution
-  inputs:
-    command: 'build'
-    projects: '$(SourceDirectory)/**/*.csproj'
-    configuration: Debug
+  - template: templates/steps/restore&build-src.yml

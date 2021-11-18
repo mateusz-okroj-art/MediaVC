@@ -28,98 +28,72 @@ pr:
       - releases/*
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
-steps:
+stages:
 
-  - task: UseDotNet@2
-    displayName: Install .NET 5
-    inputs:
-      packageType: 'sdk'
-      version: '5.0.x'
+  - stage: Build_Core
+    displayName: Build Media.VC Core
+    jobs:
+      - job: Build_Core
+        displayName: Build Media.VC Core
+        workspace:
+          clean: all
+        
+        variables:
 
-  - task: UseDotNet@2
-    displayName: Install .NET 6
-    inputs:
-      packageType: 'sdk'
-      version: '6.0.x'
+          - name: ProjectDirectory
+            value: '$(SourceDirectory)/MediaVC.Core/MediaVC.Core.csproj'
 
-  - task: DotNetCoreCLI@2
-    displayName: Restore solution
-    inputs:
-      command: 'restore'
-      projects: '$(SourceDirectory)/**/*.csproj'
-      feedsToUse: 'select'
-      configuration: NightlyBuild
+          - name: TestDirectory
+            value: '$(TestsDirectory)/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj'
 
-  - task: DotNetCoreCLI@2
-    displayName: Build solution
-    inputs:
-      command: 'build'
-      projects: '$(SourceDirectory)/**/*.csproj'
-      configuration: NightlyBuild
+        steps:
 
-  - task: DotNetCoreCLI@2
-    displayName: Test solution
-    inputs:
-      command: 'test'
-      projects: '$(TestsDirectory)/**/*.Tests.csproj'
+          - template: templates/steps/nb-master.yml
 
-  - task: PublishTestResults@2
-    displayName: Fail if tests are failed
-    inputs:
-      testResultsFormat: 'XUnit'
-      testResultsFiles: 'D:\a\_temp\*.trx'
-      failTaskOnFailedTests: true
-      buildConfiguration: 'NightlyBuild'
+  - stage: Build_Tools
+    displayName: Build MediaVC.Tools
+    jobs:
+      - job: Build_Tools
+        displayName: Build MediaVC.Tools
+        workspace:
+          clean: all
 
-  - task: DotNetCoreCLI@2
-    displayName: Pack MediaVC.Core
-    continueOnError: true
-    inputs:
-      command: 'pack'
-      packagesToPack: '$(SourceDirectory)/MediaVC.Core/MediaVC.Core.csproj'
-      configuration: 'NightlyBuild'
-      versioningScheme: 'byPrereleaseNumber'
-      majorVersion: '0'
-      minorVersion: '9'
-      patchVersion: '0'
+        variables:
 
-  - task: DotNetCoreCLI@2
-    displayName: Pack MediaVC
-    continueOnError: true
-    inputs:
-      command: 'pack'
-      packagesToPack: '$(SourceDirectory)/MediaVC/MediaVC.csproj'
-      configuration: 'NightlyBuild'
-      versioningScheme: 'byPrereleaseNumber'
-      majorVersion: '0'
-      minorVersion: '9'
-      patchVersion: '0'
+          - name: ProjectDirectory
+            value: '$(SourceDirectory)/MediaVC.Tools/MediaVC.Tools.csproj'
 
-  - task: DotNetCoreCLI@2
-    displayName: Pack MediaVC.Tools
-    inputs:
-      command: 'pack'
-      packagesToPack: '$(SourceDirectory)/MediaVC.Tools/MediaVC.Tools.csproj'
-      configuration: 'NightlyBuild'
-      versioningScheme: 'byPrereleaseNumber'
-      majorVersion: '0'
-      minorVersion: '9'
-      patchVersion: '0'
+          - name: TestDirectory
+            value: '$(TestsDirectory)/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj'
 
-  - task: NuGetCommand@2
-    displayName: Publish packages to Nuget.org
-    inputs:
-      command: 'push'
-      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
-      nuGetFeedType: 'external'
-      publishFeedCredentials: 'Nuget.org mateuszokroj1'
+        steps:
 
-  - task: DotNetCoreCLI@2
-    displayName: Benchmark test
-    continueOnError: true
-    timeoutInMinutes: 30
-    inputs:
-      command: 'run'
-      projects: '$(TestsDirectory)/MediaVC.Tools.Benchmark/MediaVC.Tools.Benchmark.csproj'
+          - template: templates/steps/nb-master.yml
+
+  - stage: Build_Main
+    displayName: Build MediaVC
+    jobs:
+      - job: Build_Main
+        displayName: Build MediaVC
+
+        variables:
+
+          - name: ProjectDirectory
+            value: '$(SourceDirectory)/MediaVC/MediaVC.csproj'
+
+          - name: TestDirectory
+            value: '$(TestsDirectory)/MediaVC.Tests/MediaVC.Tests.csproj'
+
+        steps:
+
+          - template: templates/steps/nb-master.yml
+
+          - task: DotNetCoreCLI@2
+            displayName: Benchmark test
+            continueOnError: true
+            timeoutInMinutes: 5
+            inputs:
+              command: 'run'
+              projects: '$(TestsDirectory)/MediaVC.Tools.Benchmark/MediaVC.Tools.Benchmark.csproj'
