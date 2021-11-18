@@ -10,10 +10,16 @@ variables:
   - template: templates/variables.yml
 
 trigger:
-- master
-- features/*
-- releases/*
-- bugfixes/*
+  paths:
+    exclude:
+      - LICENSE
+      - .devops/*
+  branches:
+    include:
+      - master
+      - feature/*
+      - release/*
+      - fix/*
 
 pr:
   branches:
@@ -24,7 +30,7 @@ pr:
       - release/*
 
 pool:
-  vmImage: windows-latest
+  vmImage: ubuntu-latest
 
 steps:
 
