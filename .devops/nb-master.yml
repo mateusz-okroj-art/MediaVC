@@ -93,7 +93,7 @@ stages:
           - task: DotNetCoreCLI@2
             displayName: Benchmark test
             continueOnError: true
-            timeoutInMinutes: 30
+            timeoutInMinutes: 5
             inputs:
               command: 'run'
               projects: '$(TestsDirectory)/MediaVC.Tools.Benchmark/MediaVC.Tools.Benchmark.csproj'
