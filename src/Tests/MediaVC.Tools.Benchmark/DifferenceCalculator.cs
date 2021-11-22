@@ -26,6 +26,9 @@ namespace MediaVC.Tools.Benchmark
 
                 WriteLine("Test with two files.");
                 Calc1(files[0], files[1]);
+
+                WriteLine("Test of SHA512 algorithm");
+                C
             }
             finally
             {
@@ -88,6 +91,22 @@ namespace MediaVC.Tools.Benchmark
             stopwatch.Stop();
 
             WriteLine($"Time: {stopwatch.Elapsed.TotalSeconds} s");
+        }
+
+        private static void Calc2(FileStream file)
+        {
+            file.Position = 0;
+
+            var bytes = new byte[file.Length];
+            file.Read(bytes, 0, bytes.Length);
+
+            var stopwatch = new Stopwatch();
+
+            stopwatch.Start();
+            System.Security.Cryptography.SHA512.HashData(bytes);
+            stopwatch.Stop();
+
+            Console.WriteLine($"Time: {stopwatch.Elapsed.Seconds}");
         }
     }
 }
