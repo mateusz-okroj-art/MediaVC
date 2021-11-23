@@ -24,11 +24,11 @@ namespace MediaVC.Tools.Benchmark
                 WriteLine("   Generating large files...");
                 files = GenerateFiles();
 
-                WriteLine("Test with two files.");
-                Calc1(files[0], files[1]);
+                //WriteLine("Test with two files.");
+                //Calc1(files[0], files[1]);
 
                 WriteLine("Test of SHA512 algorithm");
-                C
+                Calc2(files[0]);
             }
             finally
             {
@@ -103,10 +103,15 @@ namespace MediaVC.Tools.Benchmark
             var stopwatch = new Stopwatch();
 
             stopwatch.Start();
-            System.Security.Cryptography.SHA512.HashData(bytes);
+            var result = System.Security.Cryptography.SHA512.HashData(bytes);
             stopwatch.Stop();
 
-            Console.WriteLine($"Time: {stopwatch.Elapsed.Seconds}");
+            Console.WriteLine($"Length: {file.Length}");
+            Console.WriteLine($"Time: {stopwatch.Elapsed.Seconds} s");
+
+            Console.WriteLine("Result:");
+            foreach(var b in result)
+                Console.Write($"{b} ");
         }
     }
 }
