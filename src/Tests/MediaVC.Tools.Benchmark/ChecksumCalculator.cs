@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 using static System.Console;
 
@@ -22,16 +23,9 @@ namespace MediaVC.Tools.Benchmark
         private static Memory<byte> GenerateData()
         {
             Memory<byte> data = new byte[TestedDataLength];
-
-            for(var pos = 0; pos < TestedDataLength; pos += 16)
-            {
-                var bytes = Guid.NewGuid().ToByteArray();
-
-                var percentage = MathF.Round((float)pos / TestedDataLength * 100, 1);
-                WriteLine($"{percentage}%");
-
-                bytes.CopyTo(data.Slice(pos, bytes.Length));
-            }
+            var rand = new Random();
+            var index = rand.Next(0, data.Length);
+            data.Span[index] = 255;
 
             return data;
         }
