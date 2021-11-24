@@ -20,15 +20,12 @@ namespace MediaVC.Tools.Benchmark
 
             try
             {
-                WriteLine("1) Difference scanning of large files");
+                WriteLine("Difference scanning of large files");
                 WriteLine("   Generating large files...");
                 files = GenerateFiles();
 
-                //WriteLine("Test with two files.");
-                //Calc1(files[0], files[1]);
-
-                WriteLine("Test of SHA512 algorithm");
-                Calc2(files[0]);
+                WriteLine("Test with two files.");
+                Calc(files[0], files[1]);
             }
             finally
             {
@@ -54,13 +51,13 @@ namespace MediaVC.Tools.Benchmark
 
                 files[index] = file;
 
-                for(long pos = 0; pos < 500_000; pos += 16)
+                for(long pos = 0; pos < TestedFileLength; pos += 16)
                 {
                     var bytes = Guid.NewGuid().ToByteArray();
 
                     file.Position = pos;
 
-                    var percentage = MathF.Round((float)pos / 500_000 * 100, 1);
+                    var percentage = MathF.Round((float)pos / TestedFileLength * 100, 1);
                     WriteLine($"File {index + 1}: {percentage}%");
 
                     file.Write(bytes, 0, bytes.Length);
@@ -72,7 +69,7 @@ namespace MediaVC.Tools.Benchmark
             return files;
         }
 
-        private static void Calc1(FileStream file1, FileStream file2)
+        private static void Calc(FileStream file1, FileStream file2)
         {
             var currentVersionSource = new InputSource(file1);
             var newVersionSource = new InputSource(file2);
@@ -91,27 +88,6 @@ namespace MediaVC.Tools.Benchmark
             stopwatch.Stop();
 
             WriteLine($"Time: {stopwatch.Elapsed.TotalSeconds} s");
-        }
-
-        private static void Calc2(FileStream file)
-        {
-            file.Position = 0;
-
-            var bytes = new byte[file.Length];
-            file.Read(bytes, 0, bytes.Length);
-
-            var stopwatch = new Stopwatch();
-
-            stopwatch.Start();
-            var result = System.Security.Cryptography.SHA512.HashData(bytes);
-            stopwatch.Stop();
-
-            Console.WriteLine($"Length: {file.Length}");
-            Console.WriteLine($"Time: {stopwatch.Elapsed.Seconds} s");
-
-            Console.WriteLine("Result:");
-            foreach(var b in result)
-                Console.Write($"{b} ");
         }
     }
 }
