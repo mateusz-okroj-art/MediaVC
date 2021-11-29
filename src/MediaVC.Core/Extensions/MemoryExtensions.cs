@@ -7,6 +7,9 @@ namespace MediaVC
     {
         public static IEnumerable<ReadOnlyMemory<T>> Split<T>(this ReadOnlyMemory<T> source, int segmentMaxLength)
         {
+            if(segmentMaxLength < 1)
+                yield break;
+
             for(var position = 0; position < source.Length; position += segmentMaxLength)
             {
                 yield return position + segmentMaxLength >= source.Length ?
