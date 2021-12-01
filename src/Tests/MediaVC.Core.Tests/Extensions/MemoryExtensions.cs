@@ -9,7 +9,7 @@ namespace MediaVC.Core.Tests.Extensions
 {
     public class MemoryExtensions
     {
-        /*[Theory]
+        [Theory]
         [ClassData(typeof(ZeroAndRandomIntegerValuesTestData))]
         public void ToSplit_WhenMemoryIsEmpty_ShouldReturnEmpty(int segmentMaxLength)
         {
@@ -19,7 +19,7 @@ namespace MediaVC.Core.Tests.Extensions
         [Theory]
         [InlineData(0, 255, 0)]
         [InlineData(255, 0, 0)]
-        [InlineData(1000, 1000, 0)]
+        [InlineData(1000, 1000, 1)]
         [InlineData(1000, 500, 2)]
         [InlineData(1000, 250, 4)]
         public void ToSplit_WhenMemoryIsNonEmpty_ShouldReturnSegments_Variant1(int dataLength, int maxSegmentLength, int expectedSegmentCount)
@@ -42,7 +42,9 @@ namespace MediaVC.Core.Tests.Extensions
 
             Assert.Equal(expectedSegmentCount, result?.Count());
 
-            Assert.All(result, segment => Assert.Equal(maxSegmentLength, segment.Length));
-        }*/
+            Assert.All(result.SkipLast(1), segment => Assert.Equal(maxSegmentLength, segment.Length));
+
+            Assert.Equal(expectedLastSegmentLength, result.Last().Length);
+        }
     }
 }

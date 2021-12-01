@@ -1,9 +1,11 @@
-﻿
+﻿using System;
+using System.Collections.Generic;
+
 namespace MediaVC
 {
 	public static class MemoryExtensions
 	{
-		
+
 		public static IEnumerable<ReadOnlyMemory<T>> Split<T>(this ReadOnlyMemory<T> source, int segmentMaxLength)
 		{
 			if(segmentMaxLength < 1)
@@ -17,7 +19,7 @@ namespace MediaVC
             }
 		}
 
-				
+
 		public static IEnumerable<Memory<T>> Split<T>(this Memory<T> source, int segmentMaxLength)
 		{
 			if(segmentMaxLength < 1)
@@ -31,5 +33,5 @@ namespace MediaVC
             }
 		}
 
-					}
+	}
 }
