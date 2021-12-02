@@ -14,9 +14,13 @@ namespace MediaVC.Tools
             ArgumentNullException.ThrowIfNull(dataStream, nameof(dataStream));
 
             var segments = dataStream.ToMemorySegments(segmentMaxLength, cancellationToken);
-            
+
             await foreach(var hash in CalculateInternalAsync(segments, cancellationToken))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 yield return hash;
+            }
         }
 
         internal async static IAsyncEnumerable<Memory<byte>> CalculateInternalAsync(IAsyncEnumerable<ReadOnlyMemory<byte>> dataSegments, [EnumeratorCancellation] CancellationToken cancellationToken = default)
@@ -24,7 +28,11 @@ namespace MediaVC.Tools
             ArgumentNullException.ThrowIfNull(dataSegments, nameof(dataSegments));
 
             await foreach(var segment in dataSegments)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 yield return SHA512.HashData(segment.Span);
+            }
         }
     }
 }
