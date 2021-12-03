@@ -11,13 +11,13 @@ namespace MediaVC.Core.Tests.Extensions
     public class StreamExtensions
     {
         [Fact]
-        public void ToMemorySegments_WhenStreamIsEmpty_ShouldReturnEmpty()
+        public async void ToMemorySegments_WhenStreamIsEmpty_ShouldReturnEmpty()
         {
             var stream = Stream.Null;
 
             var segments = stream.ToMemorySegments(0, CancellationToken.None);
 
-            Assert.Empty(segments.ToEnumerable());
+            Assert.False(await segments.AnyAsync());
         }
 
         [Fact]
@@ -30,12 +30,12 @@ namespace MediaVC.Core.Tests.Extensions
 
             using var stream = new MemoryStream(data, false);
 
-            var segments = await stream.ToMemorySegments(2).ToArrayAsync();
+            var segments = stream.ToMemorySegments(2);
 
-            Assert.Equal(2, segments.Count());
+            Assert.Equal(2, await segments.CountAsync());
 
-            Assert.Equal(data.Take(2), segments[0].ToArray());
-            Assert.Equal(data.Skip(2), segments[1].ToArray());
+            Assert.Equal(data.Take(2).ToArray(), (await segments.ElementAtAsync(0)).ToArray());
+            Assert.Equal(data.Skip(2).ToArray(), (await segments.ElementAtAsync(1)).ToArray());
         }
 
         [Fact]

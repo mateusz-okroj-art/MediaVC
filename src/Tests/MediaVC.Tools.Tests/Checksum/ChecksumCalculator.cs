@@ -105,15 +105,15 @@ namespace MediaVC.Tools.Tests.Checksum
                 streamSegments.ElementAt(3)
             ))
             {
-                var results = await Tools.ChecksumCalculator.CalculateAsync(fullStream, 16).Select(item => item.ToArray()).ToArrayAsync();
+                var results = Tools.ChecksumCalculator.CalculateAsync(fullStream, 16).Select(item => item.ToArray());
 
-                Assert.Equal(streamSegments.Count(), results.Length);
+                Assert.Equal(streamSegments.Count(), await results.CountAsync());
 
                 for(byte i = 0; i < 4; ++i)
                 {
-                    // get stream
-                    // calculate
-                    // compare Single() segment
+                    var segmentToCalculate = streamSegments.ElementAt(i);
+                    var calculated = await Tools.ChecksumCalculator.CalculateAsync(segmentToCalculate, (int)segmentToCalculate.Length).Select(item => item.ToArray()).FirstAsync();
+                    Assert.Equal(calculated, (await results.ElementAtAsync(i)).ToArray());
                 }
             }
         }

@@ -18,6 +18,7 @@ namespace MediaVC
                 var count = Math.Min(segmentMaxLength, source.Length - position);
                 Memory<byte> buffer = new byte[count];
 
+                source.Position = position;
                 _ = await source.ReadAsync(buffer, cancellationToken);
 
                 yield return buffer;

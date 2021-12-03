@@ -16,7 +16,7 @@ namespace MediaVC.Tools.Tests.TestData
             for(byte i = 0; i < 4; ++i)
             {
                 testDataBuffer[i] = Guid.NewGuid().ToByteArray();
-                testDataBuffer[i].CopyTo(summedBuffer, i * 4);
+                testDataBuffer[i].CopyTo(summedBuffer, i * 16);
             }
 
             yield return new object[] { new MemoryStream(summedBuffer), testDataBuffer.Select(arr => new MemoryStream(arr)) };
