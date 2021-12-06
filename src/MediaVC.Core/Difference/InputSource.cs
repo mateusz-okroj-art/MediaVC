@@ -28,6 +28,11 @@ namespace MediaVC.Difference
             Strategy = new FileSegmentStrategy(segments);
         }
 
+        public InputSource(ReadOnlyMemory<byte> memory)
+        {
+
+        }
+
         internal InputSource(IInputSourceStrategy externalStrategy) =>
             Strategy = externalStrategy ?? throw new ArgumentNullException(nameof(externalStrategy));
 
@@ -86,12 +91,6 @@ namespace MediaVC.Difference
 
         public override int GetHashCode() => Strategy.GetHashCode();
 
-        protected override void Dispose(bool disposing)
-        {
-            if(disposing && Strategy is IDisposable disposable)
-                disposable.Dispose();
-        }
-
         public override async ValueTask DisposeAsync()
         {
             if(Strategy is IAsyncDisposable disposable)
@@ -108,6 +107,8 @@ namespace MediaVC.Difference
 
         [Obsolete]
         public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
+
+        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => throw new NotImplementedException();
 
         #endregion
 
