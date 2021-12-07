@@ -14,23 +14,24 @@ namespace MediaVC.Difference
 
         public InputSource(FileStream file)
         {
-            if (file is null)
-                throw new ArgumentNullException(nameof(file));
+            ArgumentNullException.ThrowIfNull(file);
 
             Strategy = new StreamStrategy(file);
         }
 
         public InputSource(IEnumerable<IFileSegmentInfo> segments)
         {
-            if (segments is null)
-                throw new ArgumentNullException(nameof(segments));
+            ArgumentNullException.ThrowIfNull(segments);
 
             Strategy = new FileSegmentStrategy(segments);
         }
 
         public InputSource(ReadOnlyMemory<byte> memory)
         {
+            if(memory.IsEmpty)
+                throw new ArgumentException("Memory is empty.");
 
+            Strategy = new MemoryStrategy(memory);
         }
 
         internal InputSource(IInputSourceStrategy externalStrategy) =>

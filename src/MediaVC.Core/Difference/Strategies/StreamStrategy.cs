@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MediaVC.Difference.Strategies
 {
-    internal sealed class StreamStrategy : IInputSourceStrategy, IDisposable, IAsyncDisposable
+    internal sealed class StreamStrategy : IInputSourceStrategy
     {
         #region Constructor
 
@@ -71,10 +71,6 @@ namespace MediaVC.Difference.Strategies
         public override bool Equals(object? obj) => Equals(obj as IInputSourceStrategy);
 
         public override int GetHashCode() => Stream.GetHashCode();
-
-        public ValueTask DisposeAsync() => Stream.DisposeAsync();
-
-        public void Dispose() => Stream.Dispose();
 
         #endregion
     }
