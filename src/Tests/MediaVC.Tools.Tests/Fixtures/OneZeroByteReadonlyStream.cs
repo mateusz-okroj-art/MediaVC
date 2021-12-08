@@ -1,9 +1,11 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference;
+using MediaVC.Enumerators;
 
 namespace MediaVC.Tools.Tests.Fixtures
 {
@@ -25,7 +27,9 @@ namespace MediaVC.Tools.Tests.Fixtures
 
         public long Length => 1;
 
-        public void Dispose() { }
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);
 
         public int Read(byte[] buffer, int offset, int count) =>
             buffer is not null ?

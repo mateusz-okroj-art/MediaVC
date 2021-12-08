@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference.Strategies;
+using MediaVC.Enumerators;
 
 namespace MediaVC.Difference
 {
@@ -109,7 +110,7 @@ namespace MediaVC.Difference
         [Obsolete]
         public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
 
-        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => throw new NotImplementedException();
+        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);
 
         #endregion
 

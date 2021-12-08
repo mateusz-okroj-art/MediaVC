@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,12 +36,70 @@ namespace MediaVC.Difference.Strategies
             }
         }
 
-        public bool Equals(IInputSourceStrategy? other) => throw new NotImplementedException();
+        public bool Equals(IInputSourceStrategy? other) =>
+            other?.Length == 0 && Length == 0 ||
+               other?.Length == Length && other?.GetHashCode() == GetHashCode();
 
-        public int Read(byte[] buffer, int offset, int count) => throw new NotImplementedException();
+        public override int GetHashCode()
+        {
+            var span = MemoryMarshal.ToEnumerable(this.memory);
 
-        public ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) => throw new NotImplementedException();
+            var hashes = span.Select(value => value.GetHashCode());
+            if(!hashes.Any())
+            {
+                return 0;
+            }
+            else if(hashes.Count() == 1)
+            {
+                return hashes.First();
+            }
+            else
+            {
+                var result = HashCode.Combine(hashes.First(), hashes.ElementAt(1));
+                foreach(var value in hashes.Skip(2))
+                    result = HashCode.Combine(result, hashes.ElementAt(0));
 
-        public ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default) => throw new NotImplementedException();
+                return result;
+            }
+        }
+
+        public int Read(byte[] buffer, int offset, int count)
+        {
+            ArgumentNullException.ThrowIfNull(buffer);
+
+            var memory = buffer.AsMemory().Slice(offset, count);
+            return ReadAsync(memory).AsTask().GetAwaiter().GetResult();
+        }
+
+        public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
+        {
+            if(buffer.IsEmpty)
+                throw new ArgumentException("Buffer is empty.");
+
+            if(this.position >= Length)
+                throw new InvalidOperationException();
+
+            var currentMemory = this.memory[(int)position..];
+            var readedCount = Math.Min(buffer.Length, currentMemory.Length);
+            await Task.Run(() => currentMemory.CopyTo(buffer), cancellationToken);
+
+            this.position += readedCount;
+
+            return readedCount;
+        }
+
+        public ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default)
+        {
+            if(this.position >= Length)
+                throw new InvalidOperationException();
+
+            var result = this.memory.Span[(int)this.position];
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            ++this.position;
+
+            return ValueTask.FromResult(result);
+        }
     }
 }

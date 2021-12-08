@@ -53,12 +53,12 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             await calculator.CalculateAsync(cancelationTokenSource.Token);
 
             Assert.Null(calculator.CurrentVersion);
-            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, calculator.NewVersion));
 
             Assert.NotNull(calculator.Result);
             var first = Assert.Single(calculator.Result);
             
-            Assert.Equal(this.fixture.OneZero, first.Source);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, first.Source));
             Assert.Equal(0, first.StartPositionInSource);
             Assert.Equal(0, first.EndPositionInSource);
             Assert.Equal(1U, first.Length);
@@ -79,12 +79,12 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             await calculator.CalculateAsync(cancelationTokenSource.Token);
 
             Assert.Null(calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, calculator.NewVersion));
 
             Assert.NotNull(calculator.Result);
             var first = Assert.Single(calculator.Result);
 
-            Assert.Equal(this.fixture.ThousandFullBytes, first.Source);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, first.Source));
             Assert.Equal(0, first.StartPositionInSource);
             Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, first.EndPositionInSource);
             Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, first.Length);
@@ -104,13 +104,13 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 
             await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            Assert.Equal(InputSource.Empty, calculator.CurrentVersion);
-            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.True(ReferenceEquals(InputSource.Empty, calculator.CurrentVersion));
+            Assert.True(ReferenceEquals(this.fixture.OneZero, calculator.NewVersion));
 
             Assert.NotNull(calculator.Result);
             var first = Assert.Single(calculator.Result);
 
-            Assert.Equal(this.fixture.OneZero, first.Source);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, first.Source));
             Assert.Equal(0, first.StartPositionInSource);
             Assert.Equal(this.fixture.OneZero.Length - 1, first.EndPositionInSource);
             Assert.Equal(this.fixture.OneZero.Length, (long)first.Length);
@@ -130,13 +130,13 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 
             await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.OneZero, calculator.CurrentVersion);
-            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, calculator.CurrentVersion));
+            Assert.True(ReferenceEquals(this.fixture.OneZero, calculator.NewVersion));
 
             Assert.NotNull(calculator.Result);
             var result = Assert.Single(calculator.Result);
 
-            Assert.Equal(this.fixture.OneZero, result.Source);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, result.Source));
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(0, result.EndPositionInSource);
             Assert.Equal((ulong)1, result.Length);
@@ -157,13 +157,13 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 
             await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ThousandFullBytes, calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, calculator.CurrentVersion));
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, calculator.NewVersion));
 
             Assert.NotNull(calculator.Result);
             var result = Assert.Single(calculator.Result);
 
-            Assert.Equal(this.fixture.ThousandFullBytes, result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, result.Source));
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, result.EndPositionInSource);
             Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, result.Length);
@@ -190,7 +190,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.NotNull(calculator.Removed);
             var result = Assert.Single(calculator.Removed);
 
-            Assert.Equal(this.fixture.ThousandFullBytes, result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, result.Source));
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, result.EndPositionInSource);
             Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, result.Length);
@@ -207,20 +207,20 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 
             await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[0], calculator.CurrentVersion));
             Assert.Equal(this.fixture.ExampleSources[1], calculator.NewVersion);
 
             Assert.NotNull(calculator.Result);
             Assert.Equal(2, calculator.Result.Count());
 
             var result = calculator.Result.ElementAt(0);
-            Assert.Equal(this.fixture.ExampleSources[0], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[0], result.Source));
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(4L, (long)result.Length);
 
             result = calculator.Result.ElementAt(1);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source));
             Assert.Equal(4L, result.StartPositionInSource);
             Assert.Equal(7L, result.EndPositionInSource);
             Assert.Equal(4L, (long)result.Length);
@@ -240,21 +240,21 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 
             await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[0], calculator.CurrentVersion));
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[2], calculator.NewVersion));
 
             Assert.NotNull(calculator.Result);
             Assert.Equal(2, calculator.Result.Count());
 
             var result = calculator.Result.ElementAt(0);
-            Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[2], result.Source));
             Assert.Equal(0L, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(0, result.MappedPosition);
             Assert.Equal(4L, (long)result.Length);
 
             result = calculator.Result.ElementAt(1);
-            Assert.Equal(this.fixture.ExampleSources[0], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[0], result.Source));
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(4L, result.MappedPosition);
@@ -275,21 +275,21 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 
             await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], calculator.CurrentVersion));
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[2], calculator.NewVersion));
 
             Assert.NotNull(calculator.Result);
             Assert.Equal(2, calculator.Result.Count());
 
             var result = calculator.Result.ElementAt(0);
-            Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[2], result.Source));
             Assert.Equal(0L, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(0, result.MappedPosition);
             Assert.Equal(4L, (long)result.Length);
 
             result = calculator.Result.ElementAt(1);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source));
             Assert.Equal(0L, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(4L, result.MappedPosition);
@@ -298,7 +298,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.NotNull(calculator.Removed);
 
             result = Assert.Single(calculator.Removed);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source));
             Assert.Equal(4L, result.StartPositionInSource);
             Assert.Equal(7L, result.EndPositionInSource);
             Assert.Equal(4L, (long)result.Length);
@@ -315,28 +315,28 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
 
             await calculator.CalculateAsync(cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ExampleSources[3], calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], calculator.CurrentVersion));
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[3], calculator.NewVersion));
 
             Assert.NotNull(calculator.Result);
             Assert.Equal(3, calculator.Result.Count());
 
             var result = calculator.Result.ElementAt(0);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source));
             Assert.Equal(0L, result.StartPositionInSource);
             Assert.Equal(1L, result.EndPositionInSource);
             Assert.Equal(2L, (long)result.Length);
             Assert.Equal(0, result.MappedPosition);
 
             result = calculator.Result.ElementAt(1);
-            Assert.Equal(this.fixture.ExampleSources[3], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[3], result.Source));
             Assert.Equal(2L, result.StartPositionInSource);
             Assert.Equal(2L, result.EndPositionInSource);
             Assert.Equal(1L, (long)result.Length);
             Assert.Equal(2, result.MappedPosition);
 
             result = calculator.Result.ElementAt(2);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source));
             Assert.Equal(2L, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(2L, (long)result.Length);
@@ -345,7 +345,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.NotNull(calculator.Removed);
 
             result = Assert.Single(calculator.Removed);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source));
             Assert.Equal(4L, result.StartPositionInSource);
             Assert.Equal(7L, result.EndPositionInSource);
             Assert.Equal(4L, (long)result.Length);

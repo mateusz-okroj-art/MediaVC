@@ -17,6 +17,15 @@ namespace MediaVC.Difference.Strategies
                 throw new IOException("Stream is not readable.");
         }
 
+        private const int BufferLength = 4000;
+
+        #endregion
+
+        #region Fields
+
+        private readonly Memory<byte> readerBuffer = new byte[BufferLength];
+        private long bufferStartPosition = -1;
+
         #endregion
 
         #region Properties
@@ -41,17 +50,24 @@ namespace MediaVC.Difference.Strategies
         public ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
             Stream.ReadAsync(buffer, cancellationToken);
 
-        public async ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default) =>
-            await Task.Run(() =>
+        public async ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if(Position < this.bufferStartPosition || Position > this.bufferStartPosition + BufferLength)
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                var currentPosition = Position;
+                this.bufferStartPosition = Position;
+                _ = await ReadAsync(this.readerBuffer, cancellationToken);
+                Position = currentPosition;
+            }
 
-                var value = Stream.ReadByte();
+            var value = this.readerBuffer.Span[(int)(Position - this.bufferStartPosition)];
 
-                cancellationToken.ThrowIfCancellationRequested();
+            ++Position;
 
-                return value >= 0 ? (byte)value : throw new InvalidOperationException();
-            });
+            return value;
+        }
 
         public bool Equals(IInputSourceStrategy? other)
         {
