@@ -17,13 +17,13 @@ namespace MediaVC.Difference.Strategies
                 throw new IOException("Stream is not readable.");
         }
 
-        private const int BufferLength = 4000;
+        internal const int bufferLength = 4000;
 
         #endregion
 
         #region Fields
 
-        private readonly Memory<byte> readerBuffer = new byte[BufferLength];
+        private readonly Memory<byte> readerBuffer = new byte[bufferLength];
         private long bufferStartPosition = -1;
 
         #endregion
@@ -54,7 +54,7 @@ namespace MediaVC.Difference.Strategies
         {
             cancellationToken.ThrowIfCancellationRequested();
 
-            if(Position < this.bufferStartPosition || Position > this.bufferStartPosition + BufferLength)
+            if(CheckIsBufferInvalidate())
             {
                 var currentPosition = Position;
                 this.bufferStartPosition = Position;
@@ -83,6 +83,11 @@ namespace MediaVC.Difference.Strategies
                     file1.Name == file2.Name
                 : result;
         }
+
+        private bool CheckIsBufferInvalidate() =>
+            this.bufferStartPosition < 0 ||
+            Position < this.bufferStartPosition ||
+            Position >= this.bufferStartPosition + bufferLength;
 
         public override bool Equals(object? obj) => Equals(obj as IInputSourceStrategy);
 

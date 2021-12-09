@@ -247,7 +247,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.Equal(2, calculator.Result.Count());
 
             var result = calculator.Result.ElementAt(0);
-            Assert.True(ReferenceEquals(this.fixture.ExampleSources[2], result.Source));
+            Assert.True(ReferenceEquals(calculator.NewVersion, result.Source));
             Assert.Equal(0L, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(0, result.MappedPosition);

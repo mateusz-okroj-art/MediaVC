@@ -6,7 +6,7 @@
 
         long EndPositionInSource { get; set; }
 
-        IInputSource Source { get; set; }
+        IInputSource? Source { get; set; }
 
         ulong Length { get; }
 
