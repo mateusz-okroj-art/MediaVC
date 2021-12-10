@@ -88,16 +88,19 @@ namespace MediaVC.Difference.Strategies
         }
 
         /// <summary>
-        /// 
+        /// Reads data to selected buffer.
         /// </summary>
-        /// <param name="buffer"></param>
-        /// <param name="offset"></param>
-        /// <param name="count"></param>
-        /// <returns></returns>
+        /// <param name="buffer">Location of the read data</param>
+        /// <returns>Returns readed bytes count.</returns>
         /// <exception cref="ArgumentOutOfRangeException" />
         public int Read(byte[] buffer, int offset, int count) =>
-            ReadAsync(buffer.AsMemory().Slice(offset, count)).GetAwaiter().GetResult();
+            ReadAsync(buffer.AsMemory().Slice(offset, count)).AsTask().GetAwaiter().GetResult();
 
+        /// <summary>
+        /// Reads data to selected buffer.
+        /// </summary>
+        /// <param name="buffer">Location of the read data</param>
+        /// <returns>Returns readed bytes count.</returns>
         public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             var counter = 0;
@@ -110,7 +113,7 @@ namespace MediaVC.Difference.Strategies
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                currentSegment.Source.Position = Position - currentSegment.MappedPosition + currentSegment.StartPositionInSource;
+                currentSegment.Source!.Position = Position - currentSegment.MappedPosition + currentSegment.StartPositionInSource;
 
                 counter += await currentSegment.Source.ReadAsync(buffer[counter..], cancellationToken);
 
@@ -127,9 +130,8 @@ namespace MediaVC.Difference.Strategies
                 );
 
         /// <summary>
-        /// 
+        /// Returns next <see langword="byte"/>, if position is there any left. Otherwise throws <see cref="InvalidOperationException"/>.
         /// </summary>
-        /// <returns></returns>
         /// <exception cref="InvalidOperationException" />
         /// <exception cref="OperationCanceledException" />
         public async ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default)
@@ -157,6 +159,14 @@ namespace MediaVC.Difference.Strategies
 
             return this.readerBuffer.Span[(int)Position - this.bufferStartPosition];
         }
+
+        /// <summary>
+        ///   <para>Checks that selected source (for example parent, that use this strategy) is not used in any of collected segments.</para>
+        ///   <para>This prevents the loopback.</para>
+        /// </summary>
+        /// <param name="source"></param>
+        /// <returns>When detected loopback is returned <see langword="false"/>. Otherwise is <see langword="true"/>.</returns>
+        public bool CheckIsNotUsedSource(IInputSource source) => !this.segments.Any(segment => ReferenceEquals(segment.Source, source));
 
         #endregion
     }

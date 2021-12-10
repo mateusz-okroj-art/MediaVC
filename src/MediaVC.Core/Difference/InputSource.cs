@@ -23,8 +23,12 @@ namespace MediaVC.Difference
         public InputSource(IEnumerable<IFileSegmentInfo> segments)
         {
             ArgumentNullException.ThrowIfNull(segments);
+            var strategy = new FileSegmentStrategy(segments);
 
-            Strategy = new FileSegmentStrategy(segments);
+            if(!strategy.CheckIsNotUsedSource(this))
+                throw new InvalidOperationException("Usage of this source has been detected on a child segment.");
+
+            Strategy = strategy;
         }
 
         public InputSource(ReadOnlyMemory<byte> memory)

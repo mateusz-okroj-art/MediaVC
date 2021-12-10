@@ -1,6 +1,8 @@
-﻿namespace MediaVC.Difference
+﻿using System;
+
+namespace MediaVC.Difference
 {
-    public interface IFileSegmentInfo
+    public interface IFileSegmentInfo : IEquatable<IFileSegmentInfo>
     {
         long StartPositionInSource { get; set; }
 
