@@ -47,46 +47,6 @@ namespace MediaVC.Difference.Strategies
 
         #region Methods
 
-        public bool Equals(IInputSourceStrategy? other) =>
-            other is FileSegmentStrategy strategy ?
-            GetHashCode() == strategy.GetHashCode() :
-            Equals(other as object);
-
-        public override bool Equals(object? obj) =>
-            obj is IInputSourceStrategy strategy ?
-            Equals(strategy) :
-            Equals(this, obj);
-
-        public override int GetHashCode()
-        {
-            if(this.segments?.Count() < 1)
-                return 0;
-
-            var query = from segment in this.segments
-                    where segment is not null
-                    select segment;
-            
-            var hashes = query.AsParallel().Select(segment => segment.GetHashCode()).ToArray();
-
-            if(hashes is null || hashes.Length <= 0)
-            {
-                return 0;
-            }
-            else if(hashes.Length == 1)
-            {
-                return hashes[0];
-            }
-            else
-            {
-                var result = HashCode.Combine(hashes[0], hashes[1]);
-
-                foreach(var hash in hashes.Skip(2))
-                    result = HashCode.Combine(result, hash);
-
-                return result;
-            }
-        }
-
         /// <summary>
         /// Reads data to selected buffer.
         /// </summary>
@@ -167,6 +127,46 @@ namespace MediaVC.Difference.Strategies
         /// <param name="source"></param>
         /// <returns>When detected loopback is returned <see langword="false"/>. Otherwise is <see langword="true"/>.</returns>
         public bool CheckIsNotUsedSource(IInputSource source) => !this.segments.Any(segment => ReferenceEquals(segment.Source, source));
+
+        public bool Equals(IInputSourceStrategy? other) =>
+            other is FileSegmentStrategy strategy ?
+            GetHashCode() == strategy.GetHashCode() :
+            Equals(other as object);
+
+        public override bool Equals(object? obj) =>
+            obj is IInputSourceStrategy strategy ?
+            Equals(strategy) :
+            Equals(this, obj);
+
+        public override int GetHashCode()
+        {
+            if (this.segments?.Count() < 1)
+                return 0;
+
+            var query = from segment in this.segments
+                        where segment is not null
+                        select segment;
+
+            var hashes = query.AsParallel().Select(segment => segment.GetHashCode()).ToArray();
+
+            if (hashes is null || hashes.Length <= 0)
+            {
+                return 0;
+            }
+            else if (hashes.Length == 1)
+            {
+                return hashes[0];
+            }
+            else
+            {
+                var result = HashCode.Combine(hashes[0], hashes[1]);
+
+                foreach (var hash in hashes.Skip(2))
+                    result = HashCode.Combine(result, hash);
+
+                return result;
+            }
+        }
 
         #endregion
     }
