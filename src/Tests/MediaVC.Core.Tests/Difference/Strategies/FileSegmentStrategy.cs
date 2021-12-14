@@ -68,5 +68,55 @@ namespace MediaVC.Core.Tests.Difference.Strategies
 
             Assert.Equal(1, strategy.Position);
         }
+
+        [Fact]
+        public void SelectMappedSegmentForCurrentPosition_WhenSetPosition_ShouldReturnValidSegment()
+        {
+            var segments = new IFileSegmentInfo[]
+            {
+                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 0 && mock.Length == 2),
+                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 2 && mock.Length == 2)
+            };
+            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
+
+            strategy.Position = 1;
+
+            Assert.True(ReferenceEquals(segments[0], strategy.SelectMappedSegmentForCurrentPosition()));
+
+            strategy.Position = 2;
+
+            Assert.True(ReferenceEquals(segments[1], strategy.SelectMappedSegmentForCurrentPosition()));
+        }
+
+        [Fact]
+        public void CheckIsNotUsedSource_WhenSelectedUsedSource_ShouldReturnFalse()
+        {
+            var source = Mock.Of<IInputSource>();
+
+            var segments = new IFileSegmentInfo[]
+            {
+                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 0 && mock.Length == 2 && mock.Source == source),
+                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 2 && mock.Length == 2 && mock.Source == null)
+            };
+            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
+
+            Assert.False(strategy.CheckIsNotUsedSource(source));
+        }
+
+        [Fact]
+        public void ReadAsync_Variant1_ShouldReadFromSegment()
+        {
+            var data1 = new byte[] { 0, 255, 200, 100 };
+            var data2 = new byte[] { 200, 255, 0, 100 };
+
+            using var source1 = new MediaVC.Difference.InputSource(data1.AsMemory());
+            using var source2 = new MediaVC.Difference.InputSource(data2.AsMemory());
+
+            var segments = new IFileSegmentInfo[]
+            {
+                Mock.Of<IFileSegmentInfo>(mock => mock.StartPositionInSource == 0 && mock.EndPositionInSource == 1 && mock.Length == 2 && mock.MappedPosition == ),
+                Mock.Of<IFileSegmentInfo>()
+            };
+        }
     }
 }

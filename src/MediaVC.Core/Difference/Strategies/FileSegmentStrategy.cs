@@ -83,9 +83,9 @@ namespace MediaVC.Difference.Strategies
             return counter;
         }
 
-        private IFileSegmentInfo? SelectMappedSegmentForCurrentPosition() => this.segments.OrderBy(segment => segment.MappedPosition)
+        internal IFileSegmentInfo? SelectMappedSegmentForCurrentPosition() => this.segments.OrderByDescending(segment => segment.MappedPosition)
                 .FirstOrDefault(segment =>
-                    segment.MappedPosition < Position &&
+                    segment.MappedPosition <= Position &&
                     segment.MappedPosition + (long)segment.Length >= Position
                 );
 
