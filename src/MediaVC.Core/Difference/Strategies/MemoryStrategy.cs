@@ -81,7 +81,7 @@ namespace MediaVC.Difference.Strategies
 
             var currentMemory = this.memory[(int)position..];
             var readedCount = Math.Min(buffer.Length, currentMemory.Length);
-            await Task.Run(() => currentMemory.CopyTo(buffer), cancellationToken);
+            await Task.Run(() => currentMemory[..buffer.Length].CopyTo(buffer), cancellationToken);
 
             this.position += readedCount;
 

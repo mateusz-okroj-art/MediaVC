@@ -13,6 +13,10 @@ namespace MediaVC.Difference.Strategies
         public FileSegmentStrategy(IEnumerable<IFileSegmentInfo> segments)
         {
             this.segments = segments ?? throw new ArgumentNullException(nameof(segments));
+
+            if(this.segments.Any(segment => segment.Source is null))
+                throw new ArgumentException("Source of one segment is null.");
+
             Length = this.segments.Select(segment => (long)segment.Length).Sum();
         }
 
@@ -68,6 +72,8 @@ namespace MediaVC.Difference.Strategies
             if(buffer.IsEmpty || buffer.Length < 1)
                 return counter;
 
+            var positionWhenStarted = Position;
+
             var currentSegment = SelectMappedSegmentForCurrentPosition();
             while(currentSegment?.Length > 0 && counter < buffer.Length)
             {
@@ -75,7 +81,12 @@ namespace MediaVC.Difference.Strategies
 
                 currentSegment.Source!.Position = Position - currentSegment.MappedPosition + currentSegment.StartPositionInSource;
 
-                counter += await currentSegment.Source.ReadAsync(buffer[counter..], cancellationToken);
+                counter += await currentSegment.Source.ReadAsync(buffer.Slice(counter, (int)currentSegment.Length), cancellationToken);
+
+                this.position = positionWhenStarted + counter;
+
+                if(Position >= Length)
+                    break;
 
                 currentSegment = SelectMappedSegmentForCurrentPosition();
             }
