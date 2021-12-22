@@ -3,12 +3,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MediaVC.Tools.Tests.TestData
 {
-    internal class ChecksumRandomStreamTestData : IEnumerable<object[]>
+    internal sealed class ChecksumRandomStreamTestData : IEnumerable<object[]>
     {
         public IEnumerator<object[]> GetEnumerator()
         {

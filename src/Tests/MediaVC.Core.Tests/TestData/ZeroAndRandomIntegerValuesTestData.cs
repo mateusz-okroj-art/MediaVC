@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace MediaVC.Core.Tests.TestData
 {
-    internal class ZeroAndRandomIntegerValuesTestData : IEnumerable<object[]>
+    internal sealed class ZeroAndRandomIntegerValuesTestData : IEnumerable<object[]>
     {
         public IEnumerator<object[]> GetEnumerator()
         {
