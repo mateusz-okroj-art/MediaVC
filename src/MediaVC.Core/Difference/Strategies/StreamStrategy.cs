@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MediaVC.Difference.Strategies
 {
-    internal sealed class StreamStrategy : IInputSourceStrategy, IDisposable, IAsyncDisposable
+    internal sealed class StreamStrategy : IInputSourceStrategy
     {
         #region Constructor
 
@@ -16,6 +16,15 @@ namespace MediaVC.Difference.Strategies
             if (!Stream.CanRead)
                 throw new IOException("Stream is not readable.");
         }
+
+        internal const int bufferLength = 4000;
+
+        #endregion
+
+        #region Fields
+
+        private readonly Memory<byte> readerBuffer = new byte[bufferLength];
+        private long bufferStartPosition = -1;
 
         #endregion
 
@@ -41,17 +50,24 @@ namespace MediaVC.Difference.Strategies
         public ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
             Stream.ReadAsync(buffer, cancellationToken);
 
-        public async ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default) =>
-            await Task.Run(() =>
+        public async ValueTask<byte> ReadByteAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+
+            if(CheckIsBufferInvalidate())
             {
-                cancellationToken.ThrowIfCancellationRequested();
+                var currentPosition = Position;
+                this.bufferStartPosition = Position;
+                _ = await ReadAsync(this.readerBuffer, cancellationToken);
+                Position = currentPosition;
+            }
 
-                var value = Stream.ReadByte();
+            var value = this.readerBuffer.Span[(int)(Position - this.bufferStartPosition)];
 
-                cancellationToken.ThrowIfCancellationRequested();
+            ++Position;
 
-                return value >= 0 ? (byte)value : throw new InvalidOperationException();
-            });
+            return value;
+        }
 
         public bool Equals(IInputSourceStrategy? other)
         {
@@ -68,13 +84,14 @@ namespace MediaVC.Difference.Strategies
                 : result;
         }
 
+        private bool CheckIsBufferInvalidate() =>
+            this.bufferStartPosition < 0 ||
+            Position < this.bufferStartPosition ||
+            Position >= this.bufferStartPosition + bufferLength;
+
         public override bool Equals(object? obj) => Equals(obj as IInputSourceStrategy);
 
         public override int GetHashCode() => Stream.GetHashCode();
-
-        public ValueTask DisposeAsync() => Stream.DisposeAsync();
-
-        public void Dispose() => Stream.Dispose();
 
         #endregion
     }

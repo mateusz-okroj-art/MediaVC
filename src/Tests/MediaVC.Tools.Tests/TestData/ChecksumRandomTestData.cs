@@ -5,7 +5,7 @@ using System.Security.Cryptography;
 
 namespace MediaVC.Tools.Tests.TestData
 {
-    internal class ChecksumRandomTestData : IEnumerable<object[]>
+    internal sealed class ChecksumRandomTestData : IEnumerable<object[]>
     {
         public IEnumerator<object[]> GetEnumerator()
         {

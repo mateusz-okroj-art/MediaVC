@@ -134,7 +134,7 @@ namespace MediaVC.Tools.Difference
         /// <exception cref="InvalidOperationException"/>
         private async Task CalculateWhenBothFilesNotEmpty(IDifferenceCalculatorProgress? progress, CancellationToken cancellationToken)
         {
-            FileSegmentInfo fileSegmentInfo = default;
+            var fileSegmentInfo = new FileSegmentInfo();
 
             Synchronize(() =>
             {
@@ -309,7 +309,7 @@ namespace MediaVC.Tools.Difference
             var currentSegment = fileSegmentInfo;
             Synchronize(() => this.result.Add(currentSegment));
 
-            fileSegmentInfo = default;
+            fileSegmentInfo = new FileSegmentInfo();
             
             newVersionPosition += lastOffset + 1;
         }
@@ -319,7 +319,7 @@ namespace MediaVC.Tools.Difference
             var currentSegment = fileSegmentInfo;
             Synchronize(() => this.result.Add(currentSegment));
 
-            fileSegmentInfo = default;
+            fileSegmentInfo = new FileSegmentInfo();
             if(offset <= lastOffset)
             {
                 newVersionPosition += lastOffset + 1;

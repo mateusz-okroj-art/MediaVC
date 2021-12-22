@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference.Strategies;
+using MediaVC.Enumerators;
 
 namespace MediaVC.Difference
 {
@@ -14,18 +15,28 @@ namespace MediaVC.Difference
 
         public InputSource(FileStream file)
         {
-            if (file is null)
-                throw new ArgumentNullException(nameof(file));
+            ArgumentNullException.ThrowIfNull(file);
 
             Strategy = new StreamStrategy(file);
         }
 
         public InputSource(IEnumerable<IFileSegmentInfo> segments)
         {
-            if (segments is null)
-                throw new ArgumentNullException(nameof(segments));
+            ArgumentNullException.ThrowIfNull(segments);
+            var strategy = new FileSegmentStrategy(segments);
 
-            Strategy = new FileSegmentStrategy(segments);
+            if(!strategy.CheckIsNotUsedSource(this))
+                throw new InvalidOperationException("Usage of this source has been detected on a child segment.");
+
+            Strategy = strategy;
+        }
+
+        public InputSource(ReadOnlyMemory<byte> memory)
+        {
+            if(memory.IsEmpty)
+                throw new ArgumentException("Memory is empty.");
+
+            Strategy = new MemoryStrategy(memory);
         }
 
         internal InputSource(IInputSourceStrategy externalStrategy) =>
@@ -86,12 +97,6 @@ namespace MediaVC.Difference
 
         public override int GetHashCode() => Strategy.GetHashCode();
 
-        protected override void Dispose(bool disposing)
-        {
-            if(disposing && Strategy is IDisposable disposable)
-                disposable.Dispose();
-        }
-
         public override async ValueTask DisposeAsync()
         {
             if(Strategy is IAsyncDisposable disposable)
@@ -108,6 +113,8 @@ namespace MediaVC.Difference
 
         [Obsolete]
         public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
+
+        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);
 
         #endregion
 

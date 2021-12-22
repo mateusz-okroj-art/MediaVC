@@ -146,8 +146,8 @@ namespace MediaVC.Tools.Tests.Fixtures
         {
             this.stream1?.Dispose();
             this.stream2?.Dispose();
-            InputSource1.Dispose();
-            InputSource2.Dispose();
+            InputSource1.DisposeAsync().AsTask().Wait();
+            InputSource2.DisposeAsync().AsTask().Wait();
         }
 
         #endregion

@@ -6,7 +6,7 @@ using System.Linq;
 
 namespace MediaVC.Tools.Tests.TestData
 {
-    internal class ChecksumRandomMultiStreamTestData : IEnumerable<object[]>
+    internal sealed class ChecksumRandomMultiStreamTestData : IEnumerable<object[]>
     {
         public IEnumerator<object[]> GetEnumerator()
         {
