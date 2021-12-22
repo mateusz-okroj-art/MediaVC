@@ -14,6 +14,8 @@ namespace MediaVC.Difference
 
         public long StartPositionInSource { get; set; }
 
+        public long StartPositionInSource { get; set; }
+
         public long EndPositionInSource { get; set; }
 
         public long MappedPosition { get; set; }

@@ -17,6 +17,15 @@ namespace MediaVC.Difference.Strategies
                 throw new IOException("Stream is not readable.");
         }
 
+        internal const int bufferLength = 4000;
+
+        #endregion
+
+        #region Fields
+
+        private readonly Memory<byte> readerBuffer = new byte[bufferLength];
+        private long bufferStartPosition = -1;
+
         #endregion
 
         #region Fields

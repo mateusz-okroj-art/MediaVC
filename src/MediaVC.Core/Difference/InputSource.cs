@@ -97,7 +97,11 @@ namespace MediaVC.Difference
 
         public override int GetHashCode() => Strategy.GetHashCode();
 
-        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);
+        protected override void Dispose(bool disposing)
+        {
+            if(disposing && Strategy is IDisposable disposable)
+                disposable.Dispose();
+        }
 
         public override async ValueTask DisposeAsync()
         {
@@ -115,6 +119,8 @@ namespace MediaVC.Difference
 
         [Obsolete]
         public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
+
+        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);
 
         #endregion
 
