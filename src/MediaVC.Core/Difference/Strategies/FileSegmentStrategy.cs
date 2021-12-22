@@ -26,8 +26,10 @@ namespace MediaVC.Difference.Strategies
 
         private readonly IEnumerable<IFileSegmentInfo> segments;
         private long position;
-        private readonly Memory<byte> readerBuffer = new byte[2048];
+        private readonly Memory<byte> readerBuffer = new byte[BufferLength];
         private int bufferStartPosition = -1;
+
+        internal const int BufferLength = 4000;
 
         #endregion
 
@@ -81,7 +83,8 @@ namespace MediaVC.Difference.Strategies
 
                 currentSegment.Source!.Position = Position - currentSegment.MappedPosition + currentSegment.StartPositionInSource;
 
-                counter += await currentSegment.Source.ReadAsync(buffer.Slice(counter, (int)currentSegment.Length), cancellationToken);
+                var length = Math.Min(buffer.Length, (int)currentSegment.Length);
+                counter += await currentSegment.Source.ReadAsync(buffer.Slice(counter, length), cancellationToken);
 
                 this.position = positionWhenStarted + counter;
 
@@ -119,7 +122,9 @@ namespace MediaVC.Difference.Strategies
                 return buffer.Span[0];
             }
 
-            if(this.bufferStartPosition < 0 || this.bufferStartPosition > Position)
+            if(this.bufferStartPosition < 0 ||
+                this.bufferStartPosition > Position ||
+                Position >= this.bufferStartPosition + BufferLength)
             {
                 this.bufferStartPosition = (int)Position;
 

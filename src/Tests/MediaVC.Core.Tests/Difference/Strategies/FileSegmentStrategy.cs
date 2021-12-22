@@ -32,9 +32,9 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         {
             var argument = new IFileSegmentInfo[]
             {
-                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 1),
-                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 10),
-                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 100)
+                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 1 && mock.Source == MediaVC.Difference.InputSource.Empty),
+                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 10 && mock.Source == MediaVC.Difference.InputSource.Empty),
+                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 100 && mock.Source == MediaVC.Difference.InputSource.Empty)
             };
 
             var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(argument);
@@ -47,7 +47,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         {
             var argument = new IFileSegmentInfo[]
             {
-                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 1)
+                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 1 && mock.Source == MediaVC.Difference.InputSource.Empty)
             };
 
             var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(argument);
@@ -60,7 +60,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         {
             var argument = new IFileSegmentInfo[]
             {
-                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 2)
+                Mock.Of<IFileSegmentInfo>(mock => mock.Length == 2 && mock.Source == MediaVC.Difference.InputSource.Empty)
             };
             var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(argument);
 
@@ -74,8 +74,8 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         {
             var segments = new IFileSegmentInfo[]
             {
-                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 0 && mock.Length == 2),
-                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 2 && mock.Length == 2)
+                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 0 && mock.Length == 2 && mock.Source == MediaVC.Difference.InputSource.Empty),
+                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 2 && mock.Length == 2 && mock.Source == MediaVC.Difference.InputSource.Empty)
             };
             var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
 
@@ -96,7 +96,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
             var segments = new IFileSegmentInfo[]
             {
                 Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 0 && mock.Length == 2 && mock.Source == source),
-                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 2 && mock.Length == 2 && mock.Source == null)
+                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 2 && mock.Length == 2 && mock.Source == MediaVC.Difference.InputSource.Empty)
             };
             var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
 
@@ -170,6 +170,36 @@ namespace MediaVC.Core.Tests.Difference.Strategies
 
             strategy.Position = 2;
             Assert.Equal(data2[2], await strategy.ReadByteAsync());
+        }
+
+        [Fact]
+        public async void ReadByteAsync_Variant2_ShouldReadFromSegmentsWithBuffering()
+        {
+            const int testLength = MediaVC.Difference.Strategies.FileSegmentStrategy.BufferLength + 5;
+            var data1 = new byte[testLength];
+
+            for(var i = 0; i < testLength; ++i)
+                data1[i] = (byte)(i % byte.MaxValue);
+
+            using var source1 = new MediaVC.Difference.InputSource(data1.AsMemory());
+
+            var segments = new IFileSegmentInfo[]
+            {
+                Mock.Of<IFileSegmentInfo>(mock =>
+                mock.StartPositionInSource == 0 &&
+                mock.EndPositionInSource == source1.Length-1 &&
+                mock.Length == (ulong)data1.Length &&
+                mock.MappedPosition == 0 &&
+                mock.Source == source1)
+            };
+
+            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
+
+            strategy.Position = 0;
+            Assert.Equal(data1[0], await strategy.ReadByteAsync());
+
+            strategy.Position = MediaVC.Difference.Strategies.FileSegmentStrategy.BufferLength;
+            Assert.Equal(data1[MediaVC.Difference.Strategies.FileSegmentStrategy.BufferLength], await strategy.ReadByteAsync());
         }
     }
 }
