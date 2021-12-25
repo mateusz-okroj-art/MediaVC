@@ -61,17 +61,37 @@ namespace MediaVC.Readers
 
         public override int Read()
         {
+            this.syncObject.WaitForAsync().AsTask().Wait();
 
+            var result = this.readingEngine.ReadAsync().AsTask().GetAwaiter().GetResult();
+
+            return result ?? -1;
         }
 
-        public override int Read(char[] buffer, int index, int count)
-        {
-            
-        }
+        public override int Read(char[] buffer, int index, int count) =>
+            Read(buffer.AsSpan().Slice(index, count));
 
         public override int Read(Span<char> buffer)
         {
+            this.syncObject.WaitForAsync().AsTask().Wait();
 
+            var counter = 0;
+
+            for(var i = 0; i < buffer.Length; ++i)
+            {
+                var result = this.readingEngine.ReadAsync().AsTask().GetAwaiter().GetResult();
+
+                if(result.HasValue)
+                    buffer[i] = result.Value;
+                else
+                    break;
+
+                ++counter;
+            }
+
+            this.syncObject.Release();
+
+            return counter;
         }
 
         public async ValueTask<char> ReadAsync(CancellationToken cancellationToken = default)
@@ -122,7 +142,7 @@ namespace MediaVC.Readers
                 var result = await this.readingEngine.ReadAsync();
 
                 if(result.HasValue)
-                    stringBuilder.Append(result.Value);
+                    _ = stringBuilder.Append(result.Value);
                 else
                     break;
             } while(true);
