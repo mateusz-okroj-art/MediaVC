@@ -7,12 +7,12 @@ using System.Threading.Tasks;
 namespace MediaVC
 {
     /// <summary>
-    /// Returns specified AsyncEnumerator.
+    /// Returns <see cref="IAsyncEnumerator{T}"/> that is specified in constructor.
     /// </summary>
     public sealed class AsyncEnumerable<T> : IAsyncEnumerable<T>
     {
         /// <summary>
-        /// Initializes new instance of <see cref="AsyncEnumerable{T}."/>
+        /// Initializes new instance of <see cref="AsyncEnumerable{T}"/>.
         /// </summary>
         /// <param name="asyncEnumerator"></param>
         /// <exception cref="ArgumentNullException"></exception>

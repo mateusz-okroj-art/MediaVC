@@ -29,10 +29,13 @@ namespace MediaVC.Readers
 
         private readonly IInputSource source;
         private readonly TextReadingEngine readingEngine;
+        private readonly SynchronizationObject syncObject = new();
 
         #region Methods
 
         #region Overrides TextReader
+
+        #region Obsoletes
 
         /// <exception cref="InvalidOperationException"/>
         [Obsolete]
@@ -54,6 +57,8 @@ namespace MediaVC.Readers
         [Obsolete]
         public override ValueTask<int> ReadBlockAsync(Memory<char> buffer, CancellationToken cancellationToken = default) => throw new InvalidOperationException();
 
+        #endregion
+
         public override int Read()
         {
 
@@ -69,24 +74,75 @@ namespace MediaVC.Readers
 
         }
 
-        public ValueTask<char> ReadAsync(CancellationToken cancellationToken = default) { }
-
-        public override Task<int> ReadAsync(char[] buffer, int index, int count)
+        public async ValueTask<char> ReadAsync(CancellationToken cancellationToken = default)
         {
+            await this.syncObject.WaitForAsync(cancellationToken);
 
+            var result = await this.readingEngine.ReadAsync(cancellationToken);
+
+            this.syncObject.Release();
+
+            return result ?? throw new InvalidOperationException();
         }
 
-        public override ValueTask<int> ReadAsync(Memory<char> buffer, CancellationToken cancellationToken = default)
-        {
+        public async override Task<int> ReadAsync(char[] buffer, int index, int count) =>
+            await ReadAsync(buffer.AsMemory().Slice(index, count));
 
+        public async override ValueTask<int> ReadAsync(Memory<char> buffer, CancellationToken cancellationToken = default)
+        {
+            await this.syncObject.WaitForAsync(cancellationToken);
+
+            var counter = 0;
+
+            for(var i = 0; i < buffer.Length; ++i)
+            {
+                var result = await this.readingEngine.ReadAsync(cancellationToken);
+
+                if(result.HasValue)
+                    buffer.Span[i] = result.Value;
+                else
+                    break;
+
+                ++counter;
+            }
+
+            this.syncObject.Release();
+
+            return counter;
         }
 
-        public override Task<string?> ReadLineAsync()
+        public override async Task<string?> ReadLineAsync()
         {
+            await this.syncObject.WaitForAsync();
 
+            var stringBuilder = new StringBuilder();
+
+            do
+            {
+                var result = await this.readingEngine.ReadAsync();
+
+                if(result.HasValue)
+                    stringBuilder.Append(result.Value);
+                else
+                    break;
+            } while(true);
+
+            this.syncObject.Release();
+
+            return stringBuilder.ToString();
         }
 
         public override string? ReadLine()
+        {
+
+        }
+
+        public override Task<string> ReadToEndAsync()
+        {
+
+        }
+
+        public override string ReadToEnd()
         {
 
         }
@@ -100,6 +156,14 @@ namespace MediaVC.Readers
         public override bool Equals(object? obj) => Equals(obj as StringBuilder);
 
         public override int GetHashCode() => this.source.GetHashCode();
+
+        protected override void Dispose(bool disposing)
+        {
+            if(disposing)
+                this.syncObject.Dispose();
+
+            base.Dispose(disposing);
+        }
 
         #endregion
     }

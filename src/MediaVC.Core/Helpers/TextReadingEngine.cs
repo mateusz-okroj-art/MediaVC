@@ -13,7 +13,7 @@ namespace MediaVC.Helpers
 
         private readonly IInputSource source;
 
-        public async ValueTask<char> ReadAsync(CancellationToken cancellationToken = default)
+        public async ValueTask<char?> ReadAsync(CancellationToken cancellationToken = default)
         {
 
         }
