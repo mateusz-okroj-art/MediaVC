@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -131,41 +132,41 @@ namespace MediaVC.Readers
             return counter;
         }
 
-        public override async Task<string?> ReadLineAsync()
+        public override Task<string?> ReadLineAsync() => ReadToEndInternalAsync(true);
+
+        internal async Task<string?> ReadToEndInternalAsync(bool endOnLineEnding = false, CancellationToken cancellationToken = default)
         {
-            await this.syncObject.WaitForAsync();
+            await this.syncObject.WaitForAsync(cancellationToken);
 
             var stringBuilder = new StringBuilder();
 
-            do
+            for(;;)
             {
-                var result = await this.readingEngine.ReadAsync();
+                var result = await this.readingEngine.ReadAsync(cancellationToken);
 
-                if(result.HasValue)
+                if(result.HasValue && !endOnLineEnding || result.HasValue && char.GetUnicodeCategory(result.Value) != UnicodeCategory.LineSeparator)
                     _ = stringBuilder.Append(result.Value);
                 else
                     break;
-            } while(true);
+            }
 
             this.syncObject.Release();
 
-            return stringBuilder.ToString();
+            return stringBuilder.Length > 0 ? stringBuilder.ToString() : null;
         }
 
-        public override string? ReadLine()
-        {
+        public override string? ReadLine() =>
+            ReadLineAsync()
+            .GetAwaiter()
+            .GetResult();
 
-        }
+        public override async Task<string> ReadToEndAsync() =>
+            await ReadToEndInternalAsync() ?? throw new InvalidOperationException();
 
-        public override Task<string> ReadToEndAsync()
-        {
-
-        }
-
-        public override string ReadToEnd()
-        {
-
-        }
+        public override string ReadToEnd() =>
+            ReadToEndAsync()
+            .GetAwaiter()
+            .GetResult();
 
         #endregion
 
