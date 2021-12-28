@@ -32,13 +32,23 @@ namespace MediaVC.Tools.Difference
                 .ToArray();
 
             if(!segments.Any())
+            {
+                result.Add(new FileSegmentInfo
+                {
+                    Source = sourceForDetection,
+                    StartPositionInSource = 0,
+                    EndPositionInSource = sourceForDetection.Length - 1
+                });
+
                 return;
+            }
 
             for(var index = 0; index < segments.Length; ++index)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
                 var currentSegment = segments[index];
+
                 if(index == 0 &&
                     currentSegment.StartPositionInSource > 0)
                 {
