@@ -15,10 +15,14 @@ namespace MediaVC.Enumerators
             this.cancellationToken = cancellationToken;
         }
 
+        #region Fields
+
         private bool isInitialized = false;
 
         private readonly IInputSource inputSource;
         private readonly CancellationToken cancellationToken;
+
+        #endregion
 
         public byte Current { get; private set; }
 

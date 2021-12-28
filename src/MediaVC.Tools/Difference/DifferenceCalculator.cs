@@ -46,7 +46,7 @@ namespace MediaVC.Tools.Difference
         /// </summary>
         /// <param name="cancellation"></param>
         /// <exception cref="OperationCanceledException" />
-        public async ValueTask CalculateAsync(CancellationToken cancellationToken = default, IDifferenceCalculatorProgress? progress = null)
+        public async ValueTask CalculateAsync(IDifferenceCalculatorProgress? progress = null, CancellationToken cancellationToken = default)
         {
             try
             {

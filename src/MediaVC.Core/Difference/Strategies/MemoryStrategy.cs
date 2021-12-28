@@ -29,7 +29,7 @@ namespace MediaVC.Difference.Strategies
                 if(value != this.position)
                 {
                     if(value >= Length)
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException("");
 
                     this.position = value;
                 }

@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -52,7 +51,7 @@ namespace MediaVC.Tools.Detection.Strategies
 
         public async ValueTask<bool> CheckIsTextAsync(CancellationToken cancellationToken = default)
         {
-            if(Stream.Length < 1 && Stream.Length > int.MaxValue)
+            if(Stream.Length is < 1 or > int.MaxValue)
                 return false;
 
             if(this.canReadAll)
