@@ -45,14 +45,10 @@ namespace MediaVC.Helpers
                     {
                         case "utf-8":
                         case "ascii":
-
-                            break;
+                            return await ReadUTF8Segments(cancellationToken);
                         case "utf-16":
-
-                            break;
                         case "utf-16BE":
-
-                            break;
+                            return await 
                         case "utf-32":
 
                             break;
@@ -63,114 +59,166 @@ namespace MediaVC.Helpers
 
                             break;
                     }
-
-                    /*var count = Math.Min(4, (int)(this.source.Length - this.source.Position));
-                    for(var i = count; i > 0; --i)
-                    {
-                        var bytes = new byte[i];
-
-                        var readedBytes = await this.source.ReadAsync(bytes.AsMemory(0, i), cancellationToken);
-
-                        if(readedBytes < i)
-                        {
-                            LastReadingState = TextReadingState.UnexpectedEndOfStream;
-                            return null;
-                        }
-
-                        var countedChars = SelectedEncoding.GetCharCount(bytes);
-
-                        if(countedChars == 1)
-                            return SelectedEncoding.GetChars(bytes)[0];
-                        else
-                            this.source.Position -= i;
-                    }*/
                 }
                 else
                 {
                     await ScanForUTF32BOM(loopControllerSource.Controller, cancellationToken);
 
                     if(loopControllerSource.IsBreakRequested)
-                    {
                         return null;
-                    }
 
                     await ScanForUTF8BOM(loopControllerSource.Controller, cancellationToken);
 
+                    if(loopControllerSource.IsBreakRequested)
+                        return null;
+
                     await ScanForUTF16BOM(loopControllerSource.Controller, cancellationToken);
 
-                    if(this.source.Position == this.source.Length - 1)
-                    {
-                        var byte1 = await this.source.ReadByteAsync(cancellationToken);
+                    return !loopControllerSource.IsBreakRequested ?
+                        await ReadUTF8Segments(cancellationToken) :
+                        null;
+                }
+            }
+        }
 
-                        if(byte1 <= 127)
-                        {
-                            LastReadingState = TextReadingState.Done;
-                            return Encoding.UTF8.GetChars(byte1.Yield().ToArray())[0];
-                        }
-                        else
-                        {
-                            LastReadingState = TextReadingState.TooHighValueOfSegment;
-                            return null;
-                        }
+        private async ValueTask<Rune?> ReadUTF8Segments(CancellationToken cancellationToken)
+        {
+            var byte1 = await this.source.ReadByteAsync(cancellationToken);
+            Memory<byte> readedBytes;
+
+            if(byte1 >> 1 == 0b1111110)
+            {
+                readedBytes = new byte[5];
+            }
+            else if(byte1 >> 2 == 0b111110)
+            {
+                readedBytes = new byte[4];
+            }
+            else if(byte1 >> 3 == 0b11110)
+            {
+                readedBytes = new byte[3];
+            }
+            else if(byte1 >> 4 == 0b1110)
+            {
+                readedBytes = new byte[2];
+            }
+            else if(byte1 >> 5 == 0b110)
+            {
+                readedBytes = new byte[1];
+            }
+            else if(byte1 <= 127)
+            {
+                LastReadingState = TextReadingState.Done;
+                return new Rune(Encoding.UTF8.GetChars(byte1.Yield().ToArray())[0]);
+            }
+            else
+            {
+                LastReadingState = TextReadingState.TooHighValueOfSegment;
+                return null;
+            }
+
+            if(await this.source.ReadAsync(readedBytes, cancellationToken) != readedBytes.Length)
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                return null;
+            }
+
+            for(var i = 0; i < readedBytes.Length; ++i)
+            {
+                if(readedBytes.Span[i] >> 6 != 0b10)
+                {
+                    LastReadingState = TextReadingState.TooHighValueOfSegment;
+                    return null;
+                }
+            }
+
+            var resultBytes = new byte[readedBytes.Length + 1];
+            resultBytes[0] = byte1;
+
+            readedBytes.CopyTo(resultBytes.AsMemory()[1..]);
+            var resultChars = Encoding.UTF8.GetChars(resultBytes);
+
+            return resultChars.Length <= 2
+                ? new Rune(resultChars[0], resultChars[1])
+                : throw new FormatException("Chars are too much to create Rune.");
+        }
+
+        private async ValueTask<Rune?> ReadUTF16Segments(CancellationToken cancellationToken = default)
+        {
+            Memory<byte> firstReadedBytes = new byte[2];
+
+            if(await this.source.ReadAsync(firstReadedBytes, cancellationToken) != firstReadedBytes.Length)
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                return null;
+            }
+
+            if(IsLittleEndian)
+            {
+                if(firstReadedBytes.Span[0] >> 2 == 0b110110)
+                {
+                    Memory<byte> secondReadedBytes = new byte[2];
+                    var readedCount = await this.source.ReadAsync(secondReadedBytes, cancellationToken);
+                    
+                    if(readedCount == secondReadedBytes.Length &&
+                        secondReadedBytes.Span[0] >> 2 == 0b110111)
+                    {
+                        return new Rune(BitConverter.ToChar(firstReadedBytes.Span), BitConverter.ToChar(secondReadedBytes.Span));
                     }
                     else
                     {
-                        var byte1 = await this.source.ReadByteAsync(cancellationToken);
-                        Memory<byte> readedBytes;
-
-                        // UTF-8 decoding
-                        if(byte1 >> 1 == 0b1111110)
-                        {
-                            readedBytes = new byte[5];
-                        }
-                        else if(byte1 >> 2 == 0b111110)
-                        {
-                            readedBytes = new byte[4];
-                        }
-                        else if(byte1 >> 3 == 0b11110)
-                        {
-                            readedBytes = new byte[3];
-                        }
-                        else if(byte1 >> 4 == 0b1110)
-                        {
-                            readedBytes = new byte[2];
-                        }
-                        else if(byte1 >> 5 == 0b110)
-                        {
-                            readedBytes = new byte[1];
-                        }
-                        else if(byte1 <= 127)
-                        {
-                            LastReadingState = TextReadingState.Done;
-                            return Encoding.UTF8.GetChars(byte1.Yield().ToArray())[0];
-                        }
-                        else
-                        {
-                            LastReadingState = TextReadingState.TooHighValueOfSegment;
-                            return null;
-                        }
-
-                        if(await this.source.ReadAsync(readedBytes, cancellationToken) != 5)
-                        {
-                            LastReadingState = TextReadingState.UnexpectedEndOfStream;
-                            return null;
-                        }
-
-                        for(var i = 0; i < readedBytes.Length; ++i)
-                        {
-                            if(readedBytes.Span[i] >> 6 != 0b10)
-                            {
-                                LastReadingState = TextReadingState.TooHighValueOfSegment;
-
-                            }
-                        }
-
-                        var resultBytes = new byte[readedBytes.Length + 1];
-                        resultBytes[0] = byte1;
-
-                        readedBytes.CopyTo(resultBytes.AsMemory()[1..]);
-                        return Encoding.UTF8.GetChars(resultBytes)[0];
+                        this.source.Position -= readedCount + 1;
                     }
+                }
+
+                if(BitConverter.ToUInt16(firstReadedBytes.Span) <= ushort.MaxValue)
+                {
+                    return new Rune(BitConverter.ToChar(firstReadedBytes.Span));
+                }
+                else
+                {
+                    LastReadingState = TextReadingState.TooHighValueOfSegment;
+                    return null;
+                }
+            }
+            else
+            {
+                if(firstReadedBytes.Span[1] >> 2 == 0b110111)
+                {
+                    Memory<byte> secondReadedBytes = new byte[2];
+                    var readedCount = await this.source.ReadAsync(secondReadedBytes, cancellationToken);
+
+                    if(readedCount == secondReadedBytes.Length &&
+                        secondReadedBytes.Span[1] >> 2 == 0b110110)
+                    {
+                        var allBytes = new byte[]
+                        { 
+                            firstReadedBytes.Span[0],
+                            firstReadedBytes.Span[1],
+                            secondReadedBytes.Span[0],
+                            secondReadedBytes.Span[1]
+                        };
+
+                        var chars = Encoding.BigEndianUnicode.GetChars(allBytes);
+
+                        return chars.Length == 2
+                            ? new Rune(chars[0], chars[1])
+                            : throw new FormatException("Chars are too much to create Rune.");
+                    }
+                    else
+                    {
+                        this.source.Position -= readedCount + 1;
+                    }
+                }
+
+                if(BitConverter.ToUInt16(firstReadedBytes.Span) <= ushort.MaxValue)
+                {
+                    return new Rune(BitConverter.ToChar(firstReadedBytes.Span));
+                }
+                else
+                {
+                    LastReadingState = TextReadingState.TooHighValueOfSegment;
+                    return null;
                 }
             }
         }
