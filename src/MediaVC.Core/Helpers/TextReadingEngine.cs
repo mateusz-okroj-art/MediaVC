@@ -41,24 +41,13 @@ namespace MediaVC.Helpers
 
                 if(SelectedEncoding is not null)
                 {
-                    switch(SelectedEncoding.HeaderName)
+                    return SelectedEncoding.HeaderName switch
                     {
-                        case "utf-8":
-                        case "ascii":
-                            return await ReadUTF8Segments(cancellationToken);
-                        case "utf-16":
-                        case "utf-16BE":
-                            return await 
-                        case "utf-32":
-
-                            break;
-                        case "utf-32BE":
-
-                            break;
-                        default:
-
-                            break;
-                    }
+                        "utf-8" or "ascii" => await ReadUTF8Segments(cancellationToken),
+                        "utf-16" or "utf-16BE" => await ReadUTF16Segments(cancellationToken),
+                        "utf-32" or "utf-32BE" => await ReadUTF32Segments(cancellationToken),
+                        _ => await ReadCharacterWithSelectedEncoding(cancellationToken),
+                    };
                 }
                 else
                 {
@@ -79,6 +68,22 @@ namespace MediaVC.Helpers
                         null;
                 }
             }
+
+            return null;
+        }
+
+        private async ValueTask<Rune?> ReadCharacterWithSelectedEncoding(CancellationToken cancellationToken)
+        {
+            var readedByte = await this.source.ReadByteAsync(cancellationToken);
+
+            var chars = SelectedEncoding!.GetChars(readedByte.Yield().ToArray());
+
+            if(chars.Length > 2)
+                throw new FormatException("Chars are too much to create Rune.");
+
+            return chars.Length == 1 ?
+                new Rune(chars[0]) :
+                new Rune(chars[0], chars[1]);
         }
 
         private async ValueTask<Rune?> ReadUTF8Segments(CancellationToken cancellationToken)
@@ -221,6 +226,20 @@ namespace MediaVC.Helpers
                     return null;
                 }
             }
+        }
+
+        private async ValueTask<Rune?> ReadUTF32Segments(CancellationToken cancellationToken)
+        {
+            const int utf32CharLength = 4;
+            Memory<byte> bytes = new byte[utf32CharLength];
+
+            if(await this.source.ReadAsync(bytes, cancellationToken) != utf32CharLength)
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                return null;
+            }
+
+            if() ;
         }
 
         /// <summary>
