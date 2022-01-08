@@ -239,7 +239,12 @@ namespace MediaVC.Helpers
                 return null;
             }
 
-            if() ;
+            if(IsLittleEndian)
+                bytes.Span.Reverse();
+
+            var chars = Encoding.UTF32.GetChars(bytes.ToArray());
+
+            return new Rune(chars[0], chars[1]);
         }
 
         /// <summary>
