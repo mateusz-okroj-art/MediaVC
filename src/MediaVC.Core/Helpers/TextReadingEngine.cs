@@ -10,10 +10,14 @@ namespace MediaVC.Helpers
 {
     internal sealed class TextReadingEngine
     {
-        public TextReadingEngine(IInputSource inputSource) =>
+        public TextReadingEngine(IInputSource inputSource)
+        {
             this.source = inputSource ?? throw new ArgumentNullException(nameof(inputSource));
+            this.bomDetector = new ByteOrderMaskDetector(inputSource);
+        }
 
         private readonly IInputSource source;
+        private readonly ByteOrderMaskDetector bomDetector;
 
         #region Properties
 
@@ -21,7 +25,7 @@ namespace MediaVC.Helpers
 
         public TextReadingState LastReadingState { get; private set; }
 
-        public bool IsLittleEndian { get; set; }
+        public ByteOrder ByteOrder { get; set; }
 
         private static Encoding UTF32LittleEndianEncoding =>
             Encoding.GetEncodings()
@@ -35,9 +39,7 @@ namespace MediaVC.Helpers
 
         public async ValueTask<Rune?> ReadAsync(CancellationToken cancellationToken = default)
         {
-            var loopControllerSource = new ExternalLoopControllerSource();
-
-            while(!loopControllerSource.IsBreakRequested)
+            for(;;)
             {
                 if(this.source.Position >= this.source.Length)
                 {
@@ -57,15 +59,26 @@ namespace MediaVC.Helpers
                 }
                 else
                 {
-                    await ScanForUTF32BOM(loopControllerSource.Controller, cancellationToken);
+                    var byteOrder = await this.bomDetector.ScanForUTF32BOM(cancellationToken);
 
-                    if(loopControllerSource.IsBreakRequested)
+                    if(!byteOrder.HasValue) && this.bomDetector.LastReadingState != TextReadingState.Done)
                         return null;
+                    else
+                    {
+                        SelectedEncoding = byteOrder == ByteOrder.LittleEndian ?
+                            UTF32LittleEndianEncoding :
+                            Encoding.UTF32;
 
-                    await ScanForUTF8BOM(loopControllerSource.Controller, cancellationToken);
+                        ByteOrder = byteOrder.Value;
+                        continue;
+                    }
 
-                    if(loopControllerSource.IsBreakRequested)
-                        return null;
+                    var detected = await this.bomDetector.ScanForUTF8BOM(cancellationToken);
+
+                if(!detected && this.bomDetector.LastReadingState != TextReadingState.Done)
+                {
+
+                }
 
                     await ScanForUTF16BOM(loopControllerSource.Controller, cancellationToken);
 

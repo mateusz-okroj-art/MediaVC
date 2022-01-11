@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using MediaVC.Difference;
 
-using MediaVC.Difference;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MediaVC.Helpers
 {
@@ -15,10 +13,12 @@ namespace MediaVC.Helpers
 
         private readonly IInputSource source;
 
+        public TextReadingState LastReadingState { get; private set; }
+
         /// <summary>
         /// Checks that stream have UTF-16 Byte Order Mark on start position
         /// </summary>
-        public async ValueTask ScanForUTF16BOM(IExternalLoopController externalLoopController, CancellationToken cancellationToken = default)
+        public async ValueTask<ByteOrder?> ScanForUTF16BOM(CancellationToken cancellationToken = default)
         {
             if(this.source.Position <= this.source.Length - 2 && this.source.Length >= 2)
             {
@@ -27,31 +27,37 @@ namespace MediaVC.Helpers
                 if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
                 {
                     LastReadingState = TextReadingState.UnexpectedEndOfStream;
-                    externalLoopController.Break();
-                    return;
+                    return null;
                 }
 
                 if(potentialBomMark[0] == 0xff && potentialBomMark[1] == 0xfe)
                 {
-                    SelectedEncoding = Encoding.Unicode;
-                    IsLittleEndian = true;
+                    LastReadingState = TextReadingState.Done;
+                    return ByteOrder.LittleEndian;
                 }
                 else if(potentialBomMark[1] == 0xff && potentialBomMark[0] == 0xfe)
                 {
-                    SelectedEncoding = Encoding.BigEndianUnicode;
-                    IsLittleEndian = false;
+                    LastReadingState = TextReadingState.Done;
+                    return ByteOrder.BigEndian;
                 }
                 else
                 {
                     this.source.Position -= 2;
+                    LastReadingState = TextReadingState.Done;
+                    return null;
                 }
+            }
+            else
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                return null;
             }
         }
 
         /// <summary>
         /// Checks that stream have UTF-8 Byte Order Mark on start position
         /// </summary>
-        public async ValueTask ScanForUTF8BOM(IExternalLoopController externalLoopController, CancellationToken cancellationToken = default)
+        public async ValueTask<bool> ScanForUTF8BOM(CancellationToken cancellationToken = default)
         {
             if(this.source.Position <= this.source.Length - 3 && this.source.Length >= 3)
             {
@@ -60,26 +66,32 @@ namespace MediaVC.Helpers
                 if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
                 {
                     LastReadingState = TextReadingState.UnexpectedEndOfStream;
-                    externalLoopController.Break();
-                    return;
+                    return false;
                 }
 
                 if(potentialBomMark[0] == 0xef && potentialBomMark[1] == 0xbb && potentialBomMark[2] == 0xbf)
                 {
-                    SelectedEncoding = Encoding.UTF8;
-                    IsLittleEndian = true;
+                    LastReadingState = TextReadingState.Done;
+                    return true;
                 }
                 else
                 {
                     this.source.Position -= 3;
+                    LastReadingState = TextReadingState.Done;
+                    return false;
                 }
+            }
+            else
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                return false;
             }
         }
 
         /// <summary>
         /// Checks that stream have UTF-32 Byte Order Mark on start position
         /// </summary>
-        public async ValueTask ScanForUTF32BOM(IExternalLoopController externalLoopController, CancellationToken cancellationToken = default)
+        public async ValueTask<ByteOrder?> ScanForUTF32BOM(CancellationToken cancellationToken = default)
         {
             if(this.source.Position <= this.source.Length - 4 && this.source.Length >= 4)
             {
@@ -88,24 +100,30 @@ namespace MediaVC.Helpers
                 if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
                 {
                     LastReadingState = TextReadingState.UnexpectedEndOfStream;
-                    externalLoopController.Break();
-                    return;
+                    return null;
                 }
 
                 if(potentialBomMark[0] == 0xff && potentialBomMark[1] == 0xfe && potentialBomMark[2] == 0 && potentialBomMark[3] == 0)
                 {
-                    SelectedEncoding = UTF32LittleEndianEncoding;
-                    IsLittleEndian = true;
+                    LastReadingState = TextReadingState.Done;
+                    return ByteOrder.LittleEndian;
                 }
                 else if(potentialBomMark[3] == 0xff && potentialBomMark[2] == 0xfe && potentialBomMark[1] == 0 && potentialBomMark[0] == 0)
                 {
-                    SelectedEncoding = Encoding.UTF32;
-                    IsLittleEndian = false;
+                    LastReadingState = TextReadingState.Done;
+                    return ByteOrder.BigEndian;
                 }
                 else
                 {
                     this.source.Position -= 4;
+                    LastReadingState = TextReadingState.Done;
+                    return null;
                 }
+            }
+            else
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                return null;
             }
         }
     }
