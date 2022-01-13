@@ -140,7 +140,7 @@ namespace MediaVC.Readers
             {
                 var result = await this.readingEngine.ReadAsync(cancellationToken);
 
-                if(result.HasValue && !endOnLineEnding || result.HasValue && char.GetUnicodeCategory(result.Value) != UnicodeCategory.LineSeparator)
+                if(result.HasValue && !endOnLineEnding || result.HasValue && Rune.GetUnicodeCategory(result.Value) != UnicodeCategory.LineSeparator)
                     _ = stringBuilder.Append(result.Value);
                 else
                     break;
@@ -151,15 +151,15 @@ namespace MediaVC.Readers
             return stringBuilder.Length > 0 ? stringBuilder.ToString() : null;
         }
 
-        public override string? ReadLine() =>
+        public string? ReadLine() =>
             ReadLineAsync()
             .GetAwaiter()
             .GetResult();
 
-        public override async Task<string> ReadToEndAsync() =>
+        public async Task<string> ReadToEndAsync() =>
             await ReadToEndInternalAsync() ?? throw new InvalidOperationException();
 
-        public override string ReadToEnd() =>
+        public string ReadToEnd() =>
             ReadToEndAsync()
             .GetAwaiter()
             .GetResult();
@@ -172,12 +172,7 @@ namespace MediaVC.Readers
 
         public override int GetHashCode() => this.source.GetHashCode();
 
-        public void Dispose(bool disposing)
-        {
-
-                this.syncObject.Dispose();
-
-        }
+        public void Dispose() => this.syncObject.Dispose();
 
         #endregion
     }

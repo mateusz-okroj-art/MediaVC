@@ -61,9 +61,14 @@ namespace MediaVC.Helpers
                 {
                     var byteOrder = await this.bomDetector.ScanForUTF32BOM(cancellationToken);
 
-                    if(!byteOrder.HasValue) && this.bomDetector.LastReadingState != TextReadingState.Done)
+                    var state = this.bomDetector.LastReadingState;
+                    if(state != TextReadingState.Done)
+                    {
+                        LastReadingState = state;
                         return null;
-                    else
+                    }
+
+                    if(byteOrder.HasValue)
                     {
                         SelectedEncoding = byteOrder == ByteOrder.LittleEndian ?
                             UTF32LittleEndianEncoding :
@@ -75,20 +80,40 @@ namespace MediaVC.Helpers
 
                     var detected = await this.bomDetector.ScanForUTF8BOM(cancellationToken);
 
-                if(!detected && this.bomDetector.LastReadingState != TextReadingState.Done)
-                {
+                    if(state != TextReadingState.Done)
+                    {
+                        LastReadingState = state;
+                        return null;
+                    }
 
-                }
+                    if(detected)
+                    {
+                        SelectedEncoding = Encoding.UTF8;
+                        ByteOrder = ByteOrder.LittleEndian;
+                        continue;
+                    }
 
-                    await ScanForUTF16BOM(loopControllerSource.Controller, cancellationToken);
+                    byteOrder = await this.bomDetector.ScanForUTF16BOM(cancellationToken);
 
-                    return !loopControllerSource.IsBreakRequested ?
-                        await ReadUTF8Segments(cancellationToken) :
-                        null;
+                    if(state != TextReadingState.Done)
+                    {
+                        LastReadingState = state;
+                        return null;
+                    }
+
+                    if(byteOrder.HasValue)
+                    {
+                        SelectedEncoding = byteOrder == ByteOrder.LittleEndian ?
+                            Encoding.Unicode :
+                            Encoding.BigEndianUnicode;
+
+                        ByteOrder = byteOrder.Value;
+                        continue;
+                    }
+
+                    return await ReadUTF8Segments(cancellationToken);
                 }
             }
-
-            return null;
         }
 
         private async ValueTask<Rune?> ReadCharacterWithSelectedEncoding(CancellationToken cancellationToken)
@@ -97,12 +122,12 @@ namespace MediaVC.Helpers
 
             var chars = SelectedEncoding!.GetChars(readedByte.Yield().ToArray());
 
-            if(chars.Length > 2)
-                throw new FormatException("Chars are too much to create Rune.");
-
-            return chars.Length == 1 ?
-                new Rune(chars[0]) :
-                new Rune(chars[0], chars[1]);
+            return chars.Length switch
+            {
+                1 => new Rune(chars[0]),
+                2 => new Rune(chars[0], chars[1]),
+                _ => throw new FormatException("Chars are too much to create Rune."),
+            };
         }
 
         private async ValueTask<Rune?> ReadUTF8Segments(CancellationToken cancellationToken)
@@ -177,7 +202,7 @@ namespace MediaVC.Helpers
                 return null;
             }
 
-            if(IsLittleEndian)
+            if(ByteOrder == ByteOrder.LittleEndian)
             {
                 if(firstReadedBytes.Span[0] >> 2 == 0b110110)
                 {
@@ -258,7 +283,7 @@ namespace MediaVC.Helpers
                 return null;
             }
 
-            if(IsLittleEndian)
+            if(ByteOrder == ByteOrder.LittleEndian)
                 bytes.Span.Reverse();
 
             var chars = Encoding.UTF32.GetChars(bytes.ToArray());

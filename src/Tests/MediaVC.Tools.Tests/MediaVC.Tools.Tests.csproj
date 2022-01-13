@@ -28,4 +28,16 @@
     <ProjectReference Include="..\..\MediaVC.Tools\MediaVC.Tools.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="TestData\utf-16 big-endian with bom.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\utf-16 little-endian with bom.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="TestData\utf-8 without bom.bin">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
