@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Threading;
@@ -48,6 +47,8 @@ namespace MediaVC.Readers
             get => this.readingEngine.SelectedEncoding;
             set => this.readingEngine.SelectedEncoding = value;
         }
+
+        public LineEnding LineEnding => this.readingEngine.LineEnding;
 
         #endregion
 
@@ -138,10 +139,15 @@ namespace MediaVC.Readers
 
             for(;;)
             {
+                if(endOnLineEnding)
+                {
+                    if(await this.readingEngine.TryReadLineSeparator(cancellationToken))
+                        break;
+                }
                 var result = await this.readingEngine.ReadAsync(cancellationToken);
 
-                if(result.HasValue && !endOnLineEnding || result.HasValue && Rune.GetUnicodeCategory(result.Value) != UnicodeCategory.LineSeparator)
-                    _ = stringBuilder.Append(result.Value);
+                if(result.HasValue)
+                    _ = stringBuilder.Append(result.Value.ToString());
                 else
                     break;
             }

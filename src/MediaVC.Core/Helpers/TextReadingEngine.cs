@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -26,6 +27,8 @@ namespace MediaVC.Helpers
         public TextReadingState LastReadingState { get; private set; }
 
         public ByteOrder ByteOrder { get; set; }
+
+        public LineEnding LineEnding { get; private set; }
 
         private static Encoding UTF32LittleEndianEncoding =>
             Encoding.GetEncodings()
@@ -289,6 +292,48 @@ namespace MediaVC.Helpers
             var chars = Encoding.UTF32.GetChars(bytes.ToArray());
 
             return new Rune(chars[0], chars[1]);
+        }
+
+        public async ValueTask<bool> TryReadLineSeparator(CancellationToken cancellationToken = default)
+        {
+            var count = Math.Max(this.source.Length - this.source.Position - 1, 2);
+            if(count < 2)
+                return false;
+
+            Memory<byte> chars = new byte[count];
+
+            if(await this.source.ReadAsync(chars, cancellationToken) != count)
+                throw new IOException("Error while read.");
+
+            if(chars.Span[0] == '\r')
+            {
+                if(count != 2 || chars.Span[1] != '\n')
+                {
+                    if(count == 2)
+                        --this.source.Position;
+
+                    LineEnding = LineEnding.CRLF;
+                }
+                else
+                {
+                    LineEnding = LineEnding.CR;
+                }
+
+                return true;
+            }
+            else if(chars.Span[0] == '\n')
+            {
+                if(count == 2)
+                    --this.source.Position;
+
+                LineEnding = LineEnding.LF;
+                return true;
+            }
+            else
+            {
+                this.source.Position -= count;
+                return false;
+            }
         }
 
         #endregion
