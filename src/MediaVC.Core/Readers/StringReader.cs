@@ -29,7 +29,7 @@ namespace MediaVC.Readers
 
         #region Fields
 
-        private readonly IInputSource source;
+        internal readonly IInputSource source;
         private readonly TextReadingEngine readingEngine;
         private readonly SynchronizationObject syncObject = new();
 
