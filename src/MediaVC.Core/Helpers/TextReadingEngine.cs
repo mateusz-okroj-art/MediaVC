@@ -190,9 +190,12 @@ namespace MediaVC.Helpers
             readedBytes.CopyTo(resultBytes.AsMemory()[1..]);
             var resultChars = Encoding.UTF8.GetChars(resultBytes);
 
-            return resultChars.Length <= 2
-                ? new Rune(resultChars[0], resultChars[1])
-                : throw new FormatException("Chars are too much to create Rune.");
+            return resultChars.Length switch
+            {
+                1 => new Rune(resultChars[0]),
+                2 => new Rune(resultChars[0], resultChars[1]),
+                _ => throw new FormatException("Chars are too much to create Rune.")
+            };
         }
 
         private async ValueTask<Rune?> ReadUTF16Segments(CancellationToken cancellationToken = default)

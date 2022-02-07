@@ -18,6 +18,7 @@ namespace MediaVC.Core.Tests.Readers
 
         private readonly StringReaderFixture fixture;
 
+        [Fact]
         public async void ReadToEnd_Utf8()
         {
             var source = new InputSource(this.fixture.UTF8_Bytes);
