@@ -28,10 +28,12 @@ namespace MediaVC.Core.Tests.Fixtures
             Task.WaitAll(task1.AsTask(), task2.AsTask(), task3.AsTask(), task4.AsTask());
 
             UTF8_Content = Encoding.UTF8.GetString(UTF8_Bytes.Span);
-            UTF32BE_Content = Encoding.UTF32.GetString(UTF32BE_Bytes.Span);
+            UTF32BE_Content = Encoding.GetEncoding(UTF32BE_Codepage).GetString(UTF32BE_Bytes.Span);
             UTF16LE_Content = Encoding.Unicode.GetString(UTF16LE_Bytes.Span);
             UTF16BE_Content = Encoding.BigEndianUnicode.GetString(UTF16BE_Bytes.Span);
         }
+
+        public const int UTF32BE_Codepage = 12001;
 
         public Memory<byte> UTF16LE_Bytes { get; }
 

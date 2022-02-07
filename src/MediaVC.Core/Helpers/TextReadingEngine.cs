@@ -238,6 +238,23 @@ namespace MediaVC.Helpers
             }
             else
             {
+                if(this.source.Length - this.source.Position >= 2)
+                {
+                    Memory<byte> secondReadedBytes = new byte[2];
+                    var readedCount = await this.source.ReadAsync(secondReadedBytes, cancellationToken);
+
+                    if(readedCount != 2)
+                    {
+                        LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                        return null;
+                    }
+
+                    if(secondReadedBytes.Span[1] >> 2 == 0b110111)
+                    {
+
+                    }
+                }
+
                 if(firstReadedBytes.Span[1] >> 2 == 0b110111)
                 {
                     Memory<byte> secondReadedBytes = new byte[2];
@@ -248,10 +265,10 @@ namespace MediaVC.Helpers
                     {
                         var allBytes = new byte[]
                         { 
-                            firstReadedBytes.Span[0],
                             firstReadedBytes.Span[1],
-                            secondReadedBytes.Span[0],
-                            secondReadedBytes.Span[1]
+                            firstReadedBytes.Span[0],
+                            secondReadedBytes.Span[1],
+                            secondReadedBytes.Span[0]
                         };
 
                         var chars = Encoding.BigEndianUnicode.GetChars(allBytes);
