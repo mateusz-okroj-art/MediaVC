@@ -210,7 +210,20 @@ namespace MediaVC.Helpers
 
             if(ByteOrder == ByteOrder.LittleEndian)
             {
-                if(firstReadedBytes.Span[0] >> 2 == 0b110110)
+                if(this.source.Position < this.source.Length - 2)
+                {
+                    Memory<byte> secondReadedBytes = new byte[2];
+
+                    await this.source.ReadAsync(secondReadedBytes, cancellationToken);
+
+                    if(firstReadedBytes.Span[1] >> 2 == 0b110110 && secondReadedBytes.Span[1] >> 2 == 0b110111)
+                    {
+
+                    }
+                }
+                
+
+                /*if(firstReadedBytes.Span[0] >> 2 == 0b110110)
                 {
                     Memory<byte> secondReadedBytes = new byte[2];
                     var readedCount = await this.source.ReadAsync(secondReadedBytes, cancellationToken);
@@ -228,17 +241,18 @@ namespace MediaVC.Helpers
 
                 if(BitConverter.ToUInt16(firstReadedBytes.Span) <= ushort.MaxValue)
                 {
-                    return new Rune(BitConverter.ToChar(firstReadedBytes.Span));
+                    var c = BitConverter.ToChar(firstReadedBytes.Span);
+                    return new Rune(c);
                 }
                 else
                 {
                     LastReadingState = TextReadingState.TooHighValueOfSegment;
                     return null;
-                }
+                }*/
             }
             else
             {
-                if(this.source.Length - this.source.Position >= 2)
+                /*if(this.source.Length - this.source.Position >= 2)
                 {
                     Memory<byte> secondReadedBytes = new byte[2];
                     var readedCount = await this.source.ReadAsync(secondReadedBytes, cancellationToken);
@@ -291,7 +305,7 @@ namespace MediaVC.Helpers
                 {
                     LastReadingState = TextReadingState.TooHighValueOfSegment;
                     return null;
-                }
+                }*/
             }
         }
 
