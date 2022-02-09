@@ -137,7 +137,7 @@ namespace MediaVC.Readers
 
             var stringBuilder = new StringBuilder();
 
-            while(this.source.Position < this.source.Length - 1)
+            while(this.source.Position <= this.source.Length - 4)
             {
                 if(endOnLineEnding)
                 {

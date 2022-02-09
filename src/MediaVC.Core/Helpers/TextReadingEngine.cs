@@ -248,7 +248,7 @@ namespace MediaVC.Helpers
             {
                 firstReadedBytes.Span.Reverse();
 
-                if(this.source.Position < this.source.Length - 2)
+                if(this.source.Position <= this.source.Length - 2)
                 {
                     Memory<byte> secondReadedBytes = new byte[2];
 
@@ -258,7 +258,7 @@ namespace MediaVC.Helpers
                         return null;
                     }
 
-                    if(firstReadedBytes.Span[0] >> 2 == 0b110110 && secondReadedBytes.Span[0] >> 2 == 0b110111)
+                    if(firstReadedBytes.Span[1] >> 2 == 0b110110 && secondReadedBytes.Span[0] >> 2 == 0b110111)
                     {
                         secondReadedBytes.Span.Reverse();
 
@@ -275,7 +275,7 @@ namespace MediaVC.Helpers
 
                 var singleChar = BitConverter.ToChar(firstReadedBytes.Span);
 
-                if(!UnicodeHelper.IsSurrogateCodePoint(singleChar))
+                if(UnicodeHelper.IsSurrogateCodePoint(singleChar))
                 {
                     LastReadingState = TextReadingState.TooHighValueOfSegment;
                     return null;
@@ -296,12 +296,17 @@ namespace MediaVC.Helpers
                 return null;
             }
 
-            if(ByteOrder == ByteOrder.LittleEndian)
+            if(ByteOrder != ByteOrder.LittleEndian)
                 bytes.Span.Reverse();
 
             var chars = Encoding.UTF32.GetChars(bytes.ToArray());
 
-            return new Rune(chars[0], chars[1]);
+            return chars?.Length switch
+            {
+                1 => new Rune(chars[0]),
+                2 => new Rune(chars[0], chars[1]),
+                _ => throw new IOException("Error while decoding UTF-32 chars.")
+            };
         }
 
         public async ValueTask<bool> TryReadLineSeparator(CancellationToken cancellationToken = default)

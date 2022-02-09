@@ -37,7 +37,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
 
             Assert.True(ReferenceEquals(Encoding.Unicode, reader.SelectedEncoding));
             Assert.Equal(TextReadingState.Done, reader.LastReadingState);
-            Assert.Equal(this.fixture.UTF16LE_Content, result);
+            Assert.Equal(this.fixture.UTF16LE_Content[1..], result);
         }
 
         [Fact]
@@ -50,7 +50,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
 
             Assert.True(ReferenceEquals(Encoding.BigEndianUnicode, reader.SelectedEncoding));
             Assert.Equal(TextReadingState.Done, reader.LastReadingState);
-            Assert.Equal(this.fixture.UTF16BE_Content, result);
+            Assert.Equal(this.fixture.UTF16BE_Content[1..], result);
         }
 
         /*[Fact]
@@ -76,7 +76,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
 
             Assert.Equal(StringReaderFixture.UTF32BE_Codepage, reader.SelectedEncoding?.CodePage);
             Assert.Equal(TextReadingState.Done, reader.LastReadingState);
-            Assert.Equal(this.fixture.UTF32BE_Content, result);
+            Assert.Equal(this.fixture.UTF32BE_Content[2..], result);
         }
     }
 }
