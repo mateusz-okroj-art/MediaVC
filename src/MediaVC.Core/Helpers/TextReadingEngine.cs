@@ -1,7 +1,9 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -202,7 +204,7 @@ namespace MediaVC.Helpers
         {
             Memory<byte> firstReadedBytes = new byte[2];
 
-            if(await this.source.ReadAsync(firstReadedBytes, cancellationToken) != firstReadedBytes.Length)
+            if(await this.source.ReadAsync(firstReadedBytes, cancellationToken) != 2)
             {
                 LastReadingState = TextReadingState.UnexpectedEndOfStream;
                 return null;
@@ -210,102 +212,76 @@ namespace MediaVC.Helpers
 
             if(ByteOrder == ByteOrder.LittleEndian)
             {
-                if(this.source.Position < this.source.Length - 2)
+                if(this.source.Position <= this.source.Length - 2)
                 {
                     Memory<byte> secondReadedBytes = new byte[2];
 
-                    await this.source.ReadAsync(secondReadedBytes, cancellationToken);
-
-                    if(firstReadedBytes.Span[1] >> 2 == 0b110110 && secondReadedBytes.Span[1] >> 2 == 0b110111)
-                    {
-
-                    }
-                }
-                
-
-                /*if(firstReadedBytes.Span[0] >> 2 == 0b110110)
-                {
-                    Memory<byte> secondReadedBytes = new byte[2];
-                    var readedCount = await this.source.ReadAsync(secondReadedBytes, cancellationToken);
-                    
-                    if(readedCount == secondReadedBytes.Length &&
-                        secondReadedBytes.Span[0] >> 2 == 0b110111)
-                    {
-                        return new Rune(BitConverter.ToChar(firstReadedBytes.Span), BitConverter.ToChar(secondReadedBytes.Span));
-                    }
-                    else
-                    {
-                        this.source.Position -= readedCount + 1;
-                    }
-                }
-
-                if(BitConverter.ToUInt16(firstReadedBytes.Span) <= ushort.MaxValue)
-                {
-                    var c = BitConverter.ToChar(firstReadedBytes.Span);
-                    return new Rune(c);
-                }
-                else
-                {
-                    LastReadingState = TextReadingState.TooHighValueOfSegment;
-                    return null;
-                }*/
-            }
-            else
-            {
-                /*if(this.source.Length - this.source.Position >= 2)
-                {
-                    Memory<byte> secondReadedBytes = new byte[2];
-                    var readedCount = await this.source.ReadAsync(secondReadedBytes, cancellationToken);
-
-                    if(readedCount != 2)
+                    if(await this.source.ReadAsync(secondReadedBytes, cancellationToken) != 2)
                     {
                         LastReadingState = TextReadingState.UnexpectedEndOfStream;
                         return null;
                     }
 
-                    if(secondReadedBytes.Span[1] >> 2 == 0b110111)
+                    if(firstReadedBytes.Span[1] >> 2 == 0b110110 && secondReadedBytes.Span[1] >> 2 == 0b110111)
                     {
+                        char char1 = BitConverter.ToChar(firstReadedBytes.Span),
+                             char2 = BitConverter.ToChar(secondReadedBytes.Span);
 
-                    }
-                }
-
-                if(firstReadedBytes.Span[1] >> 2 == 0b110111)
-                {
-                    Memory<byte> secondReadedBytes = new byte[2];
-                    var readedCount = await this.source.ReadAsync(secondReadedBytes, cancellationToken);
-
-                    if(readedCount == secondReadedBytes.Length &&
-                        secondReadedBytes.Span[1] >> 2 == 0b110110)
-                    {
-                        var allBytes = new byte[]
-                        { 
-                            firstReadedBytes.Span[1],
-                            firstReadedBytes.Span[0],
-                            secondReadedBytes.Span[1],
-                            secondReadedBytes.Span[0]
-                        };
-
-                        var chars = Encoding.BigEndianUnicode.GetChars(allBytes);
-
-                        return chars.Length == 2
-                            ? new Rune(chars[0], chars[1])
-                            : throw new FormatException("Chars are too much to create Rune.");
+                        return new Rune(char1, char2);
                     }
                     else
                     {
-                        this.source.Position -= readedCount + 1;
+                        this.source.Position -= 2;
                     }
                 }
-
-                if(BitConverter.ToUInt16(firstReadedBytes.Span) <= ushort.MaxValue)
-                {
-                    return new Rune(BitConverter.ToChar(firstReadedBytes.Span));
-                }
-                else
+                var singleChar = BitConverter.ToChar(firstReadedBytes.Span);
+                
+                if(UnicodeHelper.IsSurrogateCodePoint(singleChar))
                 {
                     LastReadingState = TextReadingState.TooHighValueOfSegment;
                     return null;
-                }*/
+                }
+
+                return new Rune(singleChar);
+            }
+            else
+            {
+                firstReadedBytes.Span.Reverse();
+
+                if(this.source.Position < this.source.Length - 2)
+                {
+                    Memory<byte> secondReadedBytes = new byte[2];
+
+                    if(await this.source.ReadAsync(secondReadedBytes, cancellationToken) != 2)
+                    {
+                        LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                        return null;
+                    }
+
+                    if(firstReadedBytes.Span[0] >> 2 == 0b110110 && secondReadedBytes.Span[0] >> 2 == 0b110111)
+                    {
+                        secondReadedBytes.Span.Reverse();
+
+                        char char1 = BitConverter.ToChar(firstReadedBytes.Span),
+                             char2 = BitConverter.ToChar(secondReadedBytes.Span);
+
+                        return new Rune(char1, char2);
+                    }
+                    else
+                    {
+                        this.source.Position -= 2;
+                    }
+                }
+
+                var singleChar = BitConverter.ToChar(firstReadedBytes.Span);
+
+                if(!UnicodeHelper.IsSurrogateCodePoint(singleChar))
+                {
+                    LastReadingState = TextReadingState.TooHighValueOfSegment;
+                    return null;
+                }
+
+                return new Rune(singleChar);
             }
         }
 
