@@ -95,20 +95,20 @@ namespace MediaVC.Helpers
         {
             if(this.source.Position <= this.source.Length - 4 && this.source.Length >= 4)
             {
-                var potentialBomMark = new byte[4];
+                Memory<byte> potentialBomMark = new byte[4];
 
-                if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
+                if(await this.source.ReadAsync(potentialBomMark, cancellationToken) != potentialBomMark.Length)
                 {
                     LastReadingState = TextReadingState.UnexpectedEndOfStream;
                     return null;
                 }
 
-                if(potentialBomMark[0] == 0xff && potentialBomMark[1] == 0xfe && potentialBomMark[2] == 0 && potentialBomMark[3] == 0)
+                if(potentialBomMark.Span[0] == 0xff && potentialBomMark.Span[1] == 0xfe && potentialBomMark.Span[2] == 0 && potentialBomMark.Span[3] == 0)
                 {
                     LastReadingState = TextReadingState.Done;
                     return ByteOrder.LittleEndian;
                 }
-                else if(potentialBomMark[3] == 0xff && potentialBomMark[2] == 0xfe && potentialBomMark[1] == 0 && potentialBomMark[0] == 0)
+                else if(potentialBomMark.Span[3] == 0xff && potentialBomMark.Span[2] == 0xfe && potentialBomMark.Span[1] == 0 && potentialBomMark.Span[0] == 0)
                 {
                     LastReadingState = TextReadingState.Done;
                     return ByteOrder.BigEndian;

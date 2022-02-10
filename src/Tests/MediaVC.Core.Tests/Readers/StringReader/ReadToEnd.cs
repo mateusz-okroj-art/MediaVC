@@ -2,6 +2,7 @@
 
 using MediaVC.Core.Tests.Fixtures;
 using MediaVC.Difference;
+using MediaVC.Helpers;
 
 using Xunit;
 
@@ -23,6 +24,19 @@ namespace MediaVC.Core.Tests.Readers.StringReader
             var result = await reader.ReadToEndAsync();
 
             Assert.Null(reader.SelectedEncoding);
+            Assert.Equal(TextReadingState.Done, reader.LastReadingState);
+            Assert.Equal(this.fixture.UTF8_Content, result);
+        }
+
+        [Fact]
+        public async void ReadToEnd_UTF8WithBOM()
+        {
+            var source = new InputSource(this.fixture.UTF8BOM_Bytes);
+            var reader = new MediaVC.Readers.StringReader(source);
+
+            var result = await reader.ReadToEndAsync();
+
+            Assert.True(ReferenceEquals(Encoding.UTF8, reader.SelectedEncoding));
             Assert.Equal(TextReadingState.Done, reader.LastReadingState);
             Assert.Equal(this.fixture.UTF8_Content, result);
         }
@@ -53,7 +67,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
             Assert.Equal(this.fixture.UTF16BE_Content[1..], result);
         }
 
-        /*[Fact]
+        [Fact]
         public async void ReadToEnd_UTF32LE()
         {
             var source = new InputSource(this.fixture.UTF32LE_Bytes);
@@ -63,8 +77,8 @@ namespace MediaVC.Core.Tests.Readers.StringReader
 
             Assert.True(ReferenceEquals(Encoding.UTF32, reader.SelectedEncoding));
             Assert.Equal(TextReadingState.Done, reader.LastReadingState);
-            Assert.Equal(this.fixture.UTF32LE_Content, result);
-        }*/
+            Assert.Equal(this.fixture.UTF32LE_Content[1..], result);
+        }
 
         [Fact]
         public async void ReadToEnd_UTF32BE()
@@ -74,9 +88,9 @@ namespace MediaVC.Core.Tests.Readers.StringReader
 
             var result = await reader.ReadToEndAsync();
 
-            Assert.Equal(StringReaderFixture.UTF32BE_Codepage, reader.SelectedEncoding?.CodePage);
+            Assert.Equal(UnicodeHelper.UTF32BigEndianCodePage, reader.SelectedEncoding?.CodePage);
             Assert.Equal(TextReadingState.Done, reader.LastReadingState);
-            Assert.Equal(this.fixture.UTF32BE_Content[2..], result);
+            Assert.Equal(this.fixture.UTF32BE_Content[1..], result);
         }
     }
 }

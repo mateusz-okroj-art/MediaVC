@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
-using System.Text.Unicode;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -31,12 +29,6 @@ namespace MediaVC.Helpers
         public ByteOrder ByteOrder { get; set; }
 
         public LineEnding LineEnding { get; private set; }
-
-        private static Encoding UTF32LittleEndianEncoding =>
-            Encoding.GetEncodings()
-            .Where(encoding => encoding.Name == "UTF-32LE")
-            .First()
-            .GetEncoding();
 
         #endregion
 
@@ -76,8 +68,8 @@ namespace MediaVC.Helpers
                     if(byteOrder.HasValue)
                     {
                         SelectedEncoding = byteOrder == ByteOrder.LittleEndian ?
-                            UTF32LittleEndianEncoding :
-                            Encoding.UTF32;
+                            Encoding.UTF32 :
+                            UnicodeHelper.UTF32BigEndianEncoding;
 
                         ByteOrder = byteOrder.Value;
                         continue;
