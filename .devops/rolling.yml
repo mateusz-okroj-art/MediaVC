@@ -22,12 +22,13 @@ steps:
     packageType: 'sdk'
     version: '5.0.x'
 
-- task: NuGetCommand@2
+- task: DotNetCoreCLI@2
   displayName: Restore solution
   inputs:
     command: 'restore'
-    restoreSolution: 'src/MediaVC.sln'
+    projects: '**/*.csproj'
     feedsToUse: 'select'
+    configuration: Debug
 
 - task: DotNetCoreCLI@2
   displayName: Build solution

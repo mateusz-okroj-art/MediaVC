@@ -9,7 +9,7 @@
 		<RepositoryType>git</RepositoryType>
 		<Company>Mateusz Okrój</Company>
 		<Authors>Mateusz Okrój</Authors>
-		<PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
+		<PackageRequireLicenseAcceptance>false</PackageRequireLicenseAcceptance>
 		<LangVersion>latest</LangVersion>
 		<Nullable>enable</Nullable>
 		<Configurations>Debug;Release;NightlyBuild</Configurations>
@@ -18,21 +18,6 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 	</PropertyGroup>
-
-	<ItemGroup Condition="'$(Configuration)'=='Debug'">
-		<ProjectReference Include="..\MediaVC.Core\MediaVC.Core.csproj" />
-		<ProjectReference Include="..\MediaVC.Tools\MediaVC.Tools.csproj" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(Configuration)'=='NightlyBuild'">
-		<PackageReference Include="MediaVC.Core" Version="*-*" />
-		<PackageReference Include="MediaVC.Tools" Version="*-*" />
-	</ItemGroup>
-
-	<ItemGroup Condition="'$(Configuration)'=='Release'">
-		<PackageReference Include="MediaVC.Core" Version="1.*" />
-		<PackageReference Include="MediaVC.Tools" Version="1.*" />
-	</ItemGroup>
 
 	<ItemGroup>
 		<None Include="..\..\LICENSE" Link="LICENSE" />

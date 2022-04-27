@@ -1,0 +1,71 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+name: Pull Request
+
+trigger: none
+
+pr:
+ autoCancel: true
+
+pool:
+  vmImage: windows-latest
+
+steps:
+
+- task: UseDotNet@2
+  displayName: Install .NET 5
+  inputs:
+    packageType: 'sdk'
+    version: '5.0.x'
+
+- task: DotNetCoreCLI@2
+  displayName: Restore solution
+  inputs:
+    command: 'restore'
+    projects: '**/*.csproj'
+    feedsToUse: 'select'
+    configuration: Debug
+
+- task: DotNetCoreCLI@2
+  displayName: Build solution
+  inputs:
+    command: 'build'
+    projects: '**/*.csproj'
+    configuration: Debug
+
+- task: DotNetCoreCLI@2
+  displayName: Pack Nuget packages
+  inputs:
+    command: 'pack'
+    packagesToPack: '**/*.csproj'
+    versioningScheme: 'off'
+    configuration: Debug
+
+- task: VSTest@2
+  displayName: Test solution
+  inputs:
+        testSelector: 'testAssemblies'
+        testAssemblyVer2: |
+          src/Tests/**\*test*.dll
+          !**\*TestAdapter.dll
+          !**\obj\**
+        searchFolder: '$(System.DefaultWorkingDirectory)'
+        runInParallel: true
+        codeCoverageEnabled: true
+        testRunTitle: 'Pull request'
+        configuration: 'Debug'
+        rerunFailedTests: true
+        rerunType: 'basedOnTestFailureCount'
+        rerunFailedTestCasesMaxLimit: '3'
+        rerunMaxAttempts: '2'
+
+- task: PublishTestResults@2
+  displayName: Fail if tests are failed
+  inputs:
+        testResultsFormat: 'XUnit'
+        testResultsFiles: 'D:\a\_temp\*.trx'
+        failTaskOnFailedTests: true
+        buildConfiguration: 'Debug'
