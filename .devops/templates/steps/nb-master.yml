@@ -1,0 +1,70 @@
+steps:
+
+  - template: sdk-installation.yml
+
+  - task: DotNetCoreCLI@2
+    displayName: Restore from Artifacts
+    timeoutInMinutes: 5
+    inputs:
+      command: 'restore'
+      projects: '$(ProjectDirectory)'
+      feedsToUse: 'select'
+      vstsFeed: '38bc0da1-3319-433c-a904-026e89025e23/ee6b9c5d-1dfb-404c-ad78-604066a68c11'
+
+  - task: DotNetCoreCLI@2
+    displayName: Build project
+    timeoutInMinutes: 10
+    inputs:
+      command: 'build'
+      projects: $(ProjectDirectory)
+      configuration: NightlyBuild
+
+  - task: DotNetCoreCLI@2
+    displayName: Build tests
+    timeoutInMinutes: 10
+    inputs:
+      command: 'build'
+      projects: $(TestDirectory)
+
+  - task: DotNetCoreCLI@2
+    displayName: Test solution
+    timeoutInMinutes: 10
+    inputs:
+      command: 'test'
+      projects: $(TestDirectory)
+
+  - task: PublishTestResults@2
+    displayName: Fail if tests are failed
+    timeoutInMinutes: 5
+    inputs:
+      testResultsFormat: 'XUnit'
+      testResultsFiles: '$(Agent.TempDirectory)/**/*.trx'
+      failTaskOnFailedTests: true
+      buildConfiguration: 'NightlyBuild'
+
+  - task: DotNetCoreCLI@2
+    displayName: Nuget pack
+    inputs:
+      command: 'pack'
+      packagesToPack: $(ProjectDirectory)
+      configuration: 'NightlyBuild'
+      versioningScheme: 'byPrereleaseNumber'
+      majorVersion: '0'
+      minorVersion: '9'
+      patchVersion: '0'
+
+  - task: DotNetCoreCLI@2
+    displayName: Publish packages to Artifacts
+    inputs:
+      command: 'push'
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/*.nupkg'
+      nuGetFeedType: 'internal'
+      publishVstsFeed: '38bc0da1-3319-433c-a904-026e89025e23/ee6b9c5d-1dfb-404c-ad78-604066a68c11'
+
+  - task: NuGetCommand@2
+    displayName: Publish packages to Nuget.org
+    inputs:
+      command: 'push'
+      packagesToPush: '$(Build.ArtifactStagingDirectory)/**/*.nupkg;!$(Build.ArtifactStagingDirectory)/**/*.symbols.nupkg'
+      nuGetFeedType: 'external'
+      publishFeedCredentials: 'Nuget.org mateuszokroj1'
