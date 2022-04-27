@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference;
+using MediaVC.Enumerators;
 
 namespace MediaVC.Tools.Tests.Fixtures
 {
@@ -48,7 +50,9 @@ namespace MediaVC.Tools.Tests.Fixtures
 
         #region Methods
 
-        public void Dispose() { }
+        public ValueTask DisposeAsync() => ValueTask.CompletedTask;
+
+        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);
 
         public int Read(byte[] buffer, int offset, int count) =>
             ReadAsync(buffer.AsMemory().Slice(offset,count)).GetAwaiter().GetResult();

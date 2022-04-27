@@ -83,7 +83,7 @@ namespace MediaVC.Tools.Benchmark
 
             stopwatch.Start();
 
-            calculator.CalculateAsync(CancellationToken.None, progressReporter).AsTask().Wait();
+            calculator.CalculateAsync(progressReporter).AsTask().Wait();
 
             stopwatch.Stop();
 

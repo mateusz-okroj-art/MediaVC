@@ -6,8 +6,6 @@ using System.Threading.Tasks;
 
 using MediaVC.Difference;
 
-using Moq;
-
 using Xunit;
 
 namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
@@ -38,7 +36,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             var cancellationSource = new CancellationTokenSource();
             cancellationSource.Cancel();
 
-            await Assert.ThrowsAsync<OperationCanceledException>(() => calculator.CalculateAsync(cancellationSource.Token).AsTask());
+            _ = await Assert.ThrowsAsync<OperationCanceledException>(() => calculator.CalculateAsync(cancellationToken: cancellationSource.Token).AsTask());
         }
 
         [Fact]
@@ -50,15 +48,15 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
             Assert.Null(calculator.CurrentVersion);
-            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, calculator.NewVersion), "References is not equal.");
 
             Assert.NotNull(calculator.Result);
             var first = Assert.Single(calculator.Result);
             
-            Assert.Equal(this.fixture.OneZero, first.Source);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, first.Source), "References is not equal.");
             Assert.Equal(0, first.StartPositionInSource);
             Assert.Equal(0, first.EndPositionInSource);
             Assert.Equal(1U, first.Length);
@@ -76,15 +74,15 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
             Assert.Null(calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, calculator.NewVersion), "References is not equal.");
 
             Assert.NotNull(calculator.Result);
             var first = Assert.Single(calculator.Result);
 
-            Assert.Equal(this.fixture.ThousandFullBytes, first.Source);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, first.Source), "References is not equal.");
             Assert.Equal(0, first.StartPositionInSource);
             Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, first.EndPositionInSource);
             Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, first.Length);
@@ -102,15 +100,15 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
-            Assert.Equal(InputSource.Empty, calculator.CurrentVersion);
-            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.True(ReferenceEquals(InputSource.Empty, calculator.CurrentVersion), "References is not equal.");
+            Assert.True(ReferenceEquals(this.fixture.OneZero, calculator.NewVersion), "References is not equal.");
 
             Assert.NotNull(calculator.Result);
             var first = Assert.Single(calculator.Result);
 
-            Assert.Equal(this.fixture.OneZero, first.Source);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, first.Source), "References is not equal.");
             Assert.Equal(0, first.StartPositionInSource);
             Assert.Equal(this.fixture.OneZero.Length - 1, first.EndPositionInSource);
             Assert.Equal(this.fixture.OneZero.Length, (long)first.Length);
@@ -128,15 +126,15 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.OneZero, calculator.CurrentVersion);
-            Assert.Equal(this.fixture.OneZero, calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, calculator.CurrentVersion), "References is not equal.");
+            Assert.True(ReferenceEquals(this.fixture.OneZero, calculator.NewVersion), "References is not equal.");
 
             Assert.NotNull(calculator.Result);
             var result = Assert.Single(calculator.Result);
 
-            Assert.Equal(this.fixture.OneZero, result.Source);
+            Assert.True(ReferenceEquals(this.fixture.OneZero, result.Source), "References is not equal.");
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(0, result.EndPositionInSource);
             Assert.Equal((ulong)1, result.Length);
@@ -155,15 +153,15 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ThousandFullBytes, calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ThousandFullBytes, calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, calculator.CurrentVersion), "References is not equal.");
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, calculator.NewVersion), "References is not equal.");
 
             Assert.NotNull(calculator.Result);
             var result = Assert.Single(calculator.Result);
 
-            Assert.Equal(this.fixture.ThousandFullBytes, result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, result.Source), "References is not equal.");
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, result.EndPositionInSource);
             Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, result.Length);
@@ -182,7 +180,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
             Assert.NotNull(calculator.Result);
             Assert.Empty(calculator.Result);
@@ -190,7 +188,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.NotNull(calculator.Removed);
             var result = Assert.Single(calculator.Removed);
 
-            Assert.Equal(this.fixture.ThousandFullBytes, result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ThousandFullBytes, result.Source), "References is not equal.");
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(this.fixture.ThousandFullBytes.Length - 1, result.EndPositionInSource);
             Assert.Equal((ulong)this.fixture.ThousandFullBytes.Length, result.Length);
@@ -205,22 +203,22 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ExampleSources[1], calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[0], calculator.CurrentVersion), "References is not equal.");
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], calculator.NewVersion), "References is not equal.");
 
             Assert.NotNull(calculator.Result);
             Assert.Equal(2, calculator.Result.Count());
 
             var result = calculator.Result.ElementAt(0);
-            Assert.Equal(this.fixture.ExampleSources[0], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[0], result.Source), "References is not equal.");
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(4L, (long)result.Length);
 
             result = calculator.Result.ElementAt(1);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source), "References is not equal.");
             Assert.Equal(4L, result.StartPositionInSource);
             Assert.Equal(7L, result.EndPositionInSource);
             Assert.Equal(4L, (long)result.Length);
@@ -238,23 +236,23 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ExampleSources[0], calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[0], calculator.CurrentVersion), "References is not equal.");
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[2], calculator.NewVersion), "References is not equal.");
 
             Assert.NotNull(calculator.Result);
             Assert.Equal(2, calculator.Result.Count());
 
             var result = calculator.Result.ElementAt(0);
-            Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+            Assert.True(ReferenceEquals(calculator.NewVersion, result.Source), "References is not equal.");
             Assert.Equal(0L, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(0, result.MappedPosition);
             Assert.Equal(4L, (long)result.Length);
 
             result = calculator.Result.ElementAt(1);
-            Assert.Equal(this.fixture.ExampleSources[0], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[0], result.Source), "References is not equal.");
             Assert.Equal(0, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(4L, result.MappedPosition);
@@ -273,23 +271,23 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ExampleSources[2], calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], calculator.CurrentVersion), "References is not equal.");
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[2], calculator.NewVersion), "References is not equal.");
 
             Assert.NotNull(calculator.Result);
             Assert.Equal(2, calculator.Result.Count());
 
             var result = calculator.Result.ElementAt(0);
-            Assert.Equal(this.fixture.ExampleSources[2], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[2], result.Source), "References is not equal.");
             Assert.Equal(0L, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(0, result.MappedPosition);
             Assert.Equal(4L, (long)result.Length);
 
             result = calculator.Result.ElementAt(1);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source), "References is not equal.");
             Assert.Equal(0L, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(4L, result.MappedPosition);
@@ -298,7 +296,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.NotNull(calculator.Removed);
 
             result = Assert.Single(calculator.Removed);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source), "References is not equal.");
             Assert.Equal(4L, result.StartPositionInSource);
             Assert.Equal(7L, result.EndPositionInSource);
             Assert.Equal(4L, (long)result.Length);
@@ -313,30 +311,30 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             if(!Debugger.IsAttached)
                 cancelationTokenSource.CancelAfter(TimeSpan.FromSeconds(30));
 
-            await calculator.CalculateAsync(cancelationTokenSource.Token);
+            await calculator.CalculateAsync(cancellationToken: cancelationTokenSource.Token);
 
-            Assert.Equal(this.fixture.ExampleSources[1], calculator.CurrentVersion);
-            Assert.Equal(this.fixture.ExampleSources[3], calculator.NewVersion);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], calculator.CurrentVersion), "References is not equal.");
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[3], calculator.NewVersion), "References is not equal.");
 
             Assert.NotNull(calculator.Result);
             Assert.Equal(3, calculator.Result.Count());
 
             var result = calculator.Result.ElementAt(0);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source), "References is not equal.");
             Assert.Equal(0L, result.StartPositionInSource);
             Assert.Equal(1L, result.EndPositionInSource);
             Assert.Equal(2L, (long)result.Length);
             Assert.Equal(0, result.MappedPosition);
 
             result = calculator.Result.ElementAt(1);
-            Assert.Equal(this.fixture.ExampleSources[3], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[3], result.Source), "References is not equal.");
             Assert.Equal(2L, result.StartPositionInSource);
             Assert.Equal(2L, result.EndPositionInSource);
             Assert.Equal(1L, (long)result.Length);
             Assert.Equal(2, result.MappedPosition);
 
             result = calculator.Result.ElementAt(2);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source), "References is not equal.");
             Assert.Equal(2L, result.StartPositionInSource);
             Assert.Equal(3L, result.EndPositionInSource);
             Assert.Equal(2L, (long)result.Length);
@@ -345,7 +343,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             Assert.NotNull(calculator.Removed);
 
             result = Assert.Single(calculator.Removed);
-            Assert.Equal(this.fixture.ExampleSources[1], result.Source);
+            Assert.True(ReferenceEquals(this.fixture.ExampleSources[1], result.Source), "References is not equal.");
             Assert.Equal(4L, result.StartPositionInSource);
             Assert.Equal(7L, result.EndPositionInSource);
             Assert.Equal(4L, (long)result.Length);

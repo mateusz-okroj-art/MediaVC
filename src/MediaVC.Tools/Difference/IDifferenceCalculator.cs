@@ -1,5 +1,4 @@
-﻿using System;
-using System.Threading;
+﻿using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference;
@@ -8,7 +7,7 @@ namespace MediaVC.Tools.Difference
 {
     public interface IDifferenceCalculator
     {
-        ValueTask CalculateAsync(CancellationToken cancellationToken = default, IDifferenceCalculatorProgress? progress = null);
+        ValueTask CalculateAsync(IDifferenceCalculatorProgress? progress = null, CancellationToken cancellationToken = default);
 
         IInputSource? CurrentVersion { get; }
 

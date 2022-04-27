@@ -38,7 +38,9 @@ namespace MediaVC.Tools.Detection.Strategies
                 var isText = true;
 
                 if(length < 1)
+                {
                     isText = false;
+                }
                 else if(length < 100_000)
                 {
                     foreach(var value in input)
