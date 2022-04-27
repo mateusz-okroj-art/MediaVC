@@ -91,9 +91,19 @@ stages:
           - template: templates/steps/nb-master.yml
 
           - task: DotNetCoreCLI@2
-            displayName: Benchmark test
+            displayName: Benchmark test - DifferenceCalculator
             continueOnError: true
             timeoutInMinutes: 5
             inputs:
               command: 'run'
               projects: '$(TestsDirectory)/MediaVC.Tools.Benchmark/MediaVC.Tools.Benchmark.csproj'
+              arguments: '1'
+
+          - task: DotNetCoreCLI@2
+            displayName: Benchmark test - ChecksumCalculator
+            continueOnError: true
+            timeoutInMinutes: 5
+            inputs:
+              command: 'run'
+              projects: '$(TestsDirectory)/MediaVC.Tools.Benchmark/MediaVC.Tools.Benchmark.csproj'
+              arguments: '2'

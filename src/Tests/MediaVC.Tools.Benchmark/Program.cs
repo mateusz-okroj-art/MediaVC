@@ -9,7 +9,22 @@ namespace MediaVC.Tools.Benchmark
             WriteLine("MediaVC Tools Benchmark Tests");
             WriteLine();
 
-            DifferenceCalculator.Run();
+            if(args.Length != 1)
+            {
+                WriteLine("Bad argument!");
+                return;
+            }
+
+            switch(args[0].Trim())
+            {
+                case "1":
+                    DifferenceCalculator.Run();
+                    break;
+
+                case "2":
+                    ChecksumCalculator.Run();
+                    break;
+            }
         }
     }
 }
