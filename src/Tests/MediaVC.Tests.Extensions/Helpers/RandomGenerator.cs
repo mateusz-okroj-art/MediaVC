@@ -18,7 +18,7 @@ namespace MediaVC.Tests.Extensions.Helpers
             where Tvalue : struct, IComparable<Tvalue>
         {
             if(from.CompareTo(to) > 0)
-                throw new ArgumentOutOfRangeException();
+                throw new ArgumentOutOfRangeException(nameof(from));
 
             var random = new Random();
 

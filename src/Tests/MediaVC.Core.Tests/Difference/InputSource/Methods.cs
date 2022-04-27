@@ -9,7 +9,6 @@ using MediaVC.Tests.Extensions.TestData;
 using Moq;
 
 using Xunit;
-using Xunit.Extensions;
 
 namespace MediaVC.Core.Tests.Difference.InputSource
 {
@@ -56,7 +55,7 @@ namespace MediaVC.Core.Tests.Difference.InputSource
 
         [Theory]
         [ClassData(typeof(RandomValueTestData<long>))]
-        public async void Enumerator_ShouldEnumerateBytesFromStream(long testedLength)
+        public async Task Enumerator_ShouldEnumerateBytesFromStream(long testedLength)
         {
             const byte testValue = 2;
 

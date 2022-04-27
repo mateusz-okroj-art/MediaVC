@@ -2,7 +2,7 @@
 
 	<PropertyGroup>
 		<TargetFramework>net6</TargetFramework>
-		<Version>0.9.0</Version>
+		<Version>0.4.0</Version>
 		<PackageLicenseExpression>GPL-3.0-or-later</PackageLicenseExpression>
 		<NeutralLanguage>en-US</NeutralLanguage>
 		<RepositoryUrl>https://github.com/mateuszokroj1/MediaVC.git</RepositoryUrl>
@@ -16,7 +16,7 @@
 		<RootNamespace>MediaVC</RootNamespace>
 	</PropertyGroup>
 
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
 		<DefineConstants>DEBUG;TRACE</DefineConstants>
 	</PropertyGroup>
 

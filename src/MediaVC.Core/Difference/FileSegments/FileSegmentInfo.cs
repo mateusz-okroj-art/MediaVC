@@ -4,12 +4,19 @@ namespace MediaVC.Difference
 {
     public struct FileSegmentInfo : IFileSegmentInfo
     {
+        public FileSegmentInfo()
+        {
+            StartPositionInSource = -1;
+            EndPositionInSource = -1;
+            MappedPosition = -1;
+            Source = null;
+        }
 
-        public long StartPositionInSource { get; set; } = -1;
+        public long StartPositionInSource { get; set; }
 
-        public long EndPositionInSource { get; set; } = -1;
+        public long EndPositionInSource { get; set; }
 
-        public long MappedPosition { get; set; } = -1;
+        public long MappedPosition { get; set; }
 
         public readonly ulong Length => IsPositionsValid() ? (ulong)(EndPositionInSource - StartPositionInSource + 1) : 0;
 
