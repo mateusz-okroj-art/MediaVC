@@ -17,7 +17,7 @@ jobs:
 
   build:
 
-    name: Build on ${{ matrix.runsOn }}
+    name: NB Build on ${{ matrix.runsOn }}
 
     strategy:
       matrix:
