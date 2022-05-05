@@ -36,7 +36,7 @@ namespace MediaVC.Tools.Tests.Difference.DifferenceCalculator
             var cancellationSource = new CancellationTokenSource();
             cancellationSource.Cancel();
 
-            _ = await Assert.ThrowsAsync<OperationCanceledException>(() => calculator.CalculateAsync(cancellationSource.Token).AsTask());
+            _ = await Assert.ThrowsAsync<OperationCanceledException>(() => calculator.CalculateAsync(cancellationToken: cancellationSource.Token).AsTask());
         }
 
         [Fact]
