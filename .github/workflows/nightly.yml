@@ -60,7 +60,7 @@ jobs:
         key: ${{ runner.os }}-sonar
         restore-keys: ${{ runner.os }}-sonar
         
-    - name: Cache SonarCloud scanner
+    - name: Cache SonarScanner
       if: matrix.runsOn == 'windows-latest'
       id: cache-sonar-scanner
       timeout-minutes: 5
@@ -70,7 +70,7 @@ jobs:
         key: ${{ runner.os }}-sonar-scanner
         restore-keys: ${{ runner.os }}-sonar-scanner
         
-    - name: Install SonarCloud scanner
+    - name: Install SonarScanner
       if: steps.cache-sonar-scanner.outputs.cache-hit != 'true' && matrix.runsOn == 'windows-latest'
       timeout-minutes: 2
       shell: powershell
@@ -78,32 +78,36 @@ jobs:
         New-Item -Path .\.sonar\scanner -ItemType Directory
         dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
       
+    - name: Init SonarScanner
+      if: matrix.runsOn == 'windows-latest'
+      timeout-minutes: 20
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: powershell  
+      run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"mateuszokroj1_MediaVC" /o:"mateuszokroj1" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+    
     - name: Build
-      if: matrix.runsOn != 'windows-latest'
       timeout-minutes: 20
       run: |
         dotnet clean src
         dotnet build src -c Debug
       
-    - name: Build and analyze
+    - name: Test
+      timeout-minutes: 10
+      run: |
+        dotnet test src/Tests/MediaVC.Tests/MediaVC.Tests.csproj --no-build --collect "Code Coverage"
+        dotnet test src/Tests/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj --no-build --collect "Code Coverage"
+        dotnet test src/Tests/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj --no-build --collect "Code Coverage"
+      
+    - name: Finalize SonarScanner
       if: matrix.runsOn == 'windows-latest'
       timeout-minutes: 20
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       shell: powershell
-      run: |
-        .\.sonar\scanner\dotnet-sonarscanner begin /k:"mateuszokroj1_MediaVC" /o:"mateuszokroj1" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
-        dotnet clean src
-        dotnet build src -c Debug
-        .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
-     
-    - name: Test
-      timeout-minutes: 10
-      run: |
-        dotnet test src/Tests/MediaVC.Tests/MediaVC.Tests.csproj --no-build
-        dotnet test src/Tests/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj --no-build
-        dotnet test src/Tests/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj --no-build
+      run: .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
         
     - name: Benchmark tests
       if: github.head_ref != 'pull_request'
