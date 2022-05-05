@@ -88,7 +88,6 @@ jobs:
       run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"mateuszokroj1_MediaVC" /o:"mateuszokroj1" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
     
     - name: Build
-      if: matrix.runsOn != 'windows-latest'
       timeout-minutes: 20
       run: |
         dotnet clean src
