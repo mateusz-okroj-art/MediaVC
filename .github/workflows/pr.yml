@@ -1,0 +1,122 @@
+name: Pull request
+
+on:
+
+  push:
+    branches-ignore: [ main, feature/*, fix/*, release/* ]
+    
+  pull_request:
+    branches: [ main, release/* ]
+    
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    name: Pull request quality gate on ${{ matrix.runsOn }}
+
+    strategy:
+      matrix:
+        runsOn: ['ubuntu-latest', 'windows-latest', 'macOs-latest']
+        
+    env:
+      CoreProjectDir: 'src/MediaVC.Core'
+      MainProjectDir: 'src/MediaVC'
+      ToolsProjectDir: 'src/MediaVC.Tools'
+
+    runs-on: ${{ matrix.runsOn }}
+
+    steps:
+    
+    - uses: actions/checkout@v3
+      name: Git checkout
+      timeout-minutes: 2
+      with:
+        fetch-depth: 0
+      
+    - name: Setup .NET 6
+      uses: actions/setup-dotnet@v2
+      timeout-minutes: 2
+      with:
+        dotnet-version: 6.0.x
+    
+    - name: Install Coverlet
+      run: dotnet tool install --global coverlet.console
+    
+    - name: Set up JDK 11
+      if: matrix.runsOn == 'windows-latest'
+      uses: actions/setup-java@v1
+      timeout-minutes: 2
+      with:
+        java-version: 1.11
+        
+    - name: Cache SonarCloud packages
+      if: matrix.runsOn == 'windows-latest'
+      uses: actions/cache@v1
+      timeout-minutes: 5
+      with:
+        path: ~\sonar\cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+        
+    - name: Cache SonarScanner
+      if: matrix.runsOn == 'windows-latest'
+      id: cache-sonar-scanner
+      timeout-minutes: 5
+      uses: actions/cache@v1
+      with:
+        path: .\.sonar\scanner
+        key: ${{ runner.os }}-sonar-scanner
+        restore-keys: ${{ runner.os }}-sonar-scanner
+        
+    - name: Install SonarScanner
+      if: steps.cache-sonar-scanner.outputs.cache-hit != 'true' && matrix.runsOn == 'windows-latest'
+      timeout-minutes: 2
+      shell: powershell
+      run: |
+        New-Item -Path .\.sonar\scanner -ItemType Directory
+        dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+      
+    - name: Init SonarScanner
+      if: matrix.runsOn == 'windows-latest'
+      timeout-minutes: 20
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: powershell  
+      run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"mateuszokroj1_MediaVC" /o:"mateuszokroj1" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverage.xml
+    
+    - name: Build
+      timeout-minutes: 20
+      run: |
+        dotnet clean src
+        dotnet build src -c Debug --no-incremental
+      
+    - name: Test
+      timeout-minutes: 10
+      run: |
+        coverlet src/Tests/MediaVC.Core.Tests/bin/Debug/net6/MediaVC.Core.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Tests/bin/Debug/net6/MediaVC.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tests/MediaVC.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Tools.Tests/bin/Debug/net6/MediaVC.Tools.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+      
+    - name: Finalize SonarScanner
+      if: matrix.runsOn == 'windows-latest'
+      timeout-minutes: 20
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: powershell
+      run: .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+      
+    - name: Pack Core
+      timeout-minutes: 20
+      run: dotnet pack ${{ env.CoreProjectDir }}/MediaVC.Core.csproj --no-build
+      
+    - name: Pack Main
+      timeout-minutes: 20
+      run: dotnet pack ${{ env.MainProjectDir }}/MediaVC.csproj --no-build
+      
+    - name: Pack Tools
+      timeout-minutes: 20
+      run: dotnet pack ${{ env.ToolsProjectDir }}/MediaVC.Tools.csproj --no-build
