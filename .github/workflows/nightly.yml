@@ -6,10 +6,10 @@ on:
     - cron: "0 0 * * *"
 
   push:
-    branches: [ feature/Architecture ]
+    branches-ignore: [ main, release/*, feature/*, fix/* ]
     
   pull_request:
-    branches: [ main, release/* ]
+    branches-ignore: [ main, release/*, feature/*, fix/* ]
     
   workflow_dispatch:
 
@@ -43,7 +43,10 @@ jobs:
       timeout-minutes: 2
       with:
         dotnet-version: 6.0.x
-      
+    
+    - name: Install Coverlet
+      run: dotnet tool install --global coverlet.console
+    
     - name: Set up JDK 11
       if: matrix.runsOn == 'windows-latest'
       uses: actions/setup-java@v1
@@ -85,20 +88,20 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       shell: powershell  
-      run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"mateuszokroj1_MediaVC" /o:"mateuszokroj1" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io"
+      run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"mateuszokroj1_MediaVC" /o:"mateuszokroj1" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverage.xml
     
     - name: Build
       timeout-minutes: 20
       run: |
         dotnet clean src
-        dotnet build src -c Debug
+        dotnet build src -c Debug --no-incremental
       
     - name: Test
       timeout-minutes: 10
       run: |
-        dotnet test src/Tests/MediaVC.Tests/MediaVC.Tests.csproj --no-build --collect "Code Coverage"
-        dotnet test src/Tests/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj --no-build --collect "Code Coverage"
-        dotnet test src/Tests/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj --no-build --collect "Code Coverage"
+        coverlet src/Tests/MediaVC.Core.Tests/bin/Debug/net6/MediaVC.Core.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Tests/bin/Debug/net6/MediaVC.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tests/MediaVC.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Tools.Tests/bin/Debug/net6/MediaVC.Tools.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
       
     - name: Finalize SonarScanner
       if: matrix.runsOn == 'windows-latest'
@@ -110,19 +113,18 @@ jobs:
       run: .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
         
     - name: Benchmark tests
-      if: github.head_ref != 'pull_request'
       run: dotnet run src/Tests/MediaVC.Tools.Benchmark/MediaVC.Tools.Benchmark.csproj
       continue-on-error: true
       timeout-minutes: 20
      
     - name: Clean
       timeout-minutes: 1
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: dotnet clean src
     
     - name: Add GitHub Package as Nuget Source
       timeout-minutes: 1
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/mateuszokroj1/index.json"
     
     - name: Read version properties
@@ -146,51 +148,51 @@ jobs:
     
     - name: Build Core
       timeout-minutes: 20
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: dotnet build ${{ env.CoreProjectDir }}/MediaVC.Core.csproj -c NightlyBuild
       
     - name: Pack Core
       timeout-minutes: 20
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: dotnet pack ${{ env.CoreProjectDir }}/MediaVC.Core.csproj -c NightlyBuild --no-build -p:PackageVersion=${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}
       
     - name: Publish package Core
       timeout-minutes: 5
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: |
         dotnet nuget push ${{ env.CoreProjectDir }}/bin/NightlyBuild/MediaVC.Core.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "github"
         dotnet nuget push ${{ env.CoreProjectDir }}/bin/NightlyBuild/MediaVC.Core.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_KEY }}
       
     - name: Build Main
       timeout-minutes: 20
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: dotnet build ${{ env.MainProjectDir }}/MediaVC.csproj -c NightlyBuild
       
     - name: Pack Main
       timeout-minutes: 20
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: dotnet pack ${{ env.MainProjectDir }}/MediaVC.csproj -c NightlyBuild --no-build -p:PackageVersion=${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}
       
     - name: Publish package Main
       timeout-minutes: 5
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: |
         dotnet nuget push ${{ env.MainProjectDir }}/bin/NightlyBuild/MediaVC.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "github"
         dotnet nuget push ${{ env.MainProjectDir }}/bin/NightlyBuild/MediaVC.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_KEY }}
         
     - name: Build Tools
       timeout-minutes: 20
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: dotnet build ${{ env.ToolsProjectDir }}/MediaVC.Tools.csproj -c NightlyBuild
       
     - name: Pack Tools
       timeout-minutes: 20
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: dotnet pack ${{ env.ToolsProjectDir }}/MediaVC.Tools.csproj -c NightlyBuild --no-build -p:PackageVersion=${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}
       
     - name: Publish package Tools
       timeout-minutes: 5
-      if: matrix.runsOn == 'windows-latest' && github.head_ref != 'pull_request'
+      if: matrix.runsOn == 'windows-latest'
       run: |
         dotnet nuget push ${{ env.ToolsProjectDir }}/bin/NightlyBuild/MediaVC.Tools.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "github"
         dotnet nuget push ${{ env.ToolsProjectDir }}/bin/NightlyBuild/MediaVC.Tools.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_KEY }}
