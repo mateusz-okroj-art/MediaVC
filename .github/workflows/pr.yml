@@ -1,0 +1,210 @@
+name: Nightly build
+
+on:
+
+  schedule:
+    - cron: "0 0 * * *"
+
+  push:
+    branches: [ feature/Architecture ]
+    
+  pull_request:
+    branches: [ main, release/* ]
+    
+  workflow_dispatch:
+
+jobs:
+
+  build:
+
+    name: NB Build on ${{ matrix.runsOn }}
+
+    strategy:
+      matrix:
+        runsOn: ['ubuntu-latest', 'windows-latest', 'macOs-latest']
+        
+    env:
+      CoreProjectDir: 'src/MediaVC.Core'
+      MainProjectDir: 'src/MediaVC'
+      ToolsProjectDir: 'src/MediaVC.Tools'
+      isNotPullRequest: github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
+
+    runs-on: ${{ matrix.runsOn }}
+
+    steps:
+    
+    - uses: actions/checkout@v3
+      name: Git checkout
+      timeout-minutes: 2
+      with:
+        fetch-depth: 0
+      
+    - name: Setup .NET 6
+      uses: actions/setup-dotnet@v2
+      timeout-minutes: 2
+      with:
+        dotnet-version: 6.0.x
+    
+    - name: Install Coverlet
+      run: dotnet tool install --global coverlet.console
+    
+    - name: Set up JDK 11
+      if: matrix.runsOn == 'windows-latest'
+      uses: actions/setup-java@v1
+      timeout-minutes: 2
+      with:
+        java-version: 1.11
+        
+    - name: Cache SonarCloud packages
+      if: matrix.runsOn == 'windows-latest'
+      uses: actions/cache@v1
+      timeout-minutes: 5
+      with:
+        path: ~\sonar\cache
+        key: ${{ runner.os }}-sonar
+        restore-keys: ${{ runner.os }}-sonar
+        
+    - name: Cache SonarScanner
+      if: matrix.runsOn == 'windows-latest'
+      id: cache-sonar-scanner
+      timeout-minutes: 5
+      uses: actions/cache@v1
+      with:
+        path: .\.sonar\scanner
+        key: ${{ runner.os }}-sonar-scanner
+        restore-keys: ${{ runner.os }}-sonar-scanner
+        
+    - name: Install SonarScanner
+      if: steps.cache-sonar-scanner.outputs.cache-hit != 'true' && matrix.runsOn == 'windows-latest'
+      timeout-minutes: 2
+      shell: powershell
+      run: |
+        New-Item -Path .\.sonar\scanner -ItemType Directory
+        dotnet tool update dotnet-sonarscanner --tool-path .\.sonar\scanner
+      
+    - name: Init SonarScanner
+      if: matrix.runsOn == 'windows-latest'
+      timeout-minutes: 20
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: powershell  
+      run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"mateuszokroj1_MediaVC" /o:"mateuszokroj1" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverage.xml
+    
+    - name: Build
+      timeout-minutes: 20
+      run: |
+        dotnet clean src
+        dotnet build src -c Debug --no-incremental
+      
+    - name: Test
+      timeout-minutes: 10
+      run: |
+        coverlet src/Tests/MediaVC.Core.Tests/bin/Debug/net6/MediaVC.Core.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Tests/bin/Debug/net6/MediaVC.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tests/MediaVC.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Tools.Tests/bin/Debug/net6/MediaVC.Tools.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+      
+    - name: Finalize SonarScanner
+      if: matrix.runsOn == 'windows-latest'
+      timeout-minutes: 20
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      shell: powershell
+      run: .\.sonar\scanner\dotnet-sonarscanner end /d:sonar.login="${{ secrets.SONAR_TOKEN }}"
+        
+    - name: Benchmark tests
+      if: env.isNotPullRequest
+      run: dotnet run src/Tests/MediaVC.Tools.Benchmark/MediaVC.Tools.Benchmark.csproj
+      continue-on-error: true
+      timeout-minutes: 20
+     
+    - name: Clean
+      timeout-minutes: 1
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: dotnet clean src
+    
+    - name: Add GitHub Package as Nuget Source
+      timeout-minutes: 1
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: dotnet nuget add source --username USERNAME --password ${{ secrets.GITHUB_TOKEN }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/mateuszokroj1/index.json"
+    
+    - name: Read version properties
+      if: env.isNotPullRequest
+      id: version
+      uses: juliangruber/read-file-action@v1
+      with:
+        path: ./Version.json
+    
+    - name: Get branch name
+      if: env.isNotPullRequest
+      id: branch
+      uses: mad9000/actions-find-and-replace-string@2
+      with:
+        source: ${{ github.ref_name }} # this translates to ref/heads/main on the main branch, but can be any arbitrary string 
+        find: '/'        # we want to remove ref/heads/ from source 
+        replace: '-'               # and replace it with a blank string (ie. removing it)
+      
+    - name: Git SHA Trimmer
+      if: env.isNotPullRequest
+      # You may pin to the exact commit or the version.
+      # uses: priyesh2609/sha-trim-action@9b3455de8dc5c595746cf34d653bf81854b9f7e2
+      uses: priyesh2609/sha-trim-action@v1.1.1 
+    
+    - name: Build Core
+      timeout-minutes: 20
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: dotnet build ${{ env.CoreProjectDir }}/MediaVC.Core.csproj -c NightlyBuild
+      
+    - name: Pack Core
+      timeout-minutes: 20
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: dotnet pack ${{ env.CoreProjectDir }}/MediaVC.Core.csproj -c NightlyBuild --no-build -p:PackageVersion=${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}
+      
+    - name: Publish package Core
+      timeout-minutes: 5
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: |
+        dotnet nuget push ${{ env.CoreProjectDir }}/bin/NightlyBuild/MediaVC.Core.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "github"
+        dotnet nuget push ${{ env.CoreProjectDir }}/bin/NightlyBuild/MediaVC.Core.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_KEY }}
+      
+    - name: Build Main
+      timeout-minutes: 20
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: dotnet build ${{ env.MainProjectDir }}/MediaVC.csproj -c NightlyBuild
+      
+    - name: Pack Main
+      timeout-minutes: 20
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: dotnet pack ${{ env.MainProjectDir }}/MediaVC.csproj -c NightlyBuild --no-build -p:PackageVersion=${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}
+      
+    - name: Publish package Main
+      timeout-minutes: 5
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: |
+        dotnet nuget push ${{ env.MainProjectDir }}/bin/NightlyBuild/MediaVC.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "github"
+        dotnet nuget push ${{ env.MainProjectDir }}/bin/NightlyBuild/MediaVC.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_KEY }}
+        
+    - name: Build Tools
+      timeout-minutes: 20
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: dotnet build ${{ env.ToolsProjectDir }}/MediaVC.Tools.csproj -c NightlyBuild
+      
+    - name: Pack Tools
+      timeout-minutes: 20
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: dotnet pack ${{ env.ToolsProjectDir }}/MediaVC.Tools.csproj -c NightlyBuild --no-build -p:PackageVersion=${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}
+      
+    - name: Publish package Tools
+      timeout-minutes: 5
+      if: matrix.runsOn == 'windows-latest' && env.isNotPullRequest
+      run: |
+        dotnet nuget push ${{ env.ToolsProjectDir }}/bin/NightlyBuild/MediaVC.Tools.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "github"
+        dotnet nuget push ${{ env.ToolsProjectDir }}/bin/NightlyBuild/MediaVC.Tools.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_KEY }}
+
+    - name: Upload a Build Artifact
+      if: env.isNotPullRequest
+      uses: actions/upload-artifact@v3.0.0
+      with:
+        name: 'MediaVC-NB-${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}'
+        path: src
