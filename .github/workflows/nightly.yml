@@ -27,7 +27,7 @@ jobs:
       CoreProjectDir: 'src/MediaVC.Core'
       MainProjectDir: 'src/MediaVC'
       ToolsProjectDir: 'src/MediaVC.Tools'
-      isNotPullRequest: github.head_ref != 'pull_request' && github.head_ref != 'pull_request_target' && github.base_ref != 'pull_request' && github.base_ref != 'pull_request_target'
+      isNotPullRequest: github.event_name != 'pull_request' && github.event_name != 'pull_request_target'
 
     runs-on: ${{ matrix.runsOn }}
 
