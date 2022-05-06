@@ -99,9 +99,9 @@ jobs:
     - name: Test
       timeout-minutes: 10
       run: |
-        coverlet src/Tests/MediaVC.Core.Tests/bin/Debug/net6/MediaVC.Core.Tests.dll --target "dotnet" --targetargs "test --no-build" -f=opencover -o="coverage.xml"
-        coverlet src/Tests/MediaVC.Tests/bin/Debug/net6/MediaVC.Tests.dll --target "dotnet" --targetargs "test --no-build" -f=opencover -o="coverage.xml"
-        coverlet src/Tests/MediaVC.Tools.Tests/bin/Debug/net6/MediaVC.Tools.Tests.dll --target "dotnet" --targetargs "test --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Core.Tests/bin/Debug/net6/MediaVC.Core.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Tests/bin/Debug/net6/MediaVC.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tests/MediaVC.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Tools.Tests/bin/Debug/net6/MediaVC.Tools.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
       
     - name: Finalize SonarScanner
       if: matrix.runsOn == 'windows-latest'
