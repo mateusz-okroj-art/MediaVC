@@ -161,7 +161,7 @@ jobs:
       if: matrix.runsOn == 'windows-latest'
       run: |
         dotnet nuget push ${{ env.CoreProjectDir }}/bin/NightlyBuild/MediaVC.Core.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "github" --skip-duplicate
-        dotnet nuget push ${{ env.CoreProjectDir }}/bin/NightlyBuild/MediaVC.Core.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_KEY }} --skip-duplicate
+        dotnet nuget push ${{ env.CoreProjectDir }}/bin/NightlyBuild/MediaVC.Core.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate
       
     - name: Build Main
       timeout-minutes: 20
@@ -178,7 +178,7 @@ jobs:
       if: matrix.runsOn == 'windows-latest'
       run: |
         dotnet nuget push ${{ env.MainProjectDir }}/bin/NightlyBuild/MediaVC.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "github" --skip-duplicate
-        dotnet nuget push ${{ env.MainProjectDir }}/bin/NightlyBuild/MediaVC.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_KEY }} --skip-duplicate
+        dotnet nuget push ${{ env.MainProjectDir }}/bin/NightlyBuild/MediaVC.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate
         
     - name: Build Tools
       timeout-minutes: 20
@@ -195,7 +195,7 @@ jobs:
       if: matrix.runsOn == 'windows-latest'
       run: |
         dotnet nuget push ${{ env.ToolsProjectDir }}/bin/NightlyBuild/MediaVC.Tools.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "github" --skip-duplicate
-        dotnet nuget push ${{ env.ToolsProjectDir }}/bin/NightlyBuild/MediaVC.Tools.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_KEY }} --skip-duplicate
+        dotnet nuget push ${{ env.ToolsProjectDir }}/bin/NightlyBuild/MediaVC.Tools.${{ fromJSON(steps.version.outputs.content).Major }}.${{ fromJSON(steps.version.outputs.content).Minor }}.${{ fromJSON(steps.version.outputs.content).Patch }}-${{ steps.branch.outputs.value }}-${{ env.TRIMMED_SHA }}.nupkg --source "NuGet.org" --api-key ${{ secrets.NUGET_TOKEN }} --skip-duplicate
 
     - name: Upload a Build Artifact
       uses: actions/upload-artifact@v3.0.0
