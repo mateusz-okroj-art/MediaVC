@@ -55,26 +55,11 @@ namespace MediaVC.Core.Tests.Fixtures
             UTF16LE_Content = Encoding.Unicode.GetString(UTF16LE_Bytes.Span);
             UTF16BE_Content = Encoding.BigEndianUnicode.GetString(UTF16BE_Bytes.Span);
 
-            using var stream1 = new MemoryStream(CRLF_UTF8_Bytes.ToArray());
-            using var reader1 = new StreamReader(stream1);
+            var decodedString = Encoding.UTF8.GetString(CRLF_UTF8_Bytes.ToArray());
+            CRLF_UTF8_Content = decodedString.Split("\r\n");
 
-            var tempList = new List<string>();
-            string line = null;
-
-            while((line = reader1.ReadLine()) is not null)
-                tempList.Add(line);
-
-            CRLF_UTF8_Content = tempList.ToArray();
-
-            tempList.Clear();
-
-            using var stream2 = new MemoryStream(LF_UTF16_Bytes.ToArray());
-            using var reader2 = new StreamReader(stream2);
-
-            while((line = reader2.ReadLine()) is not null)
-                tempList.Add(line);
-
-            LF_UTF16_Content = tempList.ToArray();
+            decodedString = Encoding.Unicode.GetString(LF_UTF16_Bytes.ToArray());
+            LF_UTF16_Content = decodedString.Split('\n');
         }
 
         public Memory<byte> UTF16LE_Bytes { get; }

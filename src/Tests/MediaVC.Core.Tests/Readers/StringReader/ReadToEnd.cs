@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using System.Threading.Tasks;
 
 using MediaVC.Core.Tests.Fixtures;
 using MediaVC.Difference;
@@ -16,7 +17,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
         private readonly StringReaderFixture fixture;
 
         [Fact]
-        public async void ReadToEnd_UTF8()
+        public async Task ReadToEnd_UTF8()
         {
             var source = new InputSource(this.fixture.UTF8_Bytes);
             var reader = new MediaVC.Readers.StringReader(source);
@@ -29,7 +30,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
         }
 
         [Fact]
-        public async void ReadToEnd_UTF8WithBOM()
+        public async Task ReadToEnd_UTF8WithBOM()
         {
             var source = new InputSource(this.fixture.UTF8BOM_Bytes);
             var reader = new MediaVC.Readers.StringReader(source);
@@ -42,7 +43,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
         }
 
         [Fact]
-        public async void ReadToEnd_UTF16LE()
+        public async Task ReadToEnd_UTF16LE()
         {
             var source = new InputSource(this.fixture.UTF16LE_Bytes);
             var reader = new MediaVC.Readers.StringReader(source);
@@ -55,7 +56,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
         }
 
         [Fact]
-        public async void ReadToEnd_UTF16BE()
+        public async Task ReadToEnd_UTF16BE()
         {
             var source = new InputSource(this.fixture.UTF16BE_Bytes);
             var reader = new MediaVC.Readers.StringReader(source);
@@ -68,7 +69,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
         }
 
         [Fact]
-        public async void ReadToEnd_UTF32LE()
+        public async Task ReadToEnd_UTF32LE()
         {
             var source = new InputSource(this.fixture.UTF32LE_Bytes);
             var reader = new MediaVC.Readers.StringReader(source);
@@ -81,7 +82,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
         }
 
         [Fact]
-        public async void ReadToEnd_UTF32BE()
+        public async Task ReadToEnd_UTF32BE()
         {
             var source = new InputSource(this.fixture.UTF32BE_Bytes);
             var reader = new MediaVC.Readers.StringReader(source);
