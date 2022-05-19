@@ -68,7 +68,8 @@ namespace MediaVC.Difference
         /// <returns>A task that represents the asynchronous read operation. The value of the TResult parameter contains the next line from the text reader, or is null if all of the characters have been read.</returns>
         /// <exception cref="ArgumentOutOfRangeException" />
         /// <exception cref="InvalidOperationException" />
-        Task<string?> ReadLineAsync();
+        /// <exception cref="OperationCanceledException" />
+        Task<string?> ReadLineAsync(CancellationToken cancellationToken = default);
 
         /// <summary>
         /// Reads all characters from the current position to the end of the text reader and returns them as one string.
@@ -85,6 +86,7 @@ namespace MediaVC.Difference
         /// <returns>A task that represents the asynchronous read operation. The value of the TResult parameter contains a string with the characters from the current position to the end of the text reader.</returns>
         /// <exception cref="ArgumentOutOfRangeException" />
         /// <exception cref="InvalidOperationException" />
-        Task<string> ReadToEndAsync();
+        /// <exception cref="OperationCanceledException" />
+        Task<string> ReadToEndAsync(CancellationToken cancellationToken = default);
     }
 }

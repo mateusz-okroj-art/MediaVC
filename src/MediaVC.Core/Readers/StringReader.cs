@@ -129,7 +129,8 @@ namespace MediaVC.Readers
             }
         }
 
-        public Task<string?> ReadLineAsync() => ReadToEndInternalAsync(true);
+        public Task<string?> ReadLineAsync(CancellationToken cancellationToken = default) =>
+            ReadToEndInternalAsync(true, cancellationToken);
 
         internal async Task<string?> ReadToEndInternalAsync(bool endOnLineEnding = false, CancellationToken cancellationToken = default)
         {
@@ -139,11 +140,9 @@ namespace MediaVC.Readers
 
             while(this.source.Position <= this.source.Length - 4)
             {
-                if(endOnLineEnding)
-                {
-                    if(await this.readingEngine.TryReadLineSeparator(cancellationToken))
-                        break;
-                }
+                if(endOnLineEnding && await this.readingEngine.TryReadLineSeparator(cancellationToken))
+                    break;
+
                 var result = await this.readingEngine.ReadAsync(cancellationToken);
 
                 if(result.HasValue)
@@ -162,8 +161,17 @@ namespace MediaVC.Readers
             .GetAwaiter()
             .GetResult();
 
-        public async Task<string> ReadToEndAsync() =>
-            await ReadToEndInternalAsync() ?? throw new InvalidOperationException();
+        public async Task<string> ReadToEndAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                return await ReadToEndInternalAsync(false, cancellationToken) ?? throw new InvalidOperationException();
+            }
+            catch(TaskCanceledException exc)
+            {
+                throw new OperationCanceledException("Operation was canceled.", exc, cancellationToken);
+            }
+        }
 
         public string ReadToEnd() =>
             ReadToEndAsync()

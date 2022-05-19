@@ -56,11 +56,18 @@ namespace MediaVC.Core.Tests.Fixtures
             UTF16BE_Content = Encoding.BigEndianUnicode.GetString(UTF16BE_Bytes.Span);
 
             var decodedString = Encoding.UTF8.GetString(CRLF_UTF8_Bytes.ToArray());
-            CRLF_UTF8_Content = decodedString.Split("\r\n");
+            CRLF_UTF8_Content = decodedString.Split(CRLF);
 
             decodedString = Encoding.Unicode.GetString(LF_UTF16_Bytes.ToArray());
-            LF_UTF16_Content = decodedString.Split('\n');
+            LF_UTF16_Content = decodedString.Split(LF);
+
+            decodedString = Encoding.Unicode.GetString(CR_UTF16_Bytes.ToArray());
+            CR_UTF16_Content = decodedString.Split(CR);
         }
+
+        public const string CRLF = "\r\n";
+        public const string LF = "\n";
+        public const string CR = "\r";
 
         public Memory<byte> UTF16LE_Bytes { get; }
 
@@ -78,6 +85,8 @@ namespace MediaVC.Core.Tests.Fixtures
 
         public Memory<byte> LF_UTF16_Bytes { get; }
 
+        public Memory<byte> CR_UTF16_Bytes { get; }
+
         public string UTF16LE_Content { get; }
 
         public string UTF16BE_Content { get; }
@@ -91,6 +100,8 @@ namespace MediaVC.Core.Tests.Fixtures
         public string[] CRLF_UTF8_Content { get; }
 
         public string[] LF_UTF16_Content { get; }
+
+        public string[] CR_UTF16_Content { get; }
 
         public string UTF8BOM_Content { get; }
     }
