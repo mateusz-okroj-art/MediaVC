@@ -144,13 +144,13 @@ namespace MediaVC.Difference
 
         #region Obsoletes
 
-        [Obsolete]
+        [Obsolete("Input source is read-only.")]
         public override void Flush() => throw new InvalidOperationException();
 
-        [Obsolete]
+        [Obsolete("Input source is read-only.")]
         public override void SetLength(long value) => throw new InvalidOperationException();
 
-        [Obsolete]
+        [Obsolete("Input source is read-only.")]
         public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
 
         public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);

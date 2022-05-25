@@ -55,7 +55,7 @@ namespace MediaVC.Tools.Tests.Fixtures
         public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);
 
         public int Read(byte[] buffer, int offset, int count) =>
-            ReadAsync(buffer.AsMemory().Slice(offset,count)).GetAwaiter().GetResult();
+            ReadAsync(buffer.AsMemory().Slice(offset,count)).AsTask().GetAwaiter().GetResult();
 
         public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
             await Task.Run(() =>

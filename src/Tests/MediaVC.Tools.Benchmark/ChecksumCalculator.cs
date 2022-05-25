@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading.Tasks;
 
 using static System.Console;
 
@@ -8,7 +7,7 @@ namespace MediaVC.Tools.Benchmark
 {
     internal static class ChecksumCalculator
     {
-        private const int TestedDataLength = 500_000_000;
+        private const int testedDataLength = 500_000_000;
 
         public static void Run()
         {
@@ -22,9 +21,8 @@ namespace MediaVC.Tools.Benchmark
 
         private static Memory<byte> GenerateData()
         {
-            Memory<byte> data = new byte[TestedDataLength];
-            var rand = new Random();
-            var index = rand.Next(0, data.Length);
+            Memory<byte> data = new byte[testedDataLength];
+            var index = System.Security.Cryptography.RandomNumberGenerator.GetInt32(data.Length);
             data.Span[index] = 255;
 
             return data;
