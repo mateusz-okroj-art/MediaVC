@@ -25,6 +25,7 @@ jobs:
     steps:
     
     - name: Cache
+      timeout-minutes: 5
       uses: actions/cache@v3.0.2
       with:
         # A list of files, directories, and wildcard patterns to cache and restore
@@ -33,15 +34,17 @@ jobs:
         key: mediavc-rb
     
     - uses: actions/checkout@v3
+      timeout-minutes: 5
       name: Git checkout
       
     - name: Setup .NET 6
+      timeout-minutes: 5
       uses: actions/setup-dotnet@v2
-      with:
-        dotnet-version: 6.0.x
         
     - name: Restore dependencies
+      timeout-minutes: 5
       run: dotnet restore src
       
     - name: Build
+      timeout-minutes: 5
       run: dotnet build src --no-restore
