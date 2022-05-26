@@ -46,6 +46,10 @@ namespace MediaVC.Core.Tests.Fixtures
             LF_UTF16_Bytes = new byte[utf16_lf_file.Length];
             tasks.Add(utf16_lf_file.ReadAsync(LF_UTF16_Bytes).AsTask());
 
+            using var utf16_cr_file = new FileStream("TestData/utf-16 cr.bin", FileMode.Open, FileAccess.Read);
+            CR_UTF16_Bytes = new byte[utf16_cr_file.Length];
+            tasks.Add(utf16_cr_file.ReadAsync(CR_UTF16_Bytes).AsTask());
+
             Task.WaitAll(tasks.ToArray());
 
             UTF8_Content = Encoding.UTF8.GetString(UTF8_Bytes.Span);

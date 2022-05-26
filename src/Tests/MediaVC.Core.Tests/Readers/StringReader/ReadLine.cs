@@ -22,7 +22,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
         {
             using var source = new InputSource(this.fixture.CRLF_UTF8_Bytes);
             using var reader = new MediaVC.Readers.StringReader(source);
-            var expectedLength = this.fixture.CRLF_UTF8_Bytes.Length;
+            var expectedLength = this.fixture.CRLF_UTF8_Content.Length;
 
             string result;
             var resultsList = new List<string>(expectedLength);
@@ -33,7 +33,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
             Assert.Equal(expectedLength, resultsList.Count);
             
             for(var i = 0; i < expectedLength; i++)
-                Assert.Equal(this.fixture.CRLF_UTF8_Content[i], resultsList[i]);
+                Assert.True(this.fixture.CRLF_UTF8_Content[i].Equals(resultsList[i], StringComparison.InvariantCulture));
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
         {
             using var source = new InputSource(this.fixture.LF_UTF16_Bytes);
             using var reader = new MediaVC.Readers.StringReader(source);
-            var expectedLength = this.fixture.LF_UTF16_Bytes.Length;
+            var expectedLength = this.fixture.LF_UTF16_Content.Length;
 
             string result;
             var resultsList = new List<string>(expectedLength);
@@ -52,7 +52,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
             Assert.Equal(expectedLength, resultsList.Count);
 
             for(var i = 0; i < expectedLength; i++)
-                Assert.Equal(this.fixture.LF_UTF16_Content[i], resultsList[i]);
+                Assert.True(this.fixture.LF_UTF16_Content[i].Equals(resultsList[i], StringComparison.InvariantCulture));
         }
 
         [Fact]
@@ -60,7 +60,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
         {
             using var source = new InputSource(this.fixture.CR_UTF16_Bytes);
             using var reader = new MediaVC.Readers.StringReader(source);
-            var expectedLength = this.fixture.CR_UTF16_Bytes.Length;
+            var expectedLength = this.fixture.CR_UTF16_Content.Length;
 
             string result;
             var resultsList = new List<string>(expectedLength);
@@ -71,7 +71,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
             Assert.Equal(expectedLength, resultsList.Count);
 
             for(var i = 0; i < expectedLength; i++)
-                Assert.Equal(this.fixture.CR_UTF16_Content[i], resultsList[i]);
+                Assert.True(this.fixture.CR_UTF16_Content[i].Equals(resultsList[i], StringComparison.InvariantCulture));
         }
     }
 }

@@ -36,7 +36,7 @@ namespace MediaVC.Helpers
 
         public async ValueTask<Rune?> ReadAsync(CancellationToken cancellationToken = default)
         {
-            for(;;)
+            while(true)
             {
                 if(this.source.Position >= this.source.Length)
                 {
@@ -58,13 +58,6 @@ namespace MediaVC.Helpers
                 {
                     var byteOrder = await this.bomDetector.ScanForUTF32BOM(cancellationToken);
 
-                    var state = this.bomDetector.LastReadingState;
-                    if(state != TextReadingState.Done)
-                    {
-                        LastReadingState = state;
-                        return null;
-                    }
-
                     if(byteOrder.HasValue)
                     {
                         SelectedEncoding = byteOrder == ByteOrder.LittleEndian ?
@@ -77,12 +70,6 @@ namespace MediaVC.Helpers
 
                     var detected = await this.bomDetector.ScanForUTF8BOM(cancellationToken);
 
-                    if(state != TextReadingState.Done)
-                    {
-                        LastReadingState = state;
-                        return null;
-                    }
-
                     if(detected)
                     {
                         SelectedEncoding = Encoding.UTF8;
@@ -91,12 +78,6 @@ namespace MediaVC.Helpers
                     }
 
                     byteOrder = await this.bomDetector.ScanForUTF16BOM(cancellationToken);
-
-                    if(state != TextReadingState.Done)
-                    {
-                        LastReadingState = state;
-                        return null;
-                    }
 
                     if(byteOrder.HasValue)
                     {

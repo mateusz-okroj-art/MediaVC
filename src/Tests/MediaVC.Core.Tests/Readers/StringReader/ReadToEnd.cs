@@ -119,7 +119,7 @@ namespace MediaVC.Core.Tests.Readers.StringReader
 
             var result = await reader.ReadToEndAsync();
 
-            var expected = this.fixture.CRLF_UTF8_Content.Aggregate((currentResult, next) => currentResult + "\r\n" + next).SkipLast(1);
+            var expected = this.fixture.CRLF_UTF8_Content.Aggregate((currentResult, next) => currentResult + "\r\n" + next);
             Assert.Equal(expected, result);
         }
     }

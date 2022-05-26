@@ -134,26 +134,55 @@ namespace MediaVC.Readers
 
         internal async Task<string?> ReadToEndInternalAsync(bool endOnLineEnding = false, CancellationToken cancellationToken = default)
         {
-            await this.syncObject.WaitForAsync(cancellationToken);
-
-            var stringBuilder = new StringBuilder();
-
-            while(this.source.Position <= this.source.Length - 4)
+            try
             {
-                if(endOnLineEnding && await this.readingEngine.TryReadLineSeparator(cancellationToken))
-                    break;
+                await this.syncObject.WaitForAsync(cancellationToken);
 
-                var result = await this.readingEngine.ReadAsync(cancellationToken);
+                var stringBuilder = new StringBuilder();
 
-                if(result.HasValue)
+                bool isFirstRune = true;
+                Rune? result;
+                while(this.source.Position < this.source.Length && (result = await this.readingEngine.ReadAsync(cancellationToken)).HasValue)
+                {
+                    var currentPosition = this.source.Position;
+
+                    if(endOnLineEnding)
+                    {
+                        if(result.Value == new Rune('\n'))
+                        {
+                            var nextRune = await this.readingEngine.ReadAsync(cancellationToken);
+                            if(nextRune.HasValue)
+                            {
+                                if(nextRune.Value != new Rune('\r'))
+                                    this.source.Position = currentPosition;
+
+                                break;
+                            }
+                        }
+
+                        if(result.Value == new Rune('\r'))
+                        {
+                            var nextRune = await this.readingEngine.ReadAsync(cancellationToken);
+                            if(nextRune.HasValue)
+                            {
+                                if(nextRune.Value != new Rune('\n'))
+                                    this.source.Position = currentPosition;
+
+                                break;
+                            }
+                        }
+                    }
+
                     _ = stringBuilder.Append(result.Value.ToString());
-                else
-                    break;
+                    isFirstRune = false;
+                }
+
+                return isFirstRune && stringBuilder.Length < 1 ? null : stringBuilder.ToString();
             }
-
-            this.syncObject.Release();
-
-            return stringBuilder.Length > 0 ? stringBuilder.ToString() : null;
+            finally
+            {
+                this.syncObject.Release();
+            }
         }
 
         public string? ReadLine() =>

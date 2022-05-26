@@ -20,6 +20,8 @@ namespace MediaVC.Helpers
         /// </summary>
         public async ValueTask<ByteOrder?> ScanForUTF16BOM(CancellationToken cancellationToken = default)
         {
+            var startPosition = this.source.Position;
+
             if(this.source.Position <= this.source.Length - 2 && this.source.Length >= 2)
             {
                 var potentialBomMark = new byte[2];
@@ -50,6 +52,7 @@ namespace MediaVC.Helpers
             else
             {
                 LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                this.source.Position = startPosition;
                 return null;
             }
         }
@@ -59,6 +62,8 @@ namespace MediaVC.Helpers
         /// </summary>
         public async ValueTask<bool> ScanForUTF8BOM(CancellationToken cancellationToken = default)
         {
+            var startPosition = this.source.Position;
+
             if(this.source.Position <= this.source.Length - 3 && this.source.Length >= 3)
             {
                 var potentialBomMark = new byte[3];
@@ -84,6 +89,7 @@ namespace MediaVC.Helpers
             else
             {
                 LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                this.source.Position = startPosition;
                 return false;
             }
         }
@@ -93,6 +99,8 @@ namespace MediaVC.Helpers
         /// </summary>
         public async ValueTask<ByteOrder?> ScanForUTF32BOM(CancellationToken cancellationToken = default)
         {
+            var startPosition = this.source.Position;
+
             if(this.source.Position <= this.source.Length - 4 && this.source.Length >= 4)
             {
                 Memory<byte> potentialBomMark = new byte[4];
@@ -123,6 +131,7 @@ namespace MediaVC.Helpers
             else
             {
                 LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                this.source.Position = startPosition;
                 return null;
             }
         }
