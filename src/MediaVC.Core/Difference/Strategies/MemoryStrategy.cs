@@ -78,9 +78,11 @@ namespace MediaVC.Difference.Strategies
             if(buffer.IsEmpty)
                 throw new ArgumentException("Buffer is empty.");
 
-            if(this.position >= Length)
-                throw new InvalidOperationException();
+            return this.position >= Length ? throw new InvalidOperationException() : await ReadCoreAsync(buffer, cancellationToken);
+        }
 
+        private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
             var currentMemory = this.memory[(int)position..];
             var readedCount = Math.Min(buffer.Length, currentMemory.Length);
             await Task.Run(() => currentMemory[..readedCount].CopyTo(buffer), cancellationToken);
