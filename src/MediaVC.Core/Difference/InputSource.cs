@@ -10,7 +10,7 @@ using MediaVC.Enumerators;
 namespace MediaVC.Difference
 {
     /// <summary>
-    /// Input source of data.
+    /// Read-only source based on <see cref="Stream"/>
     /// </summary>
     public sealed class InputSource : Stream, IInputSource, IEquatable<InputSource>
     {
