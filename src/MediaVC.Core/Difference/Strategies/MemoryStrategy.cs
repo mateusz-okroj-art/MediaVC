@@ -76,9 +76,12 @@ namespace MediaVC.Difference.Strategies
         public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             if(buffer.IsEmpty)
-                throw new ArgumentException("Buffer is empty.");
+                return 0;
 
-            return this.position >= Length ? throw new InvalidOperationException() : await ReadCoreAsync(buffer, cancellationToken);
+            if(this.position >= Length)
+                throw new InvalidOperationException();
+
+            return await ReadCoreAsync(buffer, cancellationToken);
         }
 
         private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, CancellationToken cancellationToken)

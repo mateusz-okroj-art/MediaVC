@@ -79,14 +79,14 @@ namespace MediaVC.Tools.Tests.Checksum
 
         [Theory]
         [ClassData(typeof(ChecksumRandomStreamTestData))]
-        public async Task CalculateAsync_WhenArgumentIsNonEmpty_ShouldReturnCalculated(Stream stream, int segmentMaxLength, IAsyncEnumerable<Memory<byte>> expectedResults)
+        public async Task CalculateAsync_WhenArgumentIsNonEmpty_ShouldReturnCalculated(Stream stream, int segmentMaxLength, IAsyncEnumerable<ReadOnlyMemory<byte>> expectedResults)
         {
             using(stream)
             {
                 var results = await Tools.ChecksumCalculator.CalculateAsync(stream, segmentMaxLength).ToArrayAsync();
-                
-                int count;
-                Assert.Equal(count = await expectedResults.CountAsync(), results.Length);
+
+                var count = await expectedResults.CountAsync();
+                Assert.Equal(count, results.Length);
 
                 for(var i = 0; i < count; ++i)
                     Assert.Equal((await expectedResults.ElementAtAsync(i)).ToArray(), results[i].ToArray());

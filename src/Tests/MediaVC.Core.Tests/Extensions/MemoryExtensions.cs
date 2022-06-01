@@ -13,7 +13,7 @@ namespace MediaVC.Core.Tests.Extensions
         [ClassData(typeof(ZeroAndRandomIntegerValuesTestData))]
         public void Split_WhenMemoryIsEmpty_ShouldReturnEmpty(int segmentMaxLength)
         {
-            Assert.Empty(ReadOnlyMemory<byte>.Empty.Split(segmentMaxLength));
+            Assert.Empty(Memory<byte>.Empty.Split(segmentMaxLength));
         }
 
         [Theory]
@@ -24,7 +24,7 @@ namespace MediaVC.Core.Tests.Extensions
         [InlineData(1000, 250, 4)]
         public void Split_WhenMemoryIsNonEmpty_ShouldReturnSegments_Variant1(int dataLength, int maxSegmentLength, int expectedSegmentCount)
         {
-            ReadOnlyMemory<byte> data = new byte[dataLength];
+            Memory<byte> data = new byte[dataLength];
             var result = data.Split(maxSegmentLength);
 
             Assert.Equal(expectedSegmentCount, result?.Count());
@@ -37,7 +37,7 @@ namespace MediaVC.Core.Tests.Extensions
         [InlineData(2000, 249, 8, 9)]
         public void Split_WhenMemoryIsNonEmpty_ShouldReturnSegments_Variant2(int dataLength, int maxSegmentLength, int expectedLastSegmentLength, int expectedSegmentCount)
         {
-            ReadOnlyMemory<byte> data = new byte[dataLength];
+            Memory<byte> data = new byte[dataLength];
             var result = data.Split(maxSegmentLength);
 
             Assert.Equal(expectedSegmentCount, result?.Count());

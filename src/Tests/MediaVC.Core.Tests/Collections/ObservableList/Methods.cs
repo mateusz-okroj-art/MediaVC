@@ -47,6 +47,27 @@ namespace MediaVC.Core.Tests.Collections.ObservableList
         }
 
         [Fact]
+        public void RemoveAt_ShouldRemoveFromListAndNotify()
+        {
+            var result = new ObservableList<float>();
+            const float value = 0.5f;
+
+            var observableMock = new Mock<IObserver<float>>();
+            observableMock.Setup(mocked => mocked.OnNext(It.IsAny<float>())).Verifiable();
+
+            result.Add(value);
+
+            using(result.Removed.Subscribe(observableMock.Object))
+            {
+                result.RemoveAt(0);
+            }
+
+            Assert.Empty(result);
+
+            observableMock.Verify(mocked => mocked.OnNext(value));
+        }
+
+        [Fact]
         public void Remove_ShouldRemoveFromListAndNotify()
         {
             var result = new ObservableList<float>();

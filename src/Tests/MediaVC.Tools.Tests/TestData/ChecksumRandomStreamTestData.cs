@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 
 namespace MediaVC.Tools.Tests.TestData
 {
@@ -10,9 +11,8 @@ namespace MediaVC.Tools.Tests.TestData
     {
         public IEnumerator<object[]> GetEnumerator()
         {
-            var random = new Random();
-            var length = random.Next(1,255) * 16;
-            var segmentsCount = random.Next(1, length);
+            var length = RandomNumberGenerator.GetInt32(1, 256) * 16;
+            var segmentsCount = RandomNumberGenerator.GetInt32(1, length+1);
 
             var buffer = new byte[length];
             for (var i = 0; i < length; i += 16)
@@ -26,7 +26,7 @@ namespace MediaVC.Tools.Tests.TestData
 
             var segmentMaxLength = length / segmentsCount;
 
-            var calculatedSegments = ChecksumCalculator.CalculateInternalAsync(new ReadOnlyMemory<byte>(buffer).Split(segmentMaxLength).ToAsyncEnumerable());
+            var calculatedSegments = ChecksumCalculator.CalculateInternalAsync(new ReadOnlyMemory<byte>(buffer).Split(segmentMaxLength).ToArray().ToAsyncEnumerable());
             yield return new object[] { stream, segmentMaxLength, calculatedSegments };
         }
 
