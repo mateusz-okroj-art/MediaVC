@@ -1,4 +1,8 @@
-﻿using static System.Console;
+﻿using System.Runtime.CompilerServices;
+
+using static System.Console;
+
+[assembly: InternalsVisibleTo("MediaVC.Tests")]
 
 namespace MediaVC.Tools.Benchmark
 {
