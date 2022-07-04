@@ -22,38 +22,44 @@ namespace MediaVC.Helpers
         {
             var startPosition = this.source.Position;
 
-            if(this.source.Position <= this.source.Length - 2 && this.source.Length >= 2)
+            this.source.Position = 0;
+            try
             {
-                var potentialBomMark = new byte[2];
+                if(this.source.Position <= this.source.Length - 2 && this.source.Length >= 2)
+                {
+                    var potentialBomMark = new byte[2];
 
-                if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
+                    if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
+                    {
+                        LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                        return null;
+                    }
+
+                    if(potentialBomMark[0] == 0xff && potentialBomMark[1] == 0xfe)
+                    {
+                        LastReadingState = TextReadingState.Done;
+                        return ByteOrder.LittleEndian;
+                    }
+                    else if(potentialBomMark[1] == 0xff && potentialBomMark[0] == 0xfe)
+                    {
+                        LastReadingState = TextReadingState.Done;
+                        return ByteOrder.BigEndian;
+                    }
+                    else
+                    {
+                        LastReadingState = TextReadingState.Done;
+                        return null;
+                    }
+                }
+                else
                 {
                     LastReadingState = TextReadingState.UnexpectedEndOfStream;
                     return null;
                 }
-
-                if(potentialBomMark[0] == 0xff && potentialBomMark[1] == 0xfe)
-                {
-                    LastReadingState = TextReadingState.Done;
-                    return ByteOrder.LittleEndian;
-                }
-                else if(potentialBomMark[1] == 0xff && potentialBomMark[0] == 0xfe)
-                {
-                    LastReadingState = TextReadingState.Done;
-                    return ByteOrder.BigEndian;
-                }
-                else
-                {
-                    this.source.Position -= 2;
-                    LastReadingState = TextReadingState.Done;
-                    return null;
-                }
             }
-            else
+            finally
             {
-                LastReadingState = TextReadingState.UnexpectedEndOfStream;
                 this.source.Position = startPosition;
-                return null;
             }
         }
 
@@ -64,33 +70,40 @@ namespace MediaVC.Helpers
         {
             var startPosition = this.source.Position;
 
-            if(this.source.Position <= this.source.Length - 3 && this.source.Length >= 3)
-            {
-                var potentialBomMark = new byte[3];
+            this.source.Position = 0;
 
-                if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
+            try
+            {
+                if(this.source.Position <= this.source.Length - 3 && this.source.Length >= 3)
+                {
+                    var potentialBomMark = new byte[3];
+
+                    if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
+                    {
+                        LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                        return false;
+                    }
+
+                    if(potentialBomMark[0] == 0xef && potentialBomMark[1] == 0xbb && potentialBomMark[2] == 0xbf)
+                    {
+                        LastReadingState = TextReadingState.Done;
+                        return true;
+                    }
+                    else
+                    {
+                        LastReadingState = TextReadingState.Done;
+                        return false;
+                    }
+                }
+                else
                 {
                     LastReadingState = TextReadingState.UnexpectedEndOfStream;
                     return false;
                 }
-
-                if(potentialBomMark[0] == 0xef && potentialBomMark[1] == 0xbb && potentialBomMark[2] == 0xbf)
-                {
-                    LastReadingState = TextReadingState.Done;
-                    return true;
-                }
-                else
-                {
-                    this.source.Position -= 3;
-                    LastReadingState = TextReadingState.Done;
-                    return false;
-                }
             }
-            else
+            finally
             {
-                LastReadingState = TextReadingState.UnexpectedEndOfStream;
                 this.source.Position = startPosition;
-                return false;
             }
         }
 
@@ -101,38 +114,45 @@ namespace MediaVC.Helpers
         {
             var startPosition = this.source.Position;
 
-            if(this.source.Position <= this.source.Length - 4 && this.source.Length >= 4)
-            {
-                Memory<byte> potentialBomMark = new byte[4];
+            this.source.Position = 0;
 
-                if(await this.source.ReadAsync(potentialBomMark, cancellationToken) != potentialBomMark.Length)
+            try
+            {
+                if(this.source.Position <= this.source.Length - 4 && this.source.Length >= 4)
+                {
+                    Memory<byte> potentialBomMark = new byte[4];
+
+                    if(await this.source.ReadAsync(potentialBomMark, cancellationToken) != potentialBomMark.Length)
+                    {
+                        LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                        return null;
+                    }
+
+                    if(potentialBomMark.Span[0] == 0xff && potentialBomMark.Span[1] == 0xfe && potentialBomMark.Span[2] == 0 && potentialBomMark.Span[3] == 0)
+                    {
+                        LastReadingState = TextReadingState.Done;
+                        return ByteOrder.LittleEndian;
+                    }
+                    else if(potentialBomMark.Span[3] == 0xff && potentialBomMark.Span[2] == 0xfe && potentialBomMark.Span[1] == 0 && potentialBomMark.Span[0] == 0)
+                    {
+                        LastReadingState = TextReadingState.Done;
+                        return ByteOrder.BigEndian;
+                    }
+                    else
+                    {
+                        LastReadingState = TextReadingState.Done;
+                        return null;
+                    }
+                }
+                else
                 {
                     LastReadingState = TextReadingState.UnexpectedEndOfStream;
                     return null;
                 }
-
-                if(potentialBomMark.Span[0] == 0xff && potentialBomMark.Span[1] == 0xfe && potentialBomMark.Span[2] == 0 && potentialBomMark.Span[3] == 0)
-                {
-                    LastReadingState = TextReadingState.Done;
-                    return ByteOrder.LittleEndian;
-                }
-                else if(potentialBomMark.Span[3] == 0xff && potentialBomMark.Span[2] == 0xfe && potentialBomMark.Span[1] == 0 && potentialBomMark.Span[0] == 0)
-                {
-                    LastReadingState = TextReadingState.Done;
-                    return ByteOrder.BigEndian;
-                }
-                else
-                {
-                    this.source.Position -= 4;
-                    LastReadingState = TextReadingState.Done;
-                    return null;
-                }
             }
-            else
+            finally
             {
-                LastReadingState = TextReadingState.UnexpectedEndOfStream;
                 this.source.Position = startPosition;
-                return null;
             }
         }
     }
