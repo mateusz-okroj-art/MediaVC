@@ -2,6 +2,9 @@
 
 namespace MediaVC.Difference
 {
+    /// <summary>
+    /// Stores information about segment of data.
+    /// </summary>
     public struct FileSegmentInfo : IFileSegmentInfo
     {
         public FileSegmentInfo()

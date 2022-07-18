@@ -104,7 +104,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
 
             var segments = new IFileSegmentInfo[sources.Length];
             long currentPosition = 0;
-            for (int i = 0; i < sources.Length; ++i)
+            for (var i = 0; i < sources.Length; ++i)
             {
                 segments[i] = Mock.Of<IFileSegmentInfo>(mock =>
                     mock.StartPositionInSource == 0 &&
@@ -135,7 +135,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
 
             var segments = new IFileSegmentInfo[sources.Length];
             long currentPosition = 0;
-            for (int i = 0; i < sources.Length; ++i)
+            for (var i = 0; i < sources.Length; ++i)
             {
                 segments[i] = Mock.Of<IFileSegmentInfo>(mock =>
                     mock.StartPositionInSource == 0 &&

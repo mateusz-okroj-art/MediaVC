@@ -7,6 +7,10 @@ using System.Reactive.Subjects;
 
 namespace MediaVC
 {
+    /// <summary>
+    /// Thread-safe, observable list
+    /// </summary>
+    /// <typeparam name="T">Items type</typeparam>
     public class ObservableList<T> : IObservableEnumerable<T>, ICollection<T>
     {
         #region Fields
@@ -68,6 +72,11 @@ namespace MediaVC
             return result;
         }
 
+        /// <summary>
+        /// Removes item in selected position.
+        /// </summary>
+        /// <param name="index"></param>
+        /// <returns><see langword="true"/>, if is removed successfully.</returns>
         public bool RemoveAt(int index)
         {
             bool result;

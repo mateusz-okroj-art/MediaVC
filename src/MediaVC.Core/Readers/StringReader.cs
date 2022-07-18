@@ -140,7 +140,7 @@ namespace MediaVC.Readers
 
                 var stringBuilder = new StringBuilder();
 
-                bool isFirstRune = true;
+                var isFirstRune = true;
                 Rune? result;
                 while(this.source.Position < this.source.Length && (result = await this.readingEngine.ReadAsync(cancellationToken)).HasValue)
                 {
