@@ -9,6 +9,7 @@ using MediaVC.Tests.Extensions.TestData;
 using Moq;
 
 using Xunit;
+using Xunit.Extensions;
 
 namespace MediaVC.Core.Tests.Difference.InputSource
 {

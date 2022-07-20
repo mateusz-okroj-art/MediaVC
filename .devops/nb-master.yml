@@ -1,0 +1,99 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+name: MediaVC - NB master
+
+variables:
+
+  - template: templates/variables.yml
+
+trigger: none
+
+schedules:
+  - cron: "0 0 * * *"
+    displayName: MediaVC daily NB master
+    branches:
+      include:
+        - master
+    always: false
+
+pr:
+  branches:
+    exclude:
+      - master
+      - features/*
+      - bugfixes/*
+      - releases/*
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+
+  - stage: Build_Core
+    displayName: Build Media.VC Core
+    jobs:
+      - job: Build_Core
+        displayName: Build Media.VC Core
+        workspace:
+          clean: all
+        
+        variables:
+
+          - name: ProjectDirectory
+            value: '$(SourceDirectory)/MediaVC.Core/MediaVC.Core.csproj'
+
+          - name: TestDirectory
+            value: '$(TestsDirectory)/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj'
+
+        steps:
+
+          - template: templates/steps/nb-master.yml
+
+  - stage: Build_Tools
+    displayName: Build MediaVC.Tools
+    jobs:
+      - job: Build_Tools
+        displayName: Build MediaVC.Tools
+        workspace:
+          clean: all
+
+        variables:
+
+          - name: ProjectDirectory
+            value: '$(SourceDirectory)/MediaVC.Tools/MediaVC.Tools.csproj'
+
+          - name: TestDirectory
+            value: '$(TestsDirectory)/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj'
+
+        steps:
+
+          - template: templates/steps/nb-master.yml
+
+  - stage: Build_Main
+    displayName: Build MediaVC
+    jobs:
+      - job: Build_Main
+        displayName: Build MediaVC
+
+        variables:
+
+          - name: ProjectDirectory
+            value: '$(SourceDirectory)/MediaVC/MediaVC.csproj'
+
+          - name: TestDirectory
+            value: '$(TestsDirectory)/MediaVC.Tests/MediaVC.Tests.csproj'
+
+        steps:
+
+          - template: templates/steps/nb-master.yml
+
+          - task: DotNetCoreCLI@2
+            displayName: Benchmark test
+            continueOnError: true
+            timeoutInMinutes: 5
+            inputs:
+              command: 'run'
+              projects: '$(TestsDirectory)/MediaVC.Tools.Benchmark/MediaVC.Tools.Benchmark.csproj'

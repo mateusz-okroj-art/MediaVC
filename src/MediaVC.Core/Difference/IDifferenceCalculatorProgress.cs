@@ -1,5 +1,8 @@
 ﻿namespace MediaVC.Difference
 {
+    /// <summary>
+    /// Provides information about current progress of <see cref="DifferenceCalculator"/>
+    /// </summary>
     public interface IDifferenceCalculatorProgress
     {
         void ReportLeftMainPosition(long position);

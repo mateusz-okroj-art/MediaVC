@@ -1,0 +1,43 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+name: Pull Request
+
+variables:
+
+  - template: templates/variables.yml
+
+trigger: none
+
+pr:
+  autoCancel: true
+  branches:
+    include:
+      - master
+      - releases/*
+  drafts: false
+
+pool:
+  vmImage: ubuntu-latest
+
+workspace:
+  clean: all
+
+steps:
+
+  - template: templates/steps/sdk-installation.yml
+
+  - template: templates/steps/restore&build-src.yml
+
+  - task: DotNetCoreCLI@2
+    displayName: Pack Nuget packages
+    timeoutInMinutes: 10
+    inputs:
+      command: 'pack'
+      packagesToPack: '$(SourceDirectory)/**/*.csproj'
+      versioningScheme: 'off'
+      configuration: Debug
+
+  - template: templates/steps/test&fail.yml

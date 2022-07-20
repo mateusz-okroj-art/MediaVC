@@ -11,7 +11,7 @@ namespace MediaVC.Core.Tests.Extensions
     public class StreamExtensions
     {
         [Fact]
-        public async void ToMemorySegments_WhenStreamIsEmpty_ShouldReturnEmpty()
+        public async Task ToMemorySegments_WhenStreamIsEmpty_ShouldReturnEmpty()
         {
             var stream = Stream.Null;
 
@@ -21,7 +21,7 @@ namespace MediaVC.Core.Tests.Extensions
         }
 
         [Fact]
-        public async void ToMemorySegments_WhenStreamIsNonEmpty_ShouldReturnSegments()
+        public async Task ToMemorySegments_WhenStreamIsNonEmpty_ShouldReturnSegments()
         {
             var data = new byte[]
             {
@@ -39,7 +39,7 @@ namespace MediaVC.Core.Tests.Extensions
         }
 
         [Fact]
-        public async void ToMemorySegments_WhenCancellationRequested_ShouldThrowIsCancelled()
+        public async Task ToMemorySegments_WhenCancellationRequested_ShouldThrowIsCancelled()
         {
             var data = new byte[]
             {

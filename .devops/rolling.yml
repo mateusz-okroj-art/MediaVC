@@ -1,0 +1,42 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+name: MediaVC - rolling build
+
+variables:
+
+  - template: templates/variables.yml
+
+  - name: Configuration
+    value: Debug
+
+trigger:
+  paths:
+    exclude:
+      - LICENSE
+      - .devops/*
+  branches:
+    include:
+      - master
+      - features/*
+      - releases/*
+      - fixes/*
+
+pr:
+  branches:
+    exclude:
+      - master
+      - fixes/*
+      - features/*
+      - releases/*
+
+pool:
+  vmImage: ubuntu-latest
+
+steps:
+
+  - template: templates/steps/sdk-installation.yml
+
+  - template: templates/steps/restore&build-src.yml
