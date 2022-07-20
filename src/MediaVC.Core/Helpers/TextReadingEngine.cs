@@ -165,6 +165,9 @@ namespace MediaVC.Helpers
             readedBytes.CopyTo(resultBytes.AsMemory()[1..]);
             var resultChars = Encoding.UTF8.GetChars(resultBytes);
 
+            if(resultChars == null || resultChars.Length < 1)
+                throw new IOException("Empty values from UTF-8 decoder.");
+
             return resultChars.Length switch
             {
                 1 => new Rune(resultChars[0]),
@@ -273,6 +276,9 @@ namespace MediaVC.Helpers
                 bytes.Span.Reverse();
 
             var chars = Encoding.UTF32.GetChars(bytes.ToArray());
+
+            if(chars is null || chars.Length < 1)
+                throw new IOException("Empty values from UTF-32 decoder.");
 
             return chars?.Length switch
             {
