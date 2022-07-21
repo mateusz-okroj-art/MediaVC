@@ -1,6 +1,6 @@
 # MediaVC
-### Version: 0.4.0-dev
-###### New binary files version control
+### Version: 0.5.0-dev
+###### New version control of binary files developed in .NET 6 technology.
 
 Projects created as IT engineering studies final task for Pomeranian Academy in Slupsk
 
