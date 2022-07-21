@@ -6,4 +6,4 @@ Projects created as IT engineering studies final task for Pomeranian Academy in 
 
 [![Nightly build](https://github.com/mateuszokroj1/MediaVC/actions/workflows/nightly.yml/badge.svg?branch=main&event=schedule)](https://github.com/mateuszokroj1/MediaVC/actions/workflows/nightly.yml)
 
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=mateuszokroj1_MediaVC&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=mateuszokroj1_MediaVC)
+[![Quality gate](https://sonarcloud.io/api/project_badges/quality_gate?project=mateusz-okroj-art_MediaVC)](https://sonarcloud.io/summary/new_code?id=mateusz-okroj-art_MediaVC)
