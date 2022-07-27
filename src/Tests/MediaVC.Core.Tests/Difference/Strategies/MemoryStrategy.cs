@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
 
-using MediaVC.Core.Tests.TestData;
 using MediaVC.Difference;
+using MediaVC.Difference.Strategies;
+using MediaVC.Tests.TestData;
 
 using Moq;
 
@@ -13,181 +16,131 @@ namespace MediaVC.Core.Tests.Difference.Strategies
 {
     public class MemoryStrategy
     {
-        // TODO: rewrite for MemoryStrategy class
         [Fact]
         public void Constructor_WhenArgumentIsNull_ShouldThrowException()
         {
-            Assert.Throws<ArgumentNullException>(() => new MediaVC.Difference.Strategies.FileSegmentStrategy(null));
+            Assert.Throws<ArgumentException>(() => new MediaVC.Difference.Strategies.MemoryStrategy(null));
         }
 
         [Fact]
-        public void Length_WhenArgumentIsEmpty_ShouldReturn0()
+        public void Constructor_WhenArgumentIsEmpty_ShouldThrow()
         {
-            var argument = Enumerable.Empty<IFileSegmentInfo>();
+            Memory<byte> argument = Array.Empty<byte>();
 
-            var result = new MediaVC.Difference.Strategies.FileSegmentStrategy(argument);
-
-            Assert.Equal(0, result.Length);
+            Assert.Throws<ArgumentException>(() => new MediaVC.Difference.Strategies.MemoryStrategy(argument));
         }
 
         [Theory]
-        [ClassData(typeof(RandomLengthAndCountEmptySegmentsTestData))]
-        public void Length_WhenArgumentHaveItems_ShouldReturnSummedLength(IEnumerable<IFileSegmentInfo> segments)
+        [ClassData(typeof(RandomNonZeroIntegerTestData))]
+        public void Length_WhenArgumentIsNotEmpty_ShouldReturnBufferLength(int randomLength)
         {
-            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
+            Memory<byte> buffer = new byte[randomLength];
+            var strategy = new MediaVC.Difference.Strategies.MemoryStrategy(buffer);
 
-            Assert.Equal(segments.Select(item => (decimal)item.Length).Sum(), strategy.Length);
+            Assert.Equal(randomLength, strategy.Length);
         }
 
         [Theory]
-        [ClassData(typeof(RandomLengthAndCountEmptySegmentsTestData))]
-        public void Position_WhenSettedValueIsTooLarge_ShouldThrowException(IEnumerable<IFileSegmentInfo> segments)
+        [ClassData(typeof(RandomNonZeroIntegerTestData))]
+        public void Position_WhenSettedValueIsTooLarge_ShouldThrowException(int randomLength)
         {
-            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
+            Memory<byte> buffer = new byte[randomLength];
+            var strategy = new MediaVC.Difference.Strategies.MemoryStrategy(buffer);
 
-            var randomPosition = (long)(new Random().NextDouble() * int.MaxValue / 2) + strategy.Length;
+            var randomPosition = (long)randomLength * 2;
 
             Assert.Throws<ArgumentOutOfRangeException>(() => strategy.Position = randomPosition);
         }
 
         [Theory]
-        [ClassData(typeof(RandomLengthAndCountEmptySegmentsTestData))]
-        public void Position_WhenSettedValueIsValid_ShouldSetProperty(IEnumerable<IFileSegmentInfo> segments)
+        [ClassData(typeof(RandomNonZeroIntegerTestData))]
+        public void Position_WhenSettedValueIsValid_ShouldSetProperty(int randomLength)
         {
-            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
+            Memory<byte> buffer = new byte[randomLength];
+            var strategy = new MediaVC.Difference.Strategies.MemoryStrategy(buffer);
 
-            var randomPosition = new Random().Next(0, (int)Math.Min(strategy.Length - 1, int.MaxValue));
+            var randomPosition = (long)Math.Round(new Random().NextDouble() * randomLength);
             strategy.Position = randomPosition;
 
             Assert.Equal(randomPosition, strategy.Position);
         }
 
-        [Fact]
-        public void SelectMappedSegmentForCurrentPosition_WhenSetPosition_ShouldReturnValidSegment()
+        [Theory]
+        [ClassData(typeof(RandomBytesTestData))]
+        public async Task ReadAsync_WhenOutputBufferIsNonEmpty_ShouldReadFromSegments(byte[][] data)
         {
-            var randomLength = new Random().Next(2, int.MaxValue);
-            var segments = new IFileSegmentInfo[]
-            {
-                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == 0 && mock.Length == (ulong)(randomLength/2) && mock.Source == MediaVC.Difference.InputSource.Empty),
-                Mock.Of<IFileSegmentInfo>(mock => mock.MappedPosition == randomLength/2 - 1 && mock.Length == (ulong)(randomLength/2) && mock.Source == MediaVC.Difference.InputSource.Empty)
-            };
-            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
+            Memory<byte> buffer = data[0];
+            var strategy = new MediaVC.Difference.Strategies.MemoryStrategy(buffer);
 
-            strategy.Position = segments[0].MappedPosition;
+            Memory<byte> resultBuffer = new byte[buffer.Length];
+            var count = await strategy.ReadAsync(resultBuffer);
 
-            Assert.True(ReferenceEquals(segments[0], strategy.SelectMappedSegmentForCurrentPosition()));
+            Assert.Equal(resultBuffer.Length, count);
 
-            strategy.Position = segments[1].MappedPosition;
-
-            Assert.True(ReferenceEquals(segments[1], strategy.SelectMappedSegmentForCurrentPosition()));
+            Assert.Equal(data[0], resultBuffer.ToArray());
         }
 
         [Fact]
-        public void CheckIsNotUsedSource_WhenSelectedUsedSource_ShouldReturnFalse()
+        public async Task ReadAsync_WhenOutputBufferIsEmpty_ShouldReturnZero()
         {
-            var source = Mock.Of<IInputSource>();
+            Memory<byte> buffer = new byte[1];
+            Memory<byte> resultBuffer = Memory<byte>.Empty;
 
-            var segments = new IFileSegmentInfo[]
-            {
-                Mock.Of<IFileSegmentInfo>(mock => mock.Source == source),
-                Mock.Of<IFileSegmentInfo>(mock => mock.Source == MediaVC.Difference.InputSource.Empty)
-            };
-            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
-
-            Assert.False(strategy.CheckIsNotUsedSource(source));
+            var strategy = new MediaVC.Difference.Strategies.MemoryStrategy(buffer);
+            Assert.Equal(0, await strategy.ReadAsync(resultBuffer));
         }
 
         [Theory]
         [ClassData(typeof(RandomBytesTestData))]
-        public async void ReadAsync_Variant1_ShouldReadFromSegments(byte[][] data)
+        public async Task ReadByteAsync_WhenPositionIsBeforeEnd_ShouldReadFromSegments(byte[][] data)
         {
-            var sources = data.Select(bytes => new MediaVC.Difference.InputSource(bytes)).ToArray();
+            Memory<byte> buffer = data[0];
+            var strategy = new MediaVC.Difference.Strategies.MemoryStrategy(buffer);
 
-            var segments = new IFileSegmentInfo[sources.Length];
-            long currentPosition = 0;
-            for(var i = 0; i < sources.Length; ++i)
-            {
-                segments[i] = Mock.Of<IFileSegmentInfo>(mock =>
-                    mock.StartPositionInSource == 0 &&
-                    mock.EndPositionInSource == sources[i].Length - 1 &&
-                    mock.Length == (ulong)sources[i].Length &&
-                    mock.MappedPosition == currentPosition &&
-                    mock.Source == sources[i]
-                );
+            var result = await strategy.ReadByteAsync();
 
-                currentPosition += sources[i].Length;
-            };
+            Assert.Equal(data[0][0], result);
 
-            var expectedResult = data.SelectMany(bytes => bytes).ToArray();
-
-            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
-            var resultBuffer = new Memory<byte>(new byte[expectedResult.Length]);
-
-            Assert.Equal(expectedResult.Length, await strategy.ReadAsync(resultBuffer));
-
-            Assert.Equal(expectedResult, resultBuffer.ToArray());
-        }
-
-        [Theory]
-        [ClassData(typeof(RandomBytesTestData))]
-        public async void ReadByteAsync_Variant1_ShouldReadFromSegments(byte[][] data)
-        {
-            var sources = data.Select(bytes => new MediaVC.Difference.InputSource(bytes)).ToArray();
-
-            var segments = new IFileSegmentInfo[sources.Length];
-            long currentPosition = 0;
-            for(var i = 0; i < sources.Length; ++i)
-            {
-                segments[i] = Mock.Of<IFileSegmentInfo>(mock =>
-                    mock.StartPositionInSource == 0 &&
-                    mock.EndPositionInSource == sources[i].Length - 1 &&
-                    mock.Length == (ulong)sources[i].Length &&
-                    mock.MappedPosition == currentPosition &&
-                    mock.Source == sources[i]
-                );
-
-                currentPosition += sources[i].Length;
-            };
-
-            var expectedResult = data.SelectMany(bytes => bytes).ToArray();
-
-            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
-
-            for(var i = 0; i < segments.Length; ++i)
-            {
-                strategy.Position = segments[i].MappedPosition;
-                Assert.Equal(data[i][0], await strategy.ReadByteAsync());
-            }
+            Assert.Equal(1, strategy.Position);
         }
 
         [Fact]
-        public async void ReadByteAsync_Variant2_ShouldReadFromSegmentsWithBuffering()
+        public async Task ReadByteAsync_WhenPositionIsOnEnd_ShouldThrow()
         {
-            const int testLength = MediaVC.Difference.Strategies.FileSegmentStrategy.BufferLength + 5;
-            var data1 = new byte[testLength];
+            Memory<byte> buffer = new byte[1];
+            var strategy = new MediaVC.Difference.Strategies.MemoryStrategy(buffer);
 
-            for(var i = 0; i < testLength; ++i)
-                data1[i] = (byte)(i % byte.MaxValue);
+            _ = await strategy.ReadByteAsync();
 
-            using var source1 = new MediaVC.Difference.InputSource(data1.AsMemory());
+            await Assert.ThrowsAsync<InvalidOperationException>(async () => await strategy.ReadByteAsync());
+        }
 
-            var segments = new IFileSegmentInfo[]
-            {
-                Mock.Of<IFileSegmentInfo>(mock =>
-                mock.StartPositionInSource == 0 &&
-                mock.EndPositionInSource == source1.Length-1 &&
-                mock.Length == (ulong)data1.Length &&
-                mock.MappedPosition == 0 &&
-                mock.Source == source1)
-            };
+        [Fact]
+        public void Equals_WhenIsEquals_ShouldReturnTrue()
+        {
+            Memory<byte> buffer = new byte[10];
 
-            var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
+            var strategy = new MediaVC.Difference.Strategies.MemoryStrategy(buffer);
 
-            strategy.Position = 0;
-            Assert.Equal(data1[0], await strategy.ReadByteAsync());
+            var mock = new Mock<IInputSourceStrategy>();
+            mock.SetupGet(m => m.Length).Returns(strategy.Length);
+            mock.Setup(m => m.GetHashCode()).Returns(strategy.GetHashCode());
 
-            strategy.Position = MediaVC.Difference.Strategies.FileSegmentStrategy.BufferLength;
-            Assert.Equal(data1[MediaVC.Difference.Strategies.FileSegmentStrategy.BufferLength], await strategy.ReadByteAsync());
+            Assert.True(strategy.Equals(mock.Object));
+        }
+
+        [Fact]
+        public void Equals_WhenIsNotEquals_ShouldReturnFalse()
+        {
+            Memory<byte> buffer = new byte[10];
+
+            var strategy = new MediaVC.Difference.Strategies.MemoryStrategy(buffer);
+
+            var mock = new Mock<IInputSourceStrategy>();
+            mock.SetupGet(m => m.Length).Returns(strategy.Length + 10);
+            mock.Setup(m => m.GetHashCode()).Returns(RandomNumberGenerator.GetInt32(1, 20));
+
+            Assert.False(strategy.Equals(mock.Object));
         }
     }
 }

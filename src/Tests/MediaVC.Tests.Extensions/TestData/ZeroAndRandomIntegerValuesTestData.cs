@@ -1,10 +1,8 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
 
-namespace MediaVC.Core.Tests.TestData
+namespace MediaVC.Tests.TestData
 {
-    internal sealed class ZeroAndRandomIntegerValuesTestData : IEnumerable<object[]>
+    public sealed class ZeroAndRandomIntegerValuesTestData : IEnumerable<object[]>
     {
         public IEnumerator<object[]> GetEnumerator()
         {

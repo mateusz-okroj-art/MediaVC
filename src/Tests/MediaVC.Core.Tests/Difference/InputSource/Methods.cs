@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference.Strategies;
-using MediaVC.Tests.Extensions.TestData;
+using MediaVC.Tests.TestData;
 
 using Moq;
 

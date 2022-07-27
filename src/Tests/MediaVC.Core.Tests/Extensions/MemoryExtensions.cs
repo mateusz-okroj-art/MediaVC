@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-using MediaVC.Core.Tests.TestData;
+using MediaVC.Tests.TestData;
 
 using Xunit;
 

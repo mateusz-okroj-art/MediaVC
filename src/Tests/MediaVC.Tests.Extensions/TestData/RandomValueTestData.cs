@@ -2,7 +2,7 @@
 
 using MediaVC.Tests.Extensions.Helpers;
 
-namespace MediaVC.Tests.Extensions.TestData
+namespace MediaVC.Tests.TestData
 {
     public class RandomValueTestData<Tvalue> : IEnumerable<object[]>
         where Tvalue : struct, IComparable<Tvalue>
