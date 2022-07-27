@@ -81,11 +81,11 @@ namespace MediaVC.Tools.Difference
 
                 Synchronize(() => progress?.ReportProcessState(ProcessState.Completed));
             }
-            catch(OperationCanceledException ex)
+            catch(OperationCanceledException)
             {
                 Synchronize(() => progress?.ReportProcessState(ProcessState.Cancelled));
 
-                throw ex;
+                throw;
             }
         }
 

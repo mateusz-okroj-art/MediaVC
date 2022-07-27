@@ -29,7 +29,7 @@ namespace MediaVC.Difference.Strategies
                 if(value != this.position)
                 {
                     if(value >= Length)
-                        throw new ArgumentOutOfRangeException();
+                        throw new ArgumentOutOfRangeException(nameof(value));
 
                     this.position = value;
                 }
@@ -39,6 +39,8 @@ namespace MediaVC.Difference.Strategies
         public bool Equals(IInputSourceStrategy? other) =>
             other?.Length == 0 && Length == 0 ||
                other?.Length == Length && other?.GetHashCode() == GetHashCode();
+
+        public override bool Equals(object? obj) => obj is IInputSourceStrategy otherStrategy ? Equals(otherStrategy) : Equals(obj);
 
         public override int GetHashCode()
         {
@@ -67,18 +69,23 @@ namespace MediaVC.Difference.Strategies
         {
             ArgumentNullException.ThrowIfNull(buffer);
 
-            var memory = buffer.AsMemory().Slice(offset, count);
-            return ReadAsync(memory).AsTask().GetAwaiter().GetResult();
+            var slicedBuffer = buffer.AsMemory().Slice(offset, count);
+            return ReadAsync(slicedBuffer).AsTask().GetAwaiter().GetResult();
         }
 
         public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default)
         {
             if(buffer.IsEmpty)
-                throw new ArgumentException("Buffer is empty.");
+                return 0;
 
             if(this.position >= Length)
                 throw new InvalidOperationException();
 
+            return await ReadCoreAsync(buffer, cancellationToken);
+        }
+
+        private async ValueTask<int> ReadCoreAsync(Memory<byte> buffer, CancellationToken cancellationToken)
+        {
             var currentMemory = this.memory[(int)position..];
             var readedCount = Math.Min(buffer.Length, currentMemory.Length);
             await Task.Run(() => currentMemory[..readedCount].CopyTo(buffer), cancellationToken);

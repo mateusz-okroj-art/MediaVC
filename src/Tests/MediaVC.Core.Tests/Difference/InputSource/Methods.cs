@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference.Strategies;
-using MediaVC.Tests.Extensions.TestData;
+using MediaVC.Tests.TestData;
 
 using Moq;
 
@@ -76,7 +77,43 @@ namespace MediaVC.Core.Tests.Difference.InputSource
             Assert.All(results, item => Assert.Equal(testValue, item));
 
             strategyMock.Verify(mock => mock.ReadByteAsync(It.IsAny<CancellationToken>()), Times.Exactly((int)testedLength));
-            strategyMock.VerifySet(mock => mock.Position = It.IsInRange(-1, testedLength-1, Moq.Range.Inclusive));
+            strategyMock.VerifySet(mock => mock.Position = It.IsInRange(-1, testedLength - 1, Moq.Range.Inclusive));
+        }
+
+        [Theory]
+        [InlineData(0L, 0L, 1L, SeekOrigin.Current, 0L)]
+        [InlineData(0L, 10L, 11L, SeekOrigin.Begin, 10L)]
+        [InlineData(0L, 9L, 10L, SeekOrigin.End, 0L)]
+        [InlineData(1L, 10L, 12L, SeekOrigin.Current, 11L)]
+        public void Seek_ShouldSetPosition(long startPosition, long offset, long length, SeekOrigin seekOrigin, long expectedPosition)
+        {
+            var inputSourceStrategy = new Mock<IInputSourceStrategy>();
+            inputSourceStrategy.SetupProperty(mock => mock.Position);
+            inputSourceStrategy.SetupGet(mock => mock.Length).Returns(length);
+
+            var obj = inputSourceStrategy.Object;
+            obj.Position = startPosition;
+
+            using var result = new MediaVC.Difference.InputSource(obj);
+
+            var returned = result.Seek(offset, seekOrigin);
+
+            Assert.Equal(obj.Position, returned);
+            Assert.Equal(expectedPosition, obj.Position);
+        }
+
+        [Fact]
+        public void Equals_ShouldInvokeInStrategy()
+        {
+            var inputSourceStrategy = Mock.Of<IInputSourceStrategy>(mock =>
+                mock.Equals(It.IsAny<IInputSourceStrategy>())
+            );
+
+            using var result = new MediaVC.Difference.InputSource(inputSourceStrategy);
+
+            Assert.True(result.Equals(null));
+
+            Mock.Get(inputSourceStrategy).Verify(mock => mock.Equals(It.IsAny<IInputSourceStrategy>()));
         }
     }
 }

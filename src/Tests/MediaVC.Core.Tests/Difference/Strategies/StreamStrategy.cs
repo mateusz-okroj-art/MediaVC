@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Threading.Tasks;
 
 using Xunit;
 
@@ -47,20 +48,20 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         }
 
         [Fact]
-        public async void ReadByteAsync_WhenStreamIsLongerThanBufferLength_ShouldNotThrowWhenRead()
+        public async Task ReadByteAsync_WhenStreamIsLongerThanBufferLength_ShouldNotThrowWhenRead()
         {
             var data = new byte[MediaVC.Difference.Strategies.StreamStrategy.bufferLength+1];
             using var stream = new MemoryStream(data);
 
             var strategy = new MediaVC.Difference.Strategies.StreamStrategy(stream);
             strategy.Position = 0;
-            _ = await strategy.ReadByteAsync();
+            Assert.Equal(0, await strategy.ReadByteAsync());
             strategy.Position = MediaVC.Difference.Strategies.StreamStrategy.bufferLength;
-            _ = await strategy.ReadByteAsync();
-            _ = await strategy.ReadByteAsync();
+            Assert.Equal(0, await strategy.ReadByteAsync());
+            Assert.Equal(0, await strategy.ReadByteAsync());
         }
 
-        private FileStream GenerateTempFile()
+        private static FileStream GenerateTempFile()
         {
             var rand = new Random(5);
 

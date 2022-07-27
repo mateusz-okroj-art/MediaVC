@@ -33,7 +33,7 @@ namespace MediaVC.Tools.Tests.Fixtures
 
         public int Read(byte[] buffer, int offset, int count) =>
             buffer is not null ?
-            ReadAsync(buffer.AsMemory().Slice(offset, count)).GetAwaiter().GetResult() :
+            ReadAsync(buffer.AsMemory().Slice(offset, count)).AsTask().GetAwaiter().GetResult() :
             throw new ArgumentNullException(nameof(buffer));
 
         public async ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>

@@ -16,21 +16,9 @@ namespace MediaVC.Tools.Tests.Detection.TextDetector
         }
 
         [Fact]
-        public void Constructor1_WhenArgumentIsValid_ShouldInitialize()
-        {
-            new Tools.Detection.TextDetector(Stream.Null);
-        }
-
-        [Fact]
         public void Constructor2_WhenArgumentIsEmpty_ShouldThrowException()
         {
             Assert.Throws<ArgumentException>(() => new Tools.Detection.TextDetector(Memory<byte>.Empty));
-        }
-
-        [Fact]
-        public void Constructor2_WhenArgumentIsValid_ShouldInitialize()
-        {
-            new Tools.Detection.TextDetector(new Memory<byte>(new byte[1]));
         }
     }
 }

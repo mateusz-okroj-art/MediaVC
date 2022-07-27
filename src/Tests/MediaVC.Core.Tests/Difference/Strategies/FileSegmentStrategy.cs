@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using MediaVC.Core.Tests.TestData;
+using MediaVC.Tests.TestData;
 using MediaVC.Difference;
 
 using Moq;
 
 using Xunit;
+using System.Threading.Tasks;
 
 namespace MediaVC.Core.Tests.Difference.Strategies
 {
@@ -98,7 +99,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
 
         [Theory]
         [ClassData(typeof(RandomBytesTestData))]
-        public async void ReadAsync_Variant1_ShouldReadFromSegments(byte[][] data)
+        public async Task ReadAsync_Variant1_ShouldReadFromSegments(byte[][] data)
         {
             var sources = data.Select(bytes => new MediaVC.Difference.InputSource(bytes)).ToArray();
 
@@ -115,7 +116,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
                 );
 
                 currentPosition += sources[i].Length;
-            };
+            }
 
             var expectedResult = data.SelectMany(bytes => bytes).ToArray();
 
@@ -129,7 +130,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
 
         [Theory]
         [ClassData(typeof(RandomBytesTestData))]
-        public async void ReadByteAsync_Variant1_ShouldReadFromSegments(byte[][] data)
+        public async Task ReadByteAsync_Variant1_ShouldReadFromSegments(byte[][] data)
         {
             var sources = data.Select(bytes => new MediaVC.Difference.InputSource(bytes)).ToArray();
 
@@ -146,9 +147,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
                 );
 
                 currentPosition += sources[i].Length;
-            };
-
-            var expectedResult = data.SelectMany(bytes => bytes).ToArray();
+            }
 
             var strategy = new MediaVC.Difference.Strategies.FileSegmentStrategy(segments);
             
@@ -160,7 +159,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         }
 
         [Fact]
-        public async void ReadByteAsync_Variant2_ShouldReadFromSegmentsWithBuffering()
+        public async Task ReadByteAsync_Variant2_ShouldReadFromSegmentsWithBuffering()
         {
             const int testLength = MediaVC.Difference.Strategies.FileSegmentStrategy.BufferLength + 5;
             var data1 = new byte[testLength];

@@ -10,7 +10,7 @@ using MediaVC.Enumerators;
 namespace MediaVC.Difference
 {
     /// <summary>
-    /// Input source of data.
+    /// Read-only source based on <see cref="Stream"/>
     /// </summary>
     public sealed class InputSource : Stream, IInputSource, IEquatable<InputSource>
     {
@@ -144,13 +144,13 @@ namespace MediaVC.Difference
 
         #region Obsoletes
 
-        [Obsolete]
+        [Obsolete("Input source is read-only.")]
         public override void Flush() => throw new InvalidOperationException();
 
-        [Obsolete]
+        [Obsolete("Input source is read-only.")]
         public override void SetLength(long value) => throw new InvalidOperationException();
 
-        [Obsolete]
+        [Obsolete("Input source is read-only.")]
         public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
 
         public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);

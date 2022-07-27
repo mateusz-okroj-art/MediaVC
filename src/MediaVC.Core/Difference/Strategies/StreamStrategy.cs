@@ -44,6 +44,11 @@ namespace MediaVC.Difference.Strategies
 
         #region Methods
 
+        private bool CheckIsBufferInvalidate() =>
+            this.bufferStartPosition < 0 ||
+            Position < this.bufferStartPosition ||
+            Position >= this.bufferStartPosition + bufferLength;
+
         public int Read(byte[] buffer, int offset, int count) =>
             Stream.Read(buffer, offset, count);
 
@@ -83,11 +88,6 @@ namespace MediaVC.Difference.Strategies
                     file1.Name == file2.Name
                 : result;
         }
-
-        private bool CheckIsBufferInvalidate() =>
-            this.bufferStartPosition < 0 ||
-            Position < this.bufferStartPosition ||
-            Position >= this.bufferStartPosition + bufferLength;
 
         public override bool Equals(object? obj) => Equals(obj as IInputSourceStrategy);
 

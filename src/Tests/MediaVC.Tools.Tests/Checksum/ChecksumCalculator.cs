@@ -15,7 +15,7 @@ namespace MediaVC.Tools.Tests.Checksum
     public class ChecksumCalculator
     {
         [Fact]
-        public async void CalculateInternalAsync_WhenArgumentIsNull_ShouldThrowException()
+        public async Task CalculateInternalAsync_WhenArgumentIsNull_ShouldThrowException()
         {
             await Assert.ThrowsAsync<ArgumentNullException>(async() => await Tools.ChecksumCalculator.CalculateInternalAsync(null).CountAsync());
         }
@@ -29,17 +29,17 @@ namespace MediaVC.Tools.Tests.Checksum
         }
 
         [Fact]
-        public async void CalculateInternalAsync_WhenCancellationRequested_ShouldThrowException()
+        public async Task CalculateInternalAsync_WhenCancellationRequested_ShouldThrowException()
         {
             var cancellation = new CancellationTokenSource();
             cancellation.Cancel();
 
-            await Assert.ThrowsAsync<OperationCanceledException>(async() => await Tools.ChecksumCalculator.CalculateInternalAsync(AsyncEnumerable.Repeat(new ReadOnlyMemory<byte>(new byte[0]), 1), cancellation.Token).CountAsync());
+            await Assert.ThrowsAsync<OperationCanceledException>(async() => await Tools.ChecksumCalculator.CalculateInternalAsync(AsyncEnumerable.Repeat(new ReadOnlyMemory<byte>(Array.Empty<byte>()), 1), cancellation.Token).CountAsync());
         }
 
         [Theory]
         [ClassData(typeof(ChecksumRandomTestData))]
-        public async void CalculateInternalAsync_WhenArgumentIsNonEmpty_ShouldReturnCalculated((byte[], byte[])[] data)
+        public async Task CalculateInternalAsync_WhenArgumentIsNonEmpty_ShouldReturnCalculated((byte[], byte[])[] data)
         {
             var result = Tools.ChecksumCalculator.CalculateInternalAsync(data.Select(row => new ReadOnlyMemory<byte>(row.Item1)).ToAsyncEnumerable());
 
@@ -52,13 +52,13 @@ namespace MediaVC.Tools.Tests.Checksum
         }
 
         [Fact]
-        public async void CalculateAsync_WhenArgumentIsNull_ShouldThrowException()
+        public async Task CalculateAsync_WhenArgumentIsNull_ShouldThrowException()
         {
             await Assert.ThrowsAsync<ArgumentNullException>(async () => await Tools.ChecksumCalculator.CalculateAsync(null, 0).CountAsync());
         }
 
         [Fact]
-        public async void CalculateAsync_WhenArgumentIsEmpty_ShouldReturnEmpty()
+        public async Task CalculateAsync_WhenArgumentIsEmpty_ShouldReturnEmpty()
         {
             var result = await Tools.ChecksumCalculator.CalculateAsync(Stream.Null, 0).ToArrayAsync();
 
@@ -66,7 +66,7 @@ namespace MediaVC.Tools.Tests.Checksum
         }
 
         [Fact]
-        public async void CalculateAsync_WhenCancellationRequested_ShouldThrowException()
+        public async Task CalculateAsync_WhenCancellationRequested_ShouldThrowException()
         {
             var cancellation = new CancellationTokenSource();
             cancellation.Cancel();
@@ -79,14 +79,14 @@ namespace MediaVC.Tools.Tests.Checksum
 
         [Theory]
         [ClassData(typeof(ChecksumRandomStreamTestData))]
-        public async void CalculateAsync_WhenArgumentIsNonEmpty_ShouldReturnCalculated(Stream stream, int segmentMaxLength, IAsyncEnumerable<Memory<byte>> expectedResults)
+        public async Task CalculateAsync_WhenArgumentIsNonEmpty_ShouldReturnCalculated(Stream stream, int segmentMaxLength, IAsyncEnumerable<ReadOnlyMemory<byte>> expectedResults)
         {
             using(stream)
             {
                 var results = await Tools.ChecksumCalculator.CalculateAsync(stream, segmentMaxLength).ToArrayAsync();
-                
-                int count;
-                Assert.Equal(count = await expectedResults.CountAsync(), results.Length);
+
+                var count = await expectedResults.CountAsync();
+                Assert.Equal(count, results.Length);
 
                 for(var i = 0; i < count; ++i)
                     Assert.Equal((await expectedResults.ElementAtAsync(i)).ToArray(), results[i].ToArray());
@@ -95,7 +95,7 @@ namespace MediaVC.Tools.Tests.Checksum
 
         [Theory]
         [ClassData(typeof(ChecksumRandomMultiStreamTestData))]
-        public async void CalculateAsync_WhenArgumentIsNonEmpty_VariantWithSplittedAndFullStream_ShouldCalculateEqualValues(Stream fullStream, IEnumerable<Stream> streamSegments)
+        public async Task CalculateAsync_WhenArgumentIsNonEmpty_VariantWithSplittedAndFullStream_ShouldCalculateEqualValues(Stream fullStream, IEnumerable<Stream> streamSegments)
         {
             using(new CompositeDisposable(
                 fullStream,

@@ -54,7 +54,7 @@ namespace MediaVC.Core.Tests.Difference.Strategies
         [Fact]
         public void Read_ShouldThrowException()
         {
-            Assert.Throws<InvalidOperationException>(() => this.fixture.Read(new byte[0], 0, 1));
+            Assert.Throws<InvalidOperationException>(() => this.fixture.Read(Array.Empty<byte>(), 0, 1));
         }
 
         [Fact]

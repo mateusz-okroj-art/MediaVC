@@ -1,25 +1,22 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections;
+using System.Security.Cryptography;
 
 using MediaVC.Difference;
 
 using Moq;
 
-namespace MediaVC.Core.Tests.TestData
+namespace MediaVC.Tests.TestData
 {
-    internal sealed class RandomLengthAndCountEmptySegmentsTestData : IEnumerable<object[]>
+    public sealed class RandomLengthAndCountEmptySegmentsTestData : IEnumerable<object[]>
     {
         public IEnumerator<object[]> GetEnumerator()
         {
-            var random = new Random();
-
-            var count = random.Next(1, 10);
+            var count = RandomNumberGenerator.GetInt32(1, 10);
 
             var list = new IFileSegmentInfo[count];
             for(byte i = 0; i < count; ++i)
             {
-                var length = random.Next(1, int.MaxValue);
+                var length = RandomNumberGenerator.GetInt32(1, int.MaxValue);
                 list[i] = Mock.Of<IFileSegmentInfo>(mock => mock.Length == (ulong)length && mock.Source == Mock.Of<IInputSource>(mock => mock.Length == length));
             }
 

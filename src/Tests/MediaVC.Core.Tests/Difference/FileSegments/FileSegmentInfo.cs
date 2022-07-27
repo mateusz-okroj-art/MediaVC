@@ -56,10 +56,28 @@ namespace MediaVC.Core.Tests.Difference.FileSegments
 
             result.StartPositionInSource = start;
             result.EndPositionInSource = end;
-            
+
             Assert.Equal(
                 result.StartPositionInSource >= 0 && result.StartPositionInSource <= result.EndPositionInSource && result.EndPositionInSource >= result.StartPositionInSource ? (ulong)(result.EndPositionInSource - result.StartPositionInSource + 1) : 0,
                 result.Length);
+        }
+
+        [Fact]
+        public void Equals_ShouldReturnValid()
+        {
+            var source = Mock.Of<IInputSource>();
+
+            var segment1 = new MediaVC.Difference.FileSegmentInfo
+            {
+                Source = source,
+                StartPositionInSource = 0,
+                EndPositionInSource = 0,
+                MappedPosition = 0
+            };
+
+            var segment2 = segment1;
+
+            Assert.True(segment1.Equals(segment2));
         }
     }
 }

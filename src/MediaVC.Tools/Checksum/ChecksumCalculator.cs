@@ -23,7 +23,7 @@ namespace MediaVC.Tools
             }
         }
 
-        internal async static IAsyncEnumerable<Memory<byte>> CalculateInternalAsync(IAsyncEnumerable<ReadOnlyMemory<byte>> dataSegments, [EnumeratorCancellation] CancellationToken cancellationToken = default)
+        internal async static IAsyncEnumerable<ReadOnlyMemory<byte>> CalculateInternalAsync(IAsyncEnumerable<ReadOnlyMemory<byte>> dataSegments, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
             ArgumentNullException.ThrowIfNull(dataSegments, nameof(dataSegments));
 
