@@ -24,48 +24,53 @@ namespace MediaVC.Helpers
 
             this.source.Position = 0;
 
-                if(this.source.Position <= this.source.Length - 2 && this.source.Length >= 2)
-                {
-                    var potentialBomMark = new byte[2];
+            if(this.source.Position <= this.source.Length - 2 && this.source.Length >= 2)
+            {
+                return await ScanForUTF16BOMCore(startPosition, cancellationToken);
+            }
+            else
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                this.source.Position = startPosition;
+                return null;
+            }
+        }
 
-                    if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
-                    {
-                        LastReadingState = TextReadingState.UnexpectedEndOfStream;
-                        this.source.Position = startPosition;
-                        return null;
-                    }
+        private async ValueTask<ByteOrder?> ScanForUTF16BOMCore(long startPosition, CancellationToken cancellationToken)
+        {
+            var potentialBomMark = new byte[2];
 
-                    if(potentialBomMark[0] == 0xff && potentialBomMark[1] == 0xfe)
-                    {
-                        LastReadingState = TextReadingState.Done;
+            if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                this.source.Position = startPosition;
+                return null;
+            }
 
-                        if(startPosition > 0)
-                            this.source.Position = startPosition;
+            if(potentialBomMark[0] == 0xff && potentialBomMark[1] == 0xfe)
+            {
+                LastReadingState = TextReadingState.Done;
 
-                        return ByteOrder.LittleEndian;
-                    }
-                    else if(potentialBomMark[1] == 0xff && potentialBomMark[0] == 0xfe)
-                    {
-                        LastReadingState = TextReadingState.Done;
-
-                        if(startPosition > 0)
-                            this.source.Position = startPosition;
-
-                        return ByteOrder.BigEndian;
-                    }
-                    else
-                    {
-                        LastReadingState = TextReadingState.Done;
-                        this.source.Position = startPosition;
-                        return null;
-                    }
-                }
-                else
-                {
-                    LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                if(startPosition > 0)
                     this.source.Position = startPosition;
-                    return null;
-                }
+
+                return ByteOrder.LittleEndian;
+            }
+            else if(potentialBomMark[1] == 0xff && potentialBomMark[0] == 0xfe)
+            {
+                LastReadingState = TextReadingState.Done;
+
+                if(startPosition > 0)
+                    this.source.Position = startPosition;
+
+                return ByteOrder.BigEndian;
+            }
+            else
+            {
+                LastReadingState = TextReadingState.Done;
+                this.source.Position = startPosition;
+                return null;
+            }
         }
 
         /// <summary>
@@ -77,39 +82,44 @@ namespace MediaVC.Helpers
 
             this.source.Position = 0;
 
-                if(this.source.Position <= this.source.Length - 3 && this.source.Length >= 3)
-                {
-                    var potentialBomMark = new byte[3];
+            if(this.source.Position <= this.source.Length - 3 && this.source.Length >= 3)
+            {
+                return await ScanForUTF8BOMCore(startPosition, cancellationToken);
+            }
+            else
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                this.source.Position = startPosition;
+                return false;
+            }
+        }
 
-                    if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
-                    {
-                        LastReadingState = TextReadingState.UnexpectedEndOfStream;
-                        this.source.Position = startPosition;
-                        return false;
-                    }
+        private async ValueTask<bool> ScanForUTF8BOMCore(long startPosition, CancellationToken cancellationToken)
+        {
+            var potentialBomMark = new byte[3];
 
-                    if(potentialBomMark[0] == 0xef && potentialBomMark[1] == 0xbb && potentialBomMark[2] == 0xbf)
-                    {
-                        LastReadingState = TextReadingState.Done;
+            if(await this.source.ReadAsync(potentialBomMark.AsMemory(), cancellationToken) != potentialBomMark.Length)
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                this.source.Position = startPosition;
+                return false;
+            }
 
-                        if(startPosition > 0)
-                            this.source.Position = startPosition;
+            if(potentialBomMark[0] == 0xef && potentialBomMark[1] == 0xbb && potentialBomMark[2] == 0xbf)
+            {
+                LastReadingState = TextReadingState.Done;
 
-                        return true;
-                    }
-                    else
-                    {
-                        LastReadingState = TextReadingState.Done;
-                        this.source.Position = startPosition;
-                        return false;
-                    }
-                }
-                else
-                {
-                    LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                if(startPosition > 0)
                     this.source.Position = startPosition;
-                    return false;
-                }
+
+                return true;
+            }
+            else
+            {
+                LastReadingState = TextReadingState.Done;
+                this.source.Position = startPosition;
+                return false;
+            }
         }
 
         /// <summary>
@@ -121,48 +131,53 @@ namespace MediaVC.Helpers
 
             this.source.Position = 0;
 
-                if(this.source.Position <= this.source.Length - 4 && this.source.Length >= 4)
-                {
-                    Memory<byte> potentialBomMark = new byte[4];
+            if(this.source.Position <= this.source.Length - 4 && this.source.Length >= 4)
+            {
+                return await ScanForUTF32BOMCore(startPosition, cancellationToken);
+            }
+            else
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                this.source.Position = startPosition;
+                return null;
+            }
+        }
 
-                    if(await this.source.ReadAsync(potentialBomMark, cancellationToken) != potentialBomMark.Length)
-                    {
-                        LastReadingState = TextReadingState.UnexpectedEndOfStream;
-                        this.source.Position = startPosition;
-                        return null;
-                    }
+        private async ValueTask<ByteOrder?> ScanForUTF32BOMCore(long startPosition, CancellationToken cancellationToken)
+        {
+            Memory<byte> potentialBomMark = new byte[4];
 
-                    if(potentialBomMark.Span[0] == 0xff && potentialBomMark.Span[1] == 0xfe && potentialBomMark.Span[2] == 0 && potentialBomMark.Span[3] == 0)
-                    {
-                        LastReadingState = TextReadingState.Done;
+            if(await this.source.ReadAsync(potentialBomMark, cancellationToken) != potentialBomMark.Length)
+            {
+                LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                this.source.Position = startPosition;
+                return null;
+            }
 
-                        if(startPosition > 0)
-                            this.source.Position = startPosition;
+            if(potentialBomMark.Span[0] == 0xff && potentialBomMark.Span[1] == 0xfe && potentialBomMark.Span[2] == 0 && potentialBomMark.Span[3] == 0)
+            {
+                LastReadingState = TextReadingState.Done;
 
-                        return ByteOrder.LittleEndian;
-                    }
-                    else if(potentialBomMark.Span[3] == 0xff && potentialBomMark.Span[2] == 0xfe && potentialBomMark.Span[1] == 0 && potentialBomMark.Span[0] == 0)
-                    {
-                        LastReadingState = TextReadingState.Done;
-
-                        if(startPosition > 0)
-                            this.source.Position = startPosition;
-
-                        return ByteOrder.BigEndian;
-                    }
-                    else
-                    {
-                        LastReadingState = TextReadingState.Done;
-                        this.source.Position = startPosition;
-                        return null;
-                    }
-                }
-                else
-                {
-                    LastReadingState = TextReadingState.UnexpectedEndOfStream;
+                if(startPosition > 0)
                     this.source.Position = startPosition;
-                    return null;
-                }
+
+                return ByteOrder.LittleEndian;
+            }
+            else if(potentialBomMark.Span[3] == 0xff && potentialBomMark.Span[2] == 0xfe && potentialBomMark.Span[1] == 0 && potentialBomMark.Span[0] == 0)
+            {
+                LastReadingState = TextReadingState.Done;
+
+                if(startPosition > 0)
+                    this.source.Position = startPosition;
+
+                return ByteOrder.BigEndian;
+            }
+            else
+            {
+                LastReadingState = TextReadingState.Done;
+                this.source.Position = startPosition;
+                return null;
+            }
         }
     }
 }
