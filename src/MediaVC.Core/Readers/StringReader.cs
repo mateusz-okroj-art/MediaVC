@@ -140,41 +140,12 @@ namespace MediaVC.Readers
 
                 var stringBuilder = new StringBuilder();
 
-                var isFirstRune = true;
+                var isFirstRune = new Ref<bool>(true);
                 Rune? result;
                 while(this.source.Position < this.source.Length && (result = await this.readingEngine.ReadAsync(cancellationToken)).HasValue)
                 {
-                    var currentPosition = this.source.Position;
-
-                    if(endOnLineEnding)
-                    {
-                        if(result.Value == new Rune('\n'))
-                        {
-                            var nextRune = await this.readingEngine.ReadAsync(cancellationToken);
-                            if(nextRune.HasValue)
-                            {
-                                if(nextRune.Value != new Rune('\r'))
-                                    this.source.Position = currentPosition;
-
-                                break;
-                            }
-                        }
-
-                        if(result.Value == new Rune('\r'))
-                        {
-                            var nextRune = await this.readingEngine.ReadAsync(cancellationToken);
-                            if(nextRune.HasValue)
-                            {
-                                if(nextRune.Value != new Rune('\n'))
-                                    this.source.Position = currentPosition;
-
-                                break;
-                            }
-                        }
-                    }
-
-                    _ = stringBuilder.Append(result.Value.ToString());
-                    isFirstRune = false;
+                    if(await ReadToEndInternalCoreAsync(endOnLineEnding, isFirstRune, stringBuilder, result.Value, cancellationToken))
+                        break;
                 }
 
                 return isFirstRune && stringBuilder.Length < 1 ? null : stringBuilder.ToString();
@@ -183,6 +154,42 @@ namespace MediaVC.Readers
             {
                 this.syncObject.Release();
             }
+        }
+
+        private async Task<bool> ReadToEndInternalCoreAsync(bool endOnLineEnding, Ref<bool> isFirstRune, StringBuilder stringBuilder, Rune result, CancellationToken cancellationToken)
+        {
+            var currentPosition = this.source.Position;
+
+            if(endOnLineEnding)
+            {
+                if(result == new Rune('\n'))
+                {
+                    var nextRune = await this.readingEngine.ReadAsync(cancellationToken);
+                    if(nextRune.HasValue)
+                    {
+                        if(nextRune.Value != new Rune('\r'))
+                            this.source.Position = currentPosition;
+
+                        return true;
+                    }
+                }
+
+                if(result == new Rune('\r'))
+                {
+                    var nextRune = await this.readingEngine.ReadAsync(cancellationToken);
+                    if(nextRune.HasValue)
+                    {
+                        if(nextRune.Value != new Rune('\n'))
+                            this.source.Position = currentPosition;
+
+                        return true;
+                    }
+                }
+            }
+
+            _ = stringBuilder.Append(result.ToString());
+            isFirstRune.value = false;
+            return false;
         }
 
         public string? ReadLine() =>
