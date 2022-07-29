@@ -37,9 +37,6 @@ namespace MediaVC.Difference
             ArgumentNullException.ThrowIfNull(segments);
             var strategy = new FileSegmentStrategy(segments);
 
-            if(!strategy.CheckIsNotUsedSource(this))
-                throw new InvalidOperationException("Usage of this source has been detected on a child segment.");
-
             Strategy = strategy;
         }
 
@@ -124,6 +121,8 @@ namespace MediaVC.Difference
         public override ValueTask<int> ReadAsync(Memory<byte> buffer, CancellationToken cancellationToken = default) =>
             Strategy.ReadAsync(buffer, cancellationToken);
 
+        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);
+
         public bool Equals(InputSource? other) => Strategy.Equals(other?.Strategy);
 
         public override bool Equals(object? obj) => Equals(obj as InputSource);
@@ -152,8 +151,6 @@ namespace MediaVC.Difference
 
         [Obsolete("Input source is read-only.")]
         public override void Write(byte[] buffer, int offset, int count) => throw new InvalidOperationException();
-
-        public IAsyncEnumerator<byte> GetAsyncEnumerator(CancellationToken cancellationToken = default) => new InputSourceEnumerator(this, cancellationToken);
 
         #endregion
 
