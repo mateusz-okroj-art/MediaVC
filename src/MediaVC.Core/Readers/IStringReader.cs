@@ -9,7 +9,7 @@ namespace MediaVC.Difference
 {
     public interface IStringReader : IDisposable
     {
-        IAsyncEnumerable<string> Lines { get; }
+        IAsyncEnumerable<string?> Lines { get; }
 
         /// <summary>
         /// Reads the next character from the text reader and advances the character position by one character.
