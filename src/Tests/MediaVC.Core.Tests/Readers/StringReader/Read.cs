@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -26,7 +27,6 @@ namespace MediaVC.Core.Tests.Readers.StringReader
             var reader = new MediaVC.Readers.StringReader(inputSource);
 
             Assert.Null(await reader.ReadAsync());
-
             Assert.Equal(TextReadingState.UnexpectedEndOfStream, reader.LastReadingState);
         }
 
@@ -68,6 +68,34 @@ namespace MediaVC.Core.Tests.Readers.StringReader
                 : new Rune(this.fixture.UTF8_Content[contentIndex0]);
 
             Assert.True(rune.Equals(result));
+        }
+
+        [Fact]
+        public void Read2_ShouldReadProperly()
+        {
+            //Assert.Null(new MediaVC.Readers.StringReader(InputSource.Empty).Read());
+        }
+
+        [Fact]
+        public void Read3_ShouldReadProperly()
+        {
+            var text = "L*! 0|\r";
+
+            Memory<byte> buffer = Encoding.Latin1.GetBytes(text);
+
+            var source = new InputSource(buffer);
+
+            var reader = new MediaVC.Readers.StringReader(source);
+            reader.SelectedEncoding = Encoding.Latin1;
+
+            Span<Rune> resultBuffer = new Rune[text.Length];
+            Assert.Equal(resultBuffer.Length, reader.Read(resultBuffer));
+
+            var result = new StringBuilder();
+            foreach(var r in resultBuffer)
+                result.Append(r.ToString());
+
+            Assert.Equal(text, result.ToString());
         }
     }
 }

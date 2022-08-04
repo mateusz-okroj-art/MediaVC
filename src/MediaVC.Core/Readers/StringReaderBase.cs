@@ -13,7 +13,7 @@ namespace MediaVC.Readers
     /// <summary>
     /// Base class for <see cref="StringReader"/>.
     /// </summary>
-    public abstract class StringReaderBase : IDisposable, IEquatable<StringReaderBase>, IEqualityComparer<StringReaderBase>
+    public abstract class StringReaderBase
     {
         protected StringReaderBase(IInputSource source)
         {
@@ -48,14 +48,19 @@ namespace MediaVC.Readers
 
                 var isFirstRune = new Ref<bool>(true);
                 Rune? result;
-                while(this.source.Position < this.source.Length && (result = await this.readingEngine.ReadAsync(cancellationToken)).HasValue)
+                while(this.source.Position < this.source.Length)
                 {
+                    result = await this.readingEngine.ReadAsync(cancellationToken);
+
+                    if(result is null)
+                        break;
+
                     var resultRef = new Ref<Rune>(result.Value);
                     if(await ReadToEndInternalCoreAsync(endOnLineEnding, isFirstRune, stringBuilder, resultRef, cancellationToken))
                         break;
                 }
 
-                return isFirstRune && stringBuilder.Length < 1 ? null : stringBuilder.ToString();
+                return (isFirstRune.Value ?? false) && stringBuilder.Length < 1 ? null : stringBuilder.ToString();
             }
             finally
             {
@@ -115,17 +120,12 @@ namespace MediaVC.Readers
             return false;
         }
 
-        public void Dispose() => this.syncObject.Dispose();
+        protected virtual void Dispose() => this.syncObject.Dispose();
 
         public override int GetHashCode() => this.source.GetHashCode();
 
         public bool Equals(StringReaderBase? other) => ReferenceEquals(this.source, other?.source);
 
         public override bool Equals(object? obj) => Equals(obj as StringReaderBase);
-
-        public bool Equals(StringReaderBase? x, StringReaderBase? y) =>
-            x is null && y is null || (x?.Equals(y) ?? false);
-
-        public int GetHashCode([DisallowNull] StringReaderBase obj) => obj.GetHashCode();
     }
 }

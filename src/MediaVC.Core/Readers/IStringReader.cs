@@ -7,7 +7,7 @@ using System.Text;
 
 namespace MediaVC.Difference
 {
-    public interface IStringReader : IDisposable
+    public interface IStringReader
     {
         IAsyncEnumerable<string?> Lines { get; }
 

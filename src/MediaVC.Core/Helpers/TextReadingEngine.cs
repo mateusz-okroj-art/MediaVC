@@ -9,6 +9,9 @@ using MediaVC.Difference;
 
 namespace MediaVC.Helpers
 {
+    /// <summary>
+    /// Core of <see cref="StringReader"/>
+    /// </summary>
     internal sealed class TextReadingEngine
     {
         public TextReadingEngine(IInputSource inputSource)
@@ -34,6 +37,9 @@ namespace MediaVC.Helpers
 
         #region Methods
 
+        /// <summary>
+        /// Reads single <see cref="Rune"/>.
+        /// </summary>
         public async ValueTask<Rune?> ReadAsync(CancellationToken cancellationToken = default)
         {
             while(true)
@@ -66,6 +72,9 @@ namespace MediaVC.Helpers
             }
         }
 
+        /// <summary>
+        /// Scans Unicode Byte Order Mask on start position.
+        /// </summary>
         private async ValueTask<bool> DetectBOMsAsync(ByteOrder? byteOrder, CancellationToken cancellationToken)
         {
             if(byteOrder.HasValue)
@@ -106,7 +115,7 @@ namespace MediaVC.Helpers
         {
             var readedByte = await this.source.ReadByteAsync(cancellationToken);
 
-            var chars = SelectedEncoding!.GetChars(readedByte.Yield().ToArray());
+            var chars = SelectedEncoding!.GetChars(new[] { readedByte });
 
             return chars.Length switch
             {
@@ -116,6 +125,11 @@ namespace MediaVC.Helpers
             };
         }
 
+        /// <summary>
+        /// Reads single <see cref="Rune"/> from UTF-8 bytes.
+        /// </summary>
+        /// <exception cref="IOException"></exception>
+        /// <exception cref="FormatException"></exception>
         private async ValueTask<Rune?> ReadUTF8Segments(CancellationToken cancellationToken)
         {
             var byte1 = await this.source.ReadByteAsync(cancellationToken);
@@ -144,7 +158,7 @@ namespace MediaVC.Helpers
             else if(byte1 <= 127)
             {
                 LastReadingState = TextReadingState.Done;
-                return new Rune(Encoding.UTF8.GetChars(byte1.Yield().ToArray())[0]);
+                return new Rune(Encoding.UTF8.GetChars(new[] { byte1 })[0]);
             }
             else
             {
@@ -173,7 +187,7 @@ namespace MediaVC.Helpers
             readedBytes.CopyTo(resultBytes.AsMemory()[1..]);
             var resultChars = Encoding.UTF8.GetChars(resultBytes);
 
-            if(resultChars == null || resultChars.Length < 1)
+            if(resultChars is null || resultChars.Length < 1)
                 throw new IOException("Empty values from UTF-8 decoder.");
 
             return resultChars.Length switch
@@ -184,6 +198,9 @@ namespace MediaVC.Helpers
             };
         }
 
+        /// <summary>
+        /// Reads single <see cref="Rune"/> from UTF-16 bytes.
+        /// </summary>
         private async ValueTask<Rune?> ReadUTF16Segments(CancellationToken cancellationToken = default)
         {
             Memory<byte> firstReadedBytes = new byte[2];
@@ -200,6 +217,10 @@ namespace MediaVC.Helpers
                 return await ReadUTF16BESegments(firstReadedBytes, cancellationToken);
         }
 
+        /// <summary>
+        /// Reads single <see cref="Rune"/> from UTF-16 Big Endian bytes.
+        /// </summary>
+        /// <param name="firstReadedBytes"></param>
         private async ValueTask<Rune?> ReadUTF16BESegments(Memory<byte> firstReadedBytes, CancellationToken cancellationToken)
         {
             firstReadedBytes.Span.Reverse();
@@ -240,6 +261,9 @@ namespace MediaVC.Helpers
             return new Rune(singleChar);
         }
 
+        /// <summary>
+        /// Reads single <see cref="Rune"/> from UTF-16 Little Endian bytes.
+        /// </summary>
         private async ValueTask<Rune?> ReadUTF16LESegments(Memory<byte> firstReadedBytes, CancellationToken cancellationToken)
         {
             if(this.source.Position <= this.source.Length - 2)
@@ -275,6 +299,10 @@ namespace MediaVC.Helpers
             return new Rune(singleChar);
         }
 
+        /// <summary>
+        /// Reads single <see cref="Rune"/> from UTF-32 bytes.
+        /// </summary>
+        /// <exception cref="IOException"></exception>
         private async ValueTask<Rune?> ReadUTF32Segments(CancellationToken cancellationToken)
         {
             const int utf32CharLength = 4;
@@ -302,46 +330,9 @@ namespace MediaVC.Helpers
             };
         }
 
-        public async ValueTask<bool> TryReadLineSeparator(CancellationToken cancellationToken = default)
+        internal void Reset()
         {
-            var count = Math.Max(this.source.Length - this.source.Position - 1, 2);
-            if(count < 2)
-                return false;
-
-            Memory<byte> chars = new byte[count];
-
-            if(await this.source.ReadAsync(chars, cancellationToken) != count)
-                throw new IOException("Error while read.");
-
-            if(chars.Span[0] == '\r')
-            {
-                if(count != 2 || chars.Span[1] != '\n')
-                {
-                    if(count == 2)
-                        --this.source.Position;
-
-                    LineEnding = LineEnding.CRLF;
-                }
-                else
-                {
-                    LineEnding = LineEnding.CR;
-                }
-
-                return true;
-            }
-            else if(chars.Span[0] == '\n')
-            {
-                if(count == 2)
-                    --this.source.Position;
-
-                LineEnding = LineEnding.LF;
-                return true;
-            }
-            else
-            {
-                this.source.Position -= count;
-                return false;
-            }
+            LastReadingState = TextReadingState.Done;
         }
 
         #endregion

@@ -10,19 +10,19 @@ namespace MediaVC
     public sealed class Ref<T> : IRef<T>
         where T : struct
     {
-        public Ref(T initValue = default!)
+        public Ref(T? initValue = default)
         {
             value = initValue;
             this.changed.OnNext(value);
         }
 
-        private T value;
+        private T? value;
 
-        private readonly ISubject<T> changed = new Subject<T>();
+        private readonly ISubject<T?> changed = new Subject<T?>();
 
-        public static implicit operator T(Ref<T> source) => source.value;
+        public static implicit operator T?(Ref<T> source) => source.value;
 
-        public T Value
+        public T? Value
         {
             get => value;
             set
@@ -32,6 +32,6 @@ namespace MediaVC
             }
         }
 
-        public IObservable<T> Changed => this.changed;
+        public IObservable<T?> Changed => this.changed;
     }
 }

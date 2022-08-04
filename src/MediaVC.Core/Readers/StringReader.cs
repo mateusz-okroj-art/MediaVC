@@ -13,7 +13,7 @@ namespace MediaVC.Readers
     /// <summary>
     /// Implements <see cref="TextReader"/> functions for reading from <see cref="IInputSource"/>.
     /// </summary>
-    public sealed class StringReader : StringReaderBase, IStringReader
+    public sealed class StringReader : StringReaderBase, IStringReader, IDisposable, IEquatable<StringReader>
     {
         /// <summary>
         /// Implements <see cref="TextReader"/> functions for reading from <see cref="IInputSource"/>.
@@ -22,6 +22,8 @@ namespace MediaVC.Readers
         /// <exception cref="ArgumentNullException" />
         public StringReader(IInputSource source) : base(source ?? throw new ArgumentNullException(nameof(source)))
         {}
+
+        public IAsyncEnumerable<string?> Lines => new AsyncEnumerable<string?>(new StringReaderEnumerator(this));
 
         #region Methods
 
@@ -53,6 +55,8 @@ namespace MediaVC.Readers
 
                     if(!readedValue.HasValue)
                         break;
+
+                    buffer[counter] = readedValue.Value;
                 }
 
                 return counter;
@@ -125,7 +129,15 @@ namespace MediaVC.Readers
             .GetAwaiter()
             .GetResult();
 
-        public IAsyncEnumerable<string?> Lines => new AsyncEnumerable<string?>(new StringReaderEnumerator(this));
+        internal void Reset() => this.readingEngine.Reset();
+
+        void IDisposable.Dispose() => Dispose();
+
+        public bool Equals(StringReader? other) => base.Equals(other);
+
+        public override bool Equals(object? obj) => Equals(obj as StringReader);
+
+        public override int GetHashCode() => base.GetHashCode();
 
         #endregion
     }
