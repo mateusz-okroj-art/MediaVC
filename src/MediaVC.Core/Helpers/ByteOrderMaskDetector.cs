@@ -24,7 +24,7 @@ namespace MediaVC.Helpers
 
             this.source.Position = 0;
 
-            if(this.source.Position <= this.source.Length - 2 && this.source.Length >= 2)
+            if(this.source.Length >= 2)
             {
                 return await ScanForUTF16BOMCore(startPosition, cancellationToken);
             }
@@ -82,7 +82,7 @@ namespace MediaVC.Helpers
 
             this.source.Position = 0;
 
-            if(this.source.Position <= this.source.Length - 3 && this.source.Length >= 3)
+            if(this.source.Length >= 3)
             {
                 return await ScanForUTF8BOMCore(startPosition, cancellationToken);
             }
@@ -131,7 +131,7 @@ namespace MediaVC.Helpers
 
             this.source.Position = 0;
 
-            if(this.source.Position <= this.source.Length - 4 && this.source.Length >= 4)
+            if(this.source.Length >= 4)
             {
                 return await ScanForUTF32BOMCore(startPosition, cancellationToken);
             }

@@ -28,6 +28,11 @@ namespace MediaVC.Core.Tests.Readers.StringReader
 
             Assert.Null(await reader.ReadAsync());
             Assert.Equal(TextReadingState.UnexpectedEndOfStream, reader.LastReadingState);
+
+            reader.Reset();
+
+            Assert.Null(reader.Read());
+            Assert.Equal(TextReadingState.UnexpectedEndOfStream, reader.LastReadingState);
         }
 
         [Theory]
@@ -44,6 +49,15 @@ namespace MediaVC.Core.Tests.Readers.StringReader
             var result = await reader.ReadAsync();
 
             var rune = contentIndex1 > -1
+                ? new Rune(this.fixture.UTF8_Content[contentIndex0], this.fixture.UTF8_Content[contentIndex1])
+                : new Rune(this.fixture.UTF8_Content[contentIndex0]);
+
+            Assert.True(rune.Equals(result));
+
+            source.Position = sourceIndex;
+            result = reader.Read();
+
+            rune = contentIndex1 > -1
                 ? new Rune(this.fixture.UTF8_Content[contentIndex0], this.fixture.UTF8_Content[contentIndex1])
                 : new Rune(this.fixture.UTF8_Content[contentIndex0]);
 
@@ -68,12 +82,15 @@ namespace MediaVC.Core.Tests.Readers.StringReader
                 : new Rune(this.fixture.UTF8_Content[contentIndex0]);
 
             Assert.True(rune.Equals(result));
-        }
 
-        [Fact]
-        public void Read2_ShouldReadProperly()
-        {
-            //Assert.Null(new MediaVC.Readers.StringReader(InputSource.Empty).Read());
+            source.Position = sourceIndex;
+            result = reader.Read();
+
+            rune = contentIndex1 > -1
+                ? new Rune(this.fixture.UTF8_Content[contentIndex0], this.fixture.UTF8_Content[contentIndex1])
+                : new Rune(this.fixture.UTF8_Content[contentIndex0]);
+
+            Assert.True(rune.Equals(result));
         }
 
         [Fact]

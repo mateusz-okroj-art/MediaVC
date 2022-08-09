@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Linq;
 using System.Security.Cryptography;
+using System.Text;
+using System.Threading.Tasks;
 
 using MediaVC.Difference;
 using MediaVC.Readers;
@@ -51,6 +54,32 @@ namespace MediaVC.Core.Tests.Enumerators
             sourceMock.VerifyNoOtherCalls();
 
             Assert.Equal(0, sourceMock.Object.Position);
+        }
+
+        [Fact]
+        public async Task MoveNextAsync_ShouldSetCurrentPropertyAndReturnTrue()
+        {
+            var lines = new string[]
+            {
+                "A",
+                "ć",
+                "9",
+                " %"
+            };
+
+            var stringBuilder = new StringBuilder();
+            Array.ForEach(lines, s => stringBuilder.AppendLine(s));
+
+            var text = stringBuilder.ToString();
+
+            ReadOnlyMemory<byte> utf8Bytes = Encoding.UTF8.GetBytes(text);
+
+            using var inputSource = new InputSource(utf8Bytes);
+            using var reader = new StringReader(inputSource);
+
+            var result = await reader.Lines.ToArrayAsync();
+
+            Assert.Equal(lines, result);
         }
     }
 }

@@ -13,7 +13,7 @@ namespace MediaVC.Readers
     /// <summary>
     /// Base class for <see cref="StringReader"/>.
     /// </summary>
-    public abstract class StringReaderBase
+    public abstract class StringReaderBase : IDisposable
     {
         protected StringReaderBase(IInputSource source)
         {
@@ -22,8 +22,9 @@ namespace MediaVC.Readers
         }
 
         internal readonly IInputSource source;
-        private protected readonly TextReadingEngine readingEngine;
+        internal readonly TextReadingEngine readingEngine;
         protected readonly SynchronizationObject syncObject = new();
+        private bool disposedValue;
 
         /// <summary>
         /// Represents last reading state
@@ -120,12 +121,23 @@ namespace MediaVC.Readers
             return false;
         }
 
-        protected virtual void Dispose() => this.syncObject.Dispose();
+        protected virtual void Dispose(bool disposing)
+        {
+            if(!disposedValue)
+            {
+                if(disposing)
+                {
+                    this.syncObject.Dispose();
+                }
 
-        public override int GetHashCode() => this.source.GetHashCode();
+                disposedValue = true;
+            }
+        }
 
-        public bool Equals(StringReaderBase? other) => ReferenceEquals(this.source, other?.source);
-
-        public override bool Equals(object? obj) => Equals(obj as StringReaderBase);
+        public void Dispose()
+        {
+            Dispose(disposing: true);
+            GC.SuppressFinalize(this);
+        }
     }
 }

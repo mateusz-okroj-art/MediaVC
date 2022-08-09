@@ -131,13 +131,13 @@ namespace MediaVC.Readers
 
         internal void Reset() => this.readingEngine.Reset();
 
-        void IDisposable.Dispose() => Dispose();
+        void IDisposable.Dispose() => Dispose(true);
 
         public bool Equals(StringReader? other) => base.Equals(other);
 
         public override bool Equals(object? obj) => Equals(obj as StringReader);
 
-        public override int GetHashCode() => base.GetHashCode();
+        public override int GetHashCode() => this.source.GetHashCode();
 
         #endregion
     }
