@@ -25,6 +25,7 @@ namespace MediaVC.Readers
         internal readonly TextReadingEngine readingEngine;
         protected readonly SynchronizationObject syncObject = new();
         private bool disposedValue;
+        private bool detectedLineSeparator = false;
 
         /// <summary>
         /// Represents last reading state
@@ -39,7 +40,49 @@ namespace MediaVC.Readers
 
         public LineEnding LineEnding => this.readingEngine.LineEnding;
 
-        internal async Task<string?> ReadToEndInternalAsync(bool endOnLineEnding = false, CancellationToken cancellationToken = default)
+        protected async Task<string?> ReadLineCoreAsync(CancellationToken cancellation = default)
+        {
+            //try
+            //{
+            //    await this.syncObject.WaitForAsync(cancellation);
+
+            //    var stringBuilder = new StringBuilder();
+
+            //    Rune? result;
+            //    while(this.source.Position < this.source.Length)
+            //    {
+            //        result = await this.readingEngine.ReadAsync(cancellation);
+
+            //        if(!result.HasValue)
+            //        {
+            //            return this.source.Position == 0 ? null : stringBuilder.ToString();
+            //        }
+
+            //        var detectionResult = await DetectLFCRNewLineSeparatorAsync(currentRune, currentPosition, cancellationToken);
+
+            //        if(detectionResult == LineSeparatorDetectionResult.LastEmptyLine)
+            //            this.detectedEmptyLastLine = true;
+
+            //        if(detectionResult != LineSeparatorDetectionResult.NotDetected)
+            //            return true;
+
+            //        detectionResult = await DetectCRLFNewLineSeparatorAsync(currentRune, currentPosition, cancellationToken);
+
+            //        if(detectionResult == LineSeparatorDetectionResult.LastEmptyLine)
+            //            this.detectedEmptyLastLine = true;
+
+            //        if(detectionResult != LineSeparatorDetectionResult.NotDetected)
+            //            return true;
+            //    }
+            //}
+            //finally
+            //{
+            //    this.syncObject.Release();
+            //}
+            throw new NotImplementedException();//TODO
+        }
+
+        internal async Task<string?> ReadToEndInternalAsync(CancellationToken cancellationToken = default)
         {
             try
             {
@@ -47,21 +90,23 @@ namespace MediaVC.Readers
 
                 var stringBuilder = new StringBuilder();
 
-                var isFirstRune = new Ref<bool>(true);
+                var isFirstRune = true;
                 Rune? result;
                 while(this.source.Position < this.source.Length)
                 {
                     result = await this.readingEngine.ReadAsync(cancellationToken);
 
                     if(result is null)
-                        break;
+                    {
+                        return isFirstRune ? null : stringBuilder.ToString();
+                    }
 
-                    var resultRef = new Ref<Rune>(result.Value);
-                    if(await ReadToEndInternalCoreAsync(endOnLineEnding, isFirstRune, stringBuilder, resultRef, cancellationToken))
-                        break;
+                    stringBuilder.Append(result.ToString());
+
+                    isFirstRune = false;
                 }
 
-                return (isFirstRune.Value ?? false) && stringBuilder.Length < 1 ? null : stringBuilder.ToString();
+                return stringBuilder.ToString();
             }
             finally
             {
@@ -69,7 +114,7 @@ namespace MediaVC.Readers
             }
         }
 
-        private async ValueTask<bool> DetectCRLFNewLineSeparatorAsync(Ref<Rune> result, long currentPosition, CancellationToken cancellationToken)
+        private async ValueTask<LineSeparatorDetectionResult> DetectCRLFNewLineSeparatorAsync(Rune result, long currentPosition, CancellationToken cancellationToken)
         {
             if(result == new Rune('\r'))
             {
@@ -77,16 +122,21 @@ namespace MediaVC.Readers
                 if(nextRune.HasValue)
                 {
                     if(nextRune.Value != new Rune('\n'))
+                    {
                         this.source.Position = currentPosition;
+                        return LineSeparatorDetectionResult.FullDetected;
+                    }
 
-                    return true;
+                    return LineSeparatorDetectionResult.HalfDetected;
                 }
+
+                return LineSeparatorDetectionResult.LastEmptyLine;
             }
 
-            return false;
+            return LineSeparatorDetectionResult.NotDetected;
         }
 
-        private async ValueTask<bool> DetectLFCRNewLineSeparatorAsync(Ref<Rune> result, long currentPosition, CancellationToken cancellationToken)
+        private async ValueTask<LineSeparatorDetectionResult> DetectLFCRNewLineSeparatorAsync(Rune result, long currentPosition, CancellationToken cancellationToken)
         {
             if(result == new Rune('\n'))
             {
@@ -94,31 +144,18 @@ namespace MediaVC.Readers
                 if(nextRune.HasValue)
                 {
                     if(nextRune.Value != new Rune('\r'))
+                    {
                         this.source.Position = currentPosition;
+                        return LineSeparatorDetectionResult.FullDetected;
+                    }
 
-                    return true;
+                    return LineSeparatorDetectionResult.HalfDetected;
                 }
+
+                return LineSeparatorDetectionResult.LastEmptyLine;
             }
 
-            return false;
-        }
-
-        private async ValueTask<bool> ReadToEndInternalCoreAsync(bool endOnLineEnding, Ref<bool> isFirstRune, StringBuilder stringBuilder, Ref<Rune> result, CancellationToken cancellationToken)
-        {
-            var currentPosition = this.source.Position;
-
-            if(endOnLineEnding)
-            {
-                if(await DetectLFCRNewLineSeparatorAsync(result, currentPosition, cancellationToken))
-                    return true;
-
-                if(await DetectCRLFNewLineSeparatorAsync(result, currentPosition, cancellationToken))
-                    return true;
-            }
-
-            _ = stringBuilder.Append(result.Value.ToString());
-            isFirstRune.Value = false;
-            return false;
+            return LineSeparatorDetectionResult.NotDetected;
         }
 
         protected virtual void Dispose(bool disposing)

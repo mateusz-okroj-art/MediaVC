@@ -38,7 +38,9 @@ namespace MediaVC.Core.Tests.Helpers
             Assert.Equal(startPosition, inputSourceMock.Object.Position);
 
             inputSourceMock.VerifySet(mocked => mocked.Position = It.IsAny<long>(), Times.Exactly(3));
-            inputSourceMock.VerifyGet(mocked => mocked.Length, Times.Once);
+            inputSourceMock.VerifyGet(mocked => mocked.Position, Times.AtLeastOnce());
+            inputSourceMock.VerifyGet(mocked => mocked.Length, Times.AtLeastOnce());
+            inputSourceMock.VerifyNoOtherCalls();
         }
     }
 }

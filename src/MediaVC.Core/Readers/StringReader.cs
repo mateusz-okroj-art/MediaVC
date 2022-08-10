@@ -104,8 +104,7 @@ namespace MediaVC.Readers
             }
         }
 
-        public Task<string?> ReadLineAsync(CancellationToken cancellationToken = default) =>
-            ReadToEndInternalAsync(true, cancellationToken);
+        public Task<string?> ReadLineAsync(CancellationToken cancellationToken = default) => ReadLineCoreAsync(cancellationToken);
 
         public string? ReadLine() =>
             ReadLineAsync()
@@ -116,7 +115,7 @@ namespace MediaVC.Readers
         {
             try
             {
-                return await ReadToEndInternalAsync(false, cancellationToken) ?? throw new InvalidOperationException();
+                return await ReadToEndInternalAsync(cancellationToken) ?? throw new InvalidOperationException();
             }
             catch(TaskCanceledException exc)
             {
