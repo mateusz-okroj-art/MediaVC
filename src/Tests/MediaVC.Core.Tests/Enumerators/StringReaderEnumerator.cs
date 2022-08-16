@@ -57,14 +57,15 @@ namespace MediaVC.Core.Tests.Enumerators
         }
 
         [Fact]
-        public async Task MoveNextAsync_ShouldSetCurrentPropertyAndReturnTrue()
+        public async Task MoveNextAsync_ShouldWorkProperlyWithLinq()
         {
             var lines = new string[]
             {
                 "A",
                 "ć",
                 "9",
-                " %"
+                " %",
+                string.Empty
             };
 
             var stringBuilder = new StringBuilder();

@@ -104,12 +104,33 @@ namespace MediaVC.Readers
             }
         }
 
-        public Task<string?> ReadLineAsync(CancellationToken cancellationToken = default) => ReadLineCoreAsync(cancellationToken);
+        public async Task<string?> ReadLineAsync(CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await this.syncObject.WaitForAsync(cancellationToken);
 
-        public string? ReadLine() =>
-            ReadLineAsync()
-            .GetAwaiter()
-            .GetResult();
+                var result = await ReadLineCoreAsync(cancellationToken);
+
+                if((result?.Length ?? 0) == 0 && this.source.Position == this.source.Length && this.isLineSeparatorLastReaded)
+                {
+                    this.isLineSeparatorLastReaded = false;
+                    return string.Empty;
+                }
+                else
+                {
+                    return (this.source.Position == this.source.Length && (result?.Length ?? 0) == 0) ? null : result;
+                }
+            }
+            finally
+            {
+                this.syncObject.Release();
+            }
+        }
+
+        public string? ReadLine() => ReadLineAsync()
+                                        .GetAwaiter()
+                                        .GetResult();
 
         public async Task<string> ReadToEndAsync(CancellationToken cancellationToken = default)
         {

@@ -25,7 +25,7 @@ namespace MediaVC.Readers
         internal readonly TextReadingEngine readingEngine;
         protected readonly SynchronizationObject syncObject = new();
         private bool disposedValue;
-        private bool detectedLineSeparator = false;
+        protected bool isLineSeparatorLastReaded = false;
 
         /// <summary>
         /// Represents last reading state
@@ -42,44 +42,40 @@ namespace MediaVC.Readers
 
         protected async Task<string?> ReadLineCoreAsync(CancellationToken cancellation = default)
         {
-            //try
-            //{
-            //    await this.syncObject.WaitForAsync(cancellation);
+            var stringBuilder = new StringBuilder();
+            Rune? currentRune;
 
-            //    var stringBuilder = new StringBuilder();
+            while(this.source.Position < this.source.Length)
+            {
+                currentRune = await this.readingEngine.ReadAsync(cancellation);
 
-            //    Rune? result;
-            //    while(this.source.Position < this.source.Length)
-            //    {
-            //        result = await this.readingEngine.ReadAsync(cancellation);
+                if(!currentRune.HasValue)
+                {
+                    return this.source.Position == 0 ? null : stringBuilder.ToString();
+                }
 
-            //        if(!result.HasValue)
-            //        {
-            //            return this.source.Position == 0 ? null : stringBuilder.ToString();
-            //        }
+                var currentPosition = this.source.Position;
 
-            //        var detectionResult = await DetectLFCRNewLineSeparatorAsync(currentRune, currentPosition, cancellationToken);
+                var detectionResult = await DetectLFCRNewLineSeparatorAsync(currentRune.Value, currentPosition, cancellation);
 
-            //        if(detectionResult == LineSeparatorDetectionResult.LastEmptyLine)
-            //            this.detectedEmptyLastLine = true;
+                if(detectionResult != LineSeparatorDetectionResult.NotDetected)
+                {
+                    this.isLineSeparatorLastReaded = true;
+                    break;
+                }
 
-            //        if(detectionResult != LineSeparatorDetectionResult.NotDetected)
-            //            return true;
+                detectionResult = await DetectCRLFNewLineSeparatorAsync(currentRune.Value, currentPosition, cancellation);
 
-            //        detectionResult = await DetectCRLFNewLineSeparatorAsync(currentRune, currentPosition, cancellationToken);
+                if(detectionResult != LineSeparatorDetectionResult.NotDetected)
+                {
+                    this.isLineSeparatorLastReaded = true;
+                    break;
+                }
 
-            //        if(detectionResult == LineSeparatorDetectionResult.LastEmptyLine)
-            //            this.detectedEmptyLastLine = true;
+                stringBuilder.Append(currentRune.Value.ToString());
+            }
 
-            //        if(detectionResult != LineSeparatorDetectionResult.NotDetected)
-            //            return true;
-            //    }
-            //}
-            //finally
-            //{
-            //    this.syncObject.Release();
-            //}
-            throw new NotImplementedException();//TODO
+            return stringBuilder.ToString();
         }
 
         internal async Task<string?> ReadToEndInternalAsync(CancellationToken cancellationToken = default)
