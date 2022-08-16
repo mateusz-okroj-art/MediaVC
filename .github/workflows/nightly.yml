@@ -86,7 +86,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       shell: powershell  
-      run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"mateusz-okroj-art_MediaVC" /o:"mateusz-okroj-art" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverage.xml
+      run: .\.sonar\scanner\dotnet-sonarscanner begin /k:"mateusz-okroj-art_MediaVC" /o:"mateusz-okroj-art" /d:sonar.login="${{ secrets.SONAR_TOKEN }}" /d:sonar.host.url="https://sonarcloud.io" /d:sonar.cs.opencover.reportsPaths=coverageReports/*
     
     - name: Build
       timeout-minutes: 20
@@ -97,9 +97,9 @@ jobs:
     - name: Test
       timeout-minutes: 10
       run: |
-        coverlet src/Tests/MediaVC.Core.Tests/bin/Debug/net6/MediaVC.Core.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
-        coverlet src/Tests/MediaVC.Tests/bin/Debug/net6/MediaVC.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tests/MediaVC.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
-        coverlet src/Tests/MediaVC.Tools.Tests/bin/Debug/net6/MediaVC.Tools.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj --no-build" -f=opencover -o="coverage.xml"
+        coverlet src/Tests/MediaVC.Core.Tests/bin/Debug/net6/MediaVC.Core.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Core.Tests/MediaVC.Core.Tests.csproj --no-build" -f=opencover -o="coverageReports/coverage1.xml"
+        coverlet src/Tests/MediaVC.Tests/bin/Debug/net6/MediaVC.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tests/MediaVC.Tests.csproj --no-build" -f=opencover -o="coverageReports/coverage2.xml"
+        coverlet src/Tests/MediaVC.Tools.Tests/bin/Debug/net6/MediaVC.Tools.Tests.dll --target "dotnet" --targetargs "test src/Tests/MediaVC.Tools.Tests/MediaVC.Tools.Tests.csproj --no-build" -f=opencover -o="coverageReports/coverage3.xml"
       
     - name: Finalize SonarScanner
       if: matrix.runsOn == 'windows-latest'

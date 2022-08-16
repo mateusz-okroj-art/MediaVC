@@ -7,9 +7,9 @@ using System.Text;
 
 namespace MediaVC.Difference
 {
-    public interface IStringReader : IDisposable
+    public interface IStringReader
     {
-        IAsyncEnumerable<string> Lines { get; }
+        IAsyncEnumerable<string?> Lines { get; }
 
         /// <summary>
         /// Reads the next character from the text reader and advances the character position by one character.

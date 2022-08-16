@@ -7,50 +7,23 @@ using System.Threading.Tasks;
 
 using MediaVC.Difference;
 using MediaVC.Enumerators;
-using MediaVC.Helpers;
 
 namespace MediaVC.Readers
 {
     /// <summary>
     /// Implements <see cref="TextReader"/> functions for reading from <see cref="IInputSource"/>.
     /// </summary>
-    public sealed class StringReader : IStringReader, IEquatable<StringReader>
+    public sealed class StringReader : StringReaderBase, IStringReader, IDisposable, IEquatable<StringReader>
     {
         /// <summary>
         /// Implements <see cref="TextReader"/> functions for reading from <see cref="IInputSource"/>.
         /// </summary>
         /// <param name="source">Source for text reading</param>
         /// <exception cref="ArgumentNullException" />
-        public StringReader(IInputSource source)
-        {
-            this.source = source ?? throw new ArgumentNullException(nameof(source));
-            this.readingEngine = new TextReadingEngine(source);
-        }
+        public StringReader(IInputSource source) : base(source ?? throw new ArgumentNullException(nameof(source)))
+        {}
 
-        #region Fields
-
-        internal readonly IInputSource source;
-        private readonly TextReadingEngine readingEngine;
-        private readonly SynchronizationObject syncObject = new();
-
-        #endregion
-
-        #region Properties
-
-        /// <summary>
-        /// Represents last reading state
-        /// </summary>
-        public TextReadingState LastReadingState => this.readingEngine.LastReadingState;
-
-        public Encoding? SelectedEncoding
-        {
-            get => this.readingEngine.SelectedEncoding;
-            set => this.readingEngine.SelectedEncoding = value;
-        }
-
-        public LineEnding LineEnding => this.readingEngine.LineEnding;
-
-        #endregion
+        public IAsyncEnumerable<string?> Lines => new AsyncEnumerable<string?>(new StringReaderEnumerator(this));
 
         #region Methods
 
@@ -82,6 +55,8 @@ namespace MediaVC.Readers
 
                     if(!readedValue.HasValue)
                         break;
+
+                    buffer[counter] = readedValue.Value;
                 }
 
                 return counter;
@@ -129,55 +104,23 @@ namespace MediaVC.Readers
             }
         }
 
-        public Task<string?> ReadLineAsync(CancellationToken cancellationToken = default) =>
-            ReadToEndInternalAsync(true, cancellationToken);
-
-        internal async Task<string?> ReadToEndInternalAsync(bool endOnLineEnding = false, CancellationToken cancellationToken = default)
+        public async Task<string?> ReadLineAsync(CancellationToken cancellationToken = default)
         {
             try
             {
                 await this.syncObject.WaitForAsync(cancellationToken);
 
-                var stringBuilder = new StringBuilder();
+                var result = await ReadLineCoreAsync(cancellationToken);
 
-                var isFirstRune = true;
-                Rune? result;
-                while(this.source.Position < this.source.Length && (result = await this.readingEngine.ReadAsync(cancellationToken)).HasValue)
+                if((result?.Length ?? 0) == 0 && this.source.Position == this.source.Length && this.isLineSeparatorLastReaded)
                 {
-                    var currentPosition = this.source.Position;
-
-                    if(endOnLineEnding)
-                    {
-                        if(result.Value == new Rune('\n'))
-                        {
-                            var nextRune = await this.readingEngine.ReadAsync(cancellationToken);
-                            if(nextRune.HasValue)
-                            {
-                                if(nextRune.Value != new Rune('\r'))
-                                    this.source.Position = currentPosition;
-
-                                break;
-                            }
-                        }
-
-                        if(result.Value == new Rune('\r'))
-                        {
-                            var nextRune = await this.readingEngine.ReadAsync(cancellationToken);
-                            if(nextRune.HasValue)
-                            {
-                                if(nextRune.Value != new Rune('\n'))
-                                    this.source.Position = currentPosition;
-
-                                break;
-                            }
-                        }
-                    }
-
-                    _ = stringBuilder.Append(result.Value.ToString());
-                    isFirstRune = false;
+                    this.isLineSeparatorLastReaded = false;
+                    return string.Empty;
                 }
-
-                return isFirstRune && stringBuilder.Length < 1 ? null : stringBuilder.ToString();
+                else
+                {
+                    return (this.source.Position == this.source.Length && (result?.Length ?? 0) == 0) ? null : result;
+                }
             }
             finally
             {
@@ -185,16 +128,15 @@ namespace MediaVC.Readers
             }
         }
 
-        public string? ReadLine() =>
-            ReadLineAsync()
-            .GetAwaiter()
-            .GetResult();
+        public string? ReadLine() => ReadLineAsync()
+                                        .GetAwaiter()
+                                        .GetResult();
 
         public async Task<string> ReadToEndAsync(CancellationToken cancellationToken = default)
         {
             try
             {
-                return await ReadToEndInternalAsync(false, cancellationToken) ?? throw new InvalidOperationException();
+                return await ReadToEndInternalAsync(cancellationToken) ?? throw new InvalidOperationException();
             }
             catch(TaskCanceledException exc)
             {
@@ -207,15 +149,15 @@ namespace MediaVC.Readers
             .GetAwaiter()
             .GetResult();
 
-        public IAsyncEnumerable<string> Lines => new AsyncEnumerable<string>(new StringReaderEnumerator(this));
+        internal void Reset() => this.readingEngine.Reset();
 
-        public bool Equals(StringReader? other) => ReferenceEquals(this.source, other?.source);
+        void IDisposable.Dispose() => Dispose(true);
+
+        public bool Equals(StringReader? other) => base.Equals(other);
 
         public override bool Equals(object? obj) => Equals(obj as StringReader);
 
         public override int GetHashCode() => this.source.GetHashCode();
-
-        public void Dispose() => this.syncObject.Dispose();
 
         #endregion
     }

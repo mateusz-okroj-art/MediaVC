@@ -6,7 +6,7 @@ using MediaVC.Readers;
 
 namespace MediaVC.Enumerators
 {
-    internal class StringReaderEnumerator : IAsyncEnumerator<string>
+    internal class StringReaderEnumerator : IAsyncEnumerator<string?>
     {
         public StringReaderEnumerator(StringReader reader)
         {
@@ -18,7 +18,7 @@ namespace MediaVC.Enumerators
 
         private readonly StringReader reader;
 
-        public string Current { get; private set; }
+        public string? Current { get; private set; }
 
         public async ValueTask DisposeAsync() => await Task.CompletedTask;
 
@@ -26,7 +26,7 @@ namespace MediaVC.Enumerators
         {
             var result = await this.reader.ReadLineAsync();
 
-            Current = result!;
+            Current = result;
 
             return result is not null;
         }

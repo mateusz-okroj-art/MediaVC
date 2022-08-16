@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using MediaVC.Difference.Strategies;
+using MediaVC.Enumerators;
 using MediaVC.Tests.TestData;
 
 using Moq;
@@ -114,6 +115,32 @@ namespace MediaVC.Core.Tests.Difference.InputSource
             Assert.True(result.Equals(null));
 
             Mock.Get(inputSourceStrategy).Verify(mock => mock.Equals(It.IsAny<IInputSourceStrategy>()));
+        }
+
+        [Fact]
+        public void GetHashCode_ShouldInvokeInStrategy()
+        {
+            const int expected = 0;
+
+            var inputSourceStrategy = Mock.Of<IInputSourceStrategy>(mock =>
+                mock.GetHashCode() == expected
+            );
+
+            using var result = new MediaVC.Difference.InputSource(inputSourceStrategy);
+
+            Assert.Equal(expected, result.GetHashCode());
+
+            Mock.Get(inputSourceStrategy).Verify(mock => mock.GetHashCode());
+        }
+
+        [Fact]
+        public void GetAsyncEnumerator_ShouldReturnValid()
+        {
+            var inputSourceStrategy = Mock.Of<IInputSourceStrategy>();
+
+            using var result = new MediaVC.Difference.InputSource(inputSourceStrategy);
+
+            Assert.IsType<InputSourceEnumerator>(result.GetAsyncEnumerator());
         }
     }
 }
