@@ -3,7 +3,7 @@ name: Rolling build
 on:
 
   push:
-    branches: [ main, feature/*, fix/*, release/* ]
+    branches: [ feature/*, fix/*, release/* ]
     
   pull_request:
     branches-ignore: [ main, release/*, feature/*, fix/* ]
