@@ -2,11 +2,8 @@ name: Nightly build
 
 on:
 
-  schedule:
-    - cron: "0 0 * * *"
-
   push:
-    branches-ignore: [ main, release/*, feature/*, fix/* ]
+    branches-ignore: [ main ]
     
   pull_request:
     branches-ignore: [ main, release/*, feature/*, fix/* ]
