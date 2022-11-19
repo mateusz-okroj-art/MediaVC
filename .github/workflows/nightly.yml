@@ -3,7 +3,7 @@ name: Nightly build
 on:
 
   push:
-    branches-ignore: [ main ]
+    branches: [ main ]
     
   pull_request:
     branches-ignore: [ main, release/*, feature/*, fix/* ]
