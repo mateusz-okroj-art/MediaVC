@@ -11,7 +11,7 @@ namespace MediaVC.Tools
     {
         public async static IAsyncEnumerable<ReadOnlyMemory<byte>> CalculateAsync(Stream dataStream, int segmentMaxLength, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            ArgumentNullException.ThrowIfNull(dataStream, nameof(dataStream));
+            ArgumentNullException.ThrowIfNull(dataStream);
 
             var segments = dataStream.ToMemorySegments(segmentMaxLength, cancellationToken);
 
@@ -25,7 +25,7 @@ namespace MediaVC.Tools
 
         internal async static IAsyncEnumerable<ReadOnlyMemory<byte>> CalculateInternalAsync(IAsyncEnumerable<ReadOnlyMemory<byte>> dataSegments, [EnumeratorCancellation] CancellationToken cancellationToken = default)
         {
-            ArgumentNullException.ThrowIfNull(dataSegments, nameof(dataSegments));
+            ArgumentNullException.ThrowIfNull(dataSegments);
 
             await foreach(var segment in dataSegments)
             {

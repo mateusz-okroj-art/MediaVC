@@ -11,7 +11,6 @@ using MediaVC.Tests.TestData;
 using Moq;
 
 using Xunit;
-using Xunit.Extensions;
 
 namespace MediaVC.Core.Tests.Difference.InputSource
 {
@@ -140,7 +139,7 @@ namespace MediaVC.Core.Tests.Difference.InputSource
 
             using var result = new MediaVC.Difference.InputSource(inputSourceStrategy);
 
-            Assert.IsType<InputSourceEnumerator>(result.GetAsyncEnumerator());
+            _ = Assert.IsType<InputSourceEnumerator>(result.GetAsyncEnumerator());
         }
     }
 }

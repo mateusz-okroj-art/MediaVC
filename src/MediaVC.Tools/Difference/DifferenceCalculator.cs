@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -128,11 +129,57 @@ namespace MediaVC.Tools.Difference
             Synchronize(() => progress?.ReportRightMainPosition(NewVersion.Length - 1));
         }
 
+        private async ValueTask ScanDifferencesBetweenBuffers(ScanningProcessResult processResult, IDifferenceCalculatorProgress? progress, CancellationToken cancellationToken)
+        {
+            if(CurrentVersion is null)
+                return;
+
+            long lastOffset = 0;
+
+            for(long offset = 0; processResult.newVersionPosition + offset < NewVersion.Length && processResult.oldVersionPosition + offset < CurrentVersion.Length; ++offset)
+            {
+                CurrentVersion.Position = AdjustCurrentVersionPosition(processResult.fileSegmentInfo, offset, processResult.oldVersionPosition);
+
+                Synchronize(() =>
+                {
+                    progress?.ReportLeftOffsetedPosition(CurrentVersion.Position);
+                    progress?.ReportRightOffsetedPosition(processResult.newVersionPosition + offset);
+                });
+
+                NewVersion.Position = processResult.newVersionPosition + offset;
+
+                byte left, right;
+                left = await CurrentVersion.ReadByteAsync(cancellationToken);
+
+                if(ReferenceEquals(CurrentVersion, NewVersion))
+                    --CurrentVersion.Position;
+
+                right = await NewVersion.ReadByteAsync(cancellationToken);
+
+                var completed =
+                    left == right
+                    ? CalculateWhenBytesAreEquals(ref processResult.fileSegmentInfo, ref processResult.newVersionPosition, ref processResult.oldVersionPosition, lastOffset, offset)
+                    : CalculateWhenBytesAreDifferent(ref processResult.fileSegmentInfo, ref processResult.newVersionPosition, ref processResult.oldVersionPosition, lastOffset, offset);
+
+                if(!completed)
+                    break;
+
+                lastOffset = offset;
+            }
+        }
+
+        private class ScanningProcessResult
+        {
+            public long oldVersionPosition = 0;
+            public long newVersionPosition = 0;
+            public FileSegmentInfo fileSegmentInfo = default;
+        }
+
         /// <summary>
         /// Calculates difference when two versions are not empty
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
-        private async Task CalculateWhenBothFilesNotEmpty(IDifferenceCalculatorProgress? progress, CancellationToken cancellationToken)
+        private async ValueTask CalculateWhenBothFilesNotEmpty(IDifferenceCalculatorProgress? progress, CancellationToken cancellationToken)
         {
             var fileSegmentInfo = new FileSegmentInfo();
 
@@ -142,64 +189,34 @@ namespace MediaVC.Tools.Difference
                 progress?.ReportRightMainPosition(0);
             });
 
-            long newVersionPosition = 0, oldVersionPosition = 0;
-            while(newVersionPosition < NewVersion.Length)
+            var scanningResult = new ScanningProcessResult();
+            while(scanningResult.newVersionPosition < NewVersion.Length)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                NewVersion.Position = newVersionPosition;
+                NewVersion.Position = scanningResult.newVersionPosition;
 
-                Synchronize(() => progress?.ReportRightMainPosition(newVersionPosition));
+                Synchronize(() => progress?.ReportRightMainPosition(scanningResult.newVersionPosition));
 
-                long lastOffset = 0;
-                while(oldVersionPosition < CurrentVersion!.Length)
+                while(scanningResult.oldVersionPosition < CurrentVersion!.Length)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    CurrentVersion.Position = oldVersionPosition;
+                    CurrentVersion.Position = scanningResult.oldVersionPosition;
 
-                    Synchronize(() => progress?.ReportLeftMainPosition(oldVersionPosition));
+                    Synchronize(() => progress?.ReportLeftMainPosition(scanningResult.oldVersionPosition));
 
-                    for(long offset = 0; newVersionPosition + offset < NewVersion.Length && oldVersionPosition + offset < CurrentVersion.Length; ++offset)
-                    {
-                        CurrentVersion.Position = AdjustCurrentVersionPosition(fileSegmentInfo, offset, oldVersionPosition);
+                    await ScanDifferencesBetweenBuffers(scanningResult, progress, cancellationToken);
 
-                        Synchronize(() =>
-                        {
-                            progress?.ReportLeftOffsetedPosition(CurrentVersion.Position);
-                            progress?.ReportRightOffsetedPosition(newVersionPosition + offset);
-                        });
-
-                        NewVersion.Position = newVersionPosition + offset;
-
-                        byte left, right;
-                        left = await CurrentVersion.ReadByteAsync(cancellationToken);
-
-                        if(ReferenceEquals(CurrentVersion, NewVersion))
-                            --CurrentVersion.Position;
-
-                        right = await NewVersion.ReadByteAsync(cancellationToken);
-
-                        var completed =
-                            left == right
-                            ? CalculateWhenBytesAreEquals(ref fileSegmentInfo, ref newVersionPosition, ref oldVersionPosition, lastOffset, offset)
-                            : CalculateWhenBytesAreDifferent(ref fileSegmentInfo, ref newVersionPosition, ref oldVersionPosition, lastOffset, offset);
-
-                        if(!completed)
-                            break;
-
-                        lastOffset = offset;
-                    }
-
-                    if(newVersionPosition >= NewVersion.Length)
+                    if(scanningResult.newVersionPosition >= NewVersion.Length)
                         break;
                 }
 
-                if(oldVersionPosition >= CurrentVersion.Length)
+                if(scanningResult.oldVersionPosition >= CurrentVersion.Length)
                     break;
             }
 
-            AddSegmentForNewVersionEnding(newVersionPosition);
+            AddSegmentForNewVersionEnding(scanningResult.newVersionPosition);
 
             Synchronize(() => RemovedSegmentsDetector.Detect(this.result, CurrentVersion!, this.removed, cancellationToken));
         }
