@@ -28,4 +28,8 @@
     <ProjectReference Include="..\..\MediaVC.Tools\MediaVC.Tools.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Detection\" />
+  </ItemGroup>
+
 </Project>
