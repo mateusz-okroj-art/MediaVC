@@ -23,6 +23,10 @@ namespace MediaVC.Tools.Difference
         private readonly ObservableList<IFileSegmentInfo> result = new();
         private readonly ObservableList<IFileSegmentInfo> removed = new();
 
+        private FileSegmentInfo _fileSegmentInfo = default;
+        private long _oldVersionPosition = 0;
+        private long _newVersionPosition = 0;
+
         #endregion
 
         #region Properties
@@ -132,103 +136,113 @@ namespace MediaVC.Tools.Difference
         /// Calculates difference when two versions are not empty
         /// </summary>
         /// <exception cref="InvalidOperationException"/>
-        private async Task CalculateWhenBothFilesNotEmpty(IDifferenceCalculatorProgress? progress, CancellationToken cancellationToken)
+        private async ValueTask CalculateWhenBothFilesNotEmpty(IDifferenceCalculatorProgress? progress, CancellationToken cancellationToken)
         {
-            var fileSegmentInfo = new FileSegmentInfo();
-
             Synchronize(() =>
             {
                 progress?.ReportLeftMainPosition(0);
                 progress?.ReportRightMainPosition(0);
             });
 
-            long newVersionPosition = 0, oldVersionPosition = 0;
-            while(newVersionPosition < NewVersion.Length)
+            _newVersionPosition = 0;
+            _oldVersionPosition = 0;
+            _fileSegmentInfo = default;
+
+            while(_newVersionPosition < NewVersion.Length)
             {
                 cancellationToken.ThrowIfCancellationRequested();
 
-                NewVersion.Position = newVersionPosition;
+                NewVersion.Position = _newVersionPosition;
 
-                Synchronize(() => progress?.ReportRightMainPosition(newVersionPosition));
+                Synchronize(() => progress?.ReportRightMainPosition(_newVersionPosition));
 
                 long lastOffset = 0;
-                while(oldVersionPosition < CurrentVersion!.Length)
+                while(_oldVersionPosition < CurrentVersion!.Length)
                 {
                     cancellationToken.ThrowIfCancellationRequested();
 
-                    CurrentVersion.Position = oldVersionPosition;
+                    CurrentVersion.Position = _oldVersionPosition;
 
-                    Synchronize(() => progress?.ReportLeftMainPosition(oldVersionPosition));
+                    Synchronize(() => progress?.ReportLeftMainPosition(_oldVersionPosition));
 
-                    for(long offset = 0; newVersionPosition + offset < NewVersion.Length && oldVersionPosition + offset < CurrentVersion.Length; ++offset)
-                    {
-                        CurrentVersion.Position = AdjustCurrentVersionPosition(fileSegmentInfo, offset, oldVersionPosition);
+                    lastOffset = await ScanDifferencesCore(progress, lastOffset, cancellationToken);
 
-                        Synchronize(() =>
-                        {
-                            progress?.ReportLeftOffsetedPosition(CurrentVersion.Position);
-                            progress?.ReportRightOffsetedPosition(newVersionPosition + offset);
-                        });
-
-                        NewVersion.Position = newVersionPosition + offset;
-
-                        byte left, right;
-                        left = await CurrentVersion.ReadByteAsync(cancellationToken);
-
-                        if(ReferenceEquals(CurrentVersion, NewVersion))
-                            --CurrentVersion.Position;
-
-                        right = await NewVersion.ReadByteAsync(cancellationToken);
-
-                        var completed =
-                            left == right
-                            ? CalculateWhenBytesAreEquals(ref fileSegmentInfo, ref newVersionPosition, ref oldVersionPosition, lastOffset, offset)
-                            : CalculateWhenBytesAreDifferent(ref fileSegmentInfo, ref newVersionPosition, ref oldVersionPosition, lastOffset, offset);
-
-                        if(!completed)
-                            break;
-
-                        lastOffset = offset;
-                    }
-
-                    if(newVersionPosition >= NewVersion.Length)
+                    if(_newVersionPosition >= NewVersion.Length)
                         break;
                 }
 
-                if(oldVersionPosition >= CurrentVersion.Length)
+                if(_oldVersionPosition >= CurrentVersion.Length)
                     break;
             }
 
-            AddSegmentForNewVersionEnding(newVersionPosition);
+            AddSegmentForNewVersionEnding();
 
             Synchronize(() => RemovedSegmentsDetector.Detect(this.result, CurrentVersion!, this.removed, cancellationToken));
         }
 
-        private bool CalculateWhenBytesAreDifferent(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, ref long oldVersionPosition, long lastOffset, long offset)
+        private async ValueTask<long> ScanDifferencesCore(IDifferenceCalculatorProgress? progress, long lastOffset, CancellationToken cancellationToken)
         {
-            if(fileSegmentInfo.Source is null)
+            if(CurrentVersion is null)
+                throw new InvalidOperationException("CurrentVersion cannot be null in this case.");
+
+            for(long offset = 0; _newVersionPosition + offset < NewVersion.Length && _oldVersionPosition + offset < CurrentVersion.Length; ++offset)
             {
-                fileSegmentInfo = new FileSegmentInfo
+                CurrentVersion.Position = AdjustCurrentVersionPosition(offset);
+
+                Synchronize(() =>
+                {
+                    progress?.ReportLeftOffsetedPosition(CurrentVersion.Position);
+                    progress?.ReportRightOffsetedPosition(_newVersionPosition + offset);
+                });
+
+                NewVersion.Position = _newVersionPosition + offset;
+
+                var left = await CurrentVersion.ReadByteAsync(cancellationToken);
+
+                if(ReferenceEquals(CurrentVersion, NewVersion))
+                    --CurrentVersion.Position;
+
+                var right = await NewVersion.ReadByteAsync(cancellationToken);
+
+                var completed =
+                    left == right
+                    ? CalculateWhenBytesAreEquals(lastOffset, offset)
+                    : CalculateWhenBytesAreDifferent(lastOffset, offset);
+
+                if(!completed)
+                    break;
+
+                lastOffset = offset;
+            }
+
+            return lastOffset;
+        }
+
+        private bool CalculateWhenBytesAreDifferent(long lastOffset, long offset)
+        {
+            if(_fileSegmentInfo.Source is null)
+            {
+                _fileSegmentInfo = new FileSegmentInfo
                 {
                     Source = NewVersion,
-                    MappedPosition = newVersionPosition + offset,
-                    StartPositionInSource = newVersionPosition + offset,
-                    EndPositionInSource = newVersionPosition + offset
+                    MappedPosition = _newVersionPosition + offset,
+                    StartPositionInSource = _newVersionPosition + offset,
+                    EndPositionInSource = _newVersionPosition + offset
                 };
             }
-            else if(ReferenceEquals(fileSegmentInfo.Source, CurrentVersion))
+            else if(ReferenceEquals(_fileSegmentInfo.Source, CurrentVersion))
             {
-                SaveSegmentAndClear(ref fileSegmentInfo, ref newVersionPosition, lastOffset);
-                oldVersionPosition += lastOffset + 1;
+                SaveSegmentAndClear(lastOffset);
+                _oldVersionPosition += lastOffset + 1;
 
                 return false;
             }
-            else if(ReferenceEquals(fileSegmentInfo.Source, NewVersion))
+            else if(ReferenceEquals(_fileSegmentInfo.Source, NewVersion))
             {
-                if(SaveCurrentSegmentAndClear(ref fileSegmentInfo, ref newVersionPosition, lastOffset, offset))
+                if(SaveCurrentSegmentAndClear(lastOffset, offset))
                     return false;
 
-                fileSegmentInfo.EndPositionInSource = newVersionPosition + offset;
+                _fileSegmentInfo.EndPositionInSource = _newVersionPosition + offset;
             }
             else
             {
@@ -238,33 +252,33 @@ namespace MediaVC.Tools.Difference
             return true;
         }
 
-        private bool CalculateWhenBytesAreEquals(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, ref long oldVersionPosition, long lastOffset, long offset)
+        private bool CalculateWhenBytesAreEquals(long lastOffset, long offset)
         {
-            if(fileSegmentInfo.Source is null)
+            if(_fileSegmentInfo.Source is null)
             {
-                fileSegmentInfo = new FileSegmentInfo
+                _fileSegmentInfo = new FileSegmentInfo
                 {
                     Source = CurrentVersion!,
-                    StartPositionInSource = oldVersionPosition + offset,
-                    EndPositionInSource = oldVersionPosition + offset,
-                    MappedPosition = newVersionPosition + offset
+                    StartPositionInSource = _oldVersionPosition + offset,
+                    EndPositionInSource = _oldVersionPosition + offset,
+                    MappedPosition = _newVersionPosition + offset
                 };
             }
-            else if(ReferenceEquals(fileSegmentInfo.Source, CurrentVersion))
+            else if(ReferenceEquals(_fileSegmentInfo.Source, CurrentVersion))
             {
                 if(offset <= lastOffset)
                 {
-                    SaveSegmentAndClear(ref fileSegmentInfo, ref newVersionPosition, lastOffset);
-                    oldVersionPosition += lastOffset + 1;
+                    SaveSegmentAndClear(lastOffset);
+                    _oldVersionPosition += lastOffset + 1;
 
                     return false;
                 }
 
-                fileSegmentInfo.EndPositionInSource = oldVersionPosition + offset;
+                _fileSegmentInfo.EndPositionInSource = _oldVersionPosition + offset;
             }
-            else if(ReferenceEquals(fileSegmentInfo.Source, NewVersion))
+            else if(ReferenceEquals(_fileSegmentInfo.Source, NewVersion))
             {
-                SaveSegmentForCurrentVersionAndClear(ref fileSegmentInfo, ref newVersionPosition, ref oldVersionPosition, lastOffset, offset);
+                SaveSegmentForCurrentVersionAndClear(lastOffset, offset);
                 return false;
             }
             else
@@ -279,55 +293,53 @@ namespace MediaVC.Tools.Difference
         /// Adds last segment when NewVersion is not on end.
         /// </summary>
         /// <param name="newVersionPosition"></param>
-        private void AddSegmentForNewVersionEnding(long newVersionPosition)
+        private void AddSegmentForNewVersionEnding()
         {
-            if(newVersionPosition < NewVersion.Length - 1)
+            if(_newVersionPosition < NewVersion.Length - 1)
             {
                 Synchronize(() => this.result.Add(new FileSegmentInfo
                 {
                     Source = NewVersion,
-                    MappedPosition = newVersionPosition,
-                    StartPositionInSource = newVersionPosition,
+                    MappedPosition = _newVersionPosition,
+                    StartPositionInSource = _newVersionPosition,
                     EndPositionInSource = NewVersion.Length - 1
                 }));
             }
         }
 
-        private bool SaveCurrentSegmentAndClear(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, long lastOffset, long offset)
+        private bool SaveCurrentSegmentAndClear(long lastOffset, long offset)
         {
             if(offset <= lastOffset)
             {
-                SaveSegmentAndClear(ref fileSegmentInfo, ref newVersionPosition, lastOffset);
+                SaveSegmentAndClear(lastOffset);
                 return true;
             }
 
             return false;
         }
 
-        private void SaveSegmentAndClear(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, long lastOffset)
+        private void SaveSegmentAndClear(long lastOffset)
         {
-            var currentSegment = fileSegmentInfo;
-            Synchronize(() => this.result.Add(currentSegment));
+            Synchronize(() => this.result.Add(_fileSegmentInfo));
 
-            fileSegmentInfo = new FileSegmentInfo();
+            _fileSegmentInfo = default;
             
-            newVersionPosition += lastOffset + 1;
+            _newVersionPosition += lastOffset + 1;
         }
 
-        private void SaveSegmentForCurrentVersionAndClear(ref FileSegmentInfo fileSegmentInfo, ref long newVersionPosition, ref long oldVersionPosition, long lastOffset, long offset)
+        private void SaveSegmentForCurrentVersionAndClear(long lastOffset, long offset)
         {
-            var currentSegment = fileSegmentInfo;
-            Synchronize(() => this.result.Add(currentSegment));
+            Synchronize(() => this.result.Add(_fileSegmentInfo));
 
-            fileSegmentInfo = new FileSegmentInfo();
+            _fileSegmentInfo = default;
             if(offset <= lastOffset)
             {
-                newVersionPosition += lastOffset + 1;
-                oldVersionPosition += lastOffset + 1;
+                _newVersionPosition += lastOffset + 1;
+                _oldVersionPosition += lastOffset + 1;
             }
-            else if(CurrentVersion!.Position == oldVersionPosition + 1)
+            else if(CurrentVersion!.Position == _oldVersionPosition + 1)
             {
-                newVersionPosition += lastOffset + 1;
+                _newVersionPosition += lastOffset + 1;
             }
         }
 
@@ -335,10 +347,10 @@ namespace MediaVC.Tools.Difference
         /// When current segment source is not CurrentVersion, then CurrentVersion should not be moved by offset.
         /// </summary>
         /// <returns>Adjusted stream position</returns>
-        private long AdjustCurrentVersionPosition(IFileSegmentInfo fileSegmentInfo, long offset, long oldVersionPosition) =>
-            ReferenceEquals(fileSegmentInfo.Source, CurrentVersion) ?
-            oldVersionPosition + offset :
-            oldVersionPosition;
+        private long AdjustCurrentVersionPosition(long offset) =>
+            ReferenceEquals(_fileSegmentInfo.Source, CurrentVersion) ?
+            _oldVersionPosition + offset :
+            _oldVersionPosition;
 
         private void Synchronize(Action workToDo)
         {
