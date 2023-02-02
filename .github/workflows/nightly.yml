@@ -90,7 +90,8 @@ jobs:
       timeout-minutes: 20
       run: |
         dotnet clean src
-        dotnet build src -c Debug --no-incremental
+        dotnet restore src/MediaVC.sln -c Debug
+        dotnet build src/MediaVC.sln -c Debug --no-incremental
       
     - name: Test (Windows)
       if: matrix.runsOn == 'windows-latest'
@@ -99,7 +100,7 @@ jobs:
 
     - name: Test
       timeout-minutes: 10
-      run: dotnet test src/MediaVC.sln
+      run: dotnet test src/MediaVC.sln -c Debug
 
     - name: Finalize SonarScanner
       if: matrix.runsOn == 'windows-latest'
