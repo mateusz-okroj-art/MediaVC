@@ -96,7 +96,7 @@ jobs:
     - name: Test (Windows)
       if: matrix.runsOn == 'windows-latest'
       timeout-minutes: 10
-      run: dotnet-coverage collect 'dotnet test' -f xml -o 'coverage.xml'
+      run: dotnet-coverage collect 'dotnet test src/MediaVC.sln' -f xml -o 'coverage.xml'
 
     - name: Test
       timeout-minutes: 10
