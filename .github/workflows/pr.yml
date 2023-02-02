@@ -90,7 +90,7 @@ jobs:
       timeout-minutes: 20
       run: |
         dotnet clean src
-        dotnet restore src/MediaVC.sln -c Debug
+        dotnet restore src/MediaVC.sln
         dotnet build src/MediaVC.sln -c Debug --no-incremental
       
     - name: Test (Windows)
