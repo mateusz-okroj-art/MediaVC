@@ -99,7 +99,7 @@ jobs:
 
     - name: Test
       timeout-minutes: 10
-      run: dotnet test
+      run: dotnet test src/MediaVC.sln
 
     - name: Finalize SonarScanner
       if: matrix.runsOn == 'windows-latest'
