@@ -8,7 +8,7 @@ namespace MediaVC.Difference
     /// <summary>
     /// Provides access to input source of data
     /// </summary>
-    public interface IInputSource : IAsyncDisposable, IAsyncEnumerable<byte>
+    public interface IInputSource : IAsyncEnumerable<byte>
     {
         /// <summary>
         /// Current position in stream in bytes
