@@ -9,7 +9,7 @@ namespace MediaVC
 
         public Repository(IRepositorySource source)
         {
-            this.source = source ?? throw new ArgumentNullException(nameof(source));
+            Source = source ?? throw new ArgumentNullException(nameof(source));
         }
 
         internal Repository() { }
@@ -18,7 +18,14 @@ namespace MediaVC
 
         #region Fields
 
-        private IRepositorySource? source;
+        #endregion
+
+        #region Properties
+
+        /// <summary>
+        /// Repository realistic source
+        /// </summary>
+        public IRepositorySource? Source { get; private set; }
 
         #endregion
 
@@ -35,11 +42,6 @@ namespace MediaVC
         }
 
         public ValueTask AddChangeset(object changeset)
-        {
-            throw new NotImplementedException();
-        }
-
-        public static Repository Init()
         {
             throw new NotImplementedException();
         }

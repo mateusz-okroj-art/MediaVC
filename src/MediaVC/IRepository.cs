@@ -2,7 +2,6 @@
 
 namespace MediaVC
 {
-
     /// <summary>
     /// Provides access to operate on single MediaVC repository
     /// </summary>
