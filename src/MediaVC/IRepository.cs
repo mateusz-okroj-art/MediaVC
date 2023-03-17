@@ -7,10 +7,10 @@ namespace MediaVC
     /// </summary>
     public interface IRepository
     {
-        ValueTask AddChangeset(object changeset);
+        Task<IActionResult> AddChangeset(object changeset);
 
-        ValueTask DownloadAsync();
+        Task<IActionResult> DownloadAsync();
 
-        ValueTask UploadAsync();
+        Task<IActionResult> UploadAsync();
     }
 }

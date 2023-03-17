@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace MediaVC.Sources
 {
-    public sealed class DiskRepository : IRepositorySource, IDisposable, IAsyncDisposable
+    public sealed class DiskRepository : IRepository, IDisposable, IAsyncDisposable
     {
         #region Constructor
 
@@ -24,19 +24,15 @@ namespace MediaVC.Sources
 
         #region Methods
 
+        public Task<IActionResult> AddChangeset(object changeset) => throw new NotImplementedException();
 
+        public Task<IActionResult> DownloadAsync() => throw new NotImplementedException();
+
+        public Task<IActionResult> UploadAsync() => throw new NotImplementedException();
 
         protected void LoadFiles()
         {
 
-        }
-
-        protected async ValueTask ReleaseFiles()
-        {
-            foreach(var file in files)
-                await file.DisposeAsync();
-
-            files.Clear();
         }
 
         public static async Task<IActionResult<DiskRepository>> Init(string path)
@@ -47,6 +43,14 @@ namespace MediaVC.Sources
             }
 
             throw new NotImplementedException();
+        }
+
+        protected async ValueTask ReleaseFiles()
+        {
+            foreach(var file in files)
+                await file.DisposeAsync();
+
+            files.Clear();
         }
 
         public async void Dispose() => await ReleaseFiles();
