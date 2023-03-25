@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 
 namespace MediaVC.Synchronizations
 {
@@ -6,6 +7,6 @@ namespace MediaVC.Synchronizations
     {
         public DiskRepositorySynchronizer() { }
 
-        public IAsyncDisposable EnterAsync() => throw new NotImplementedException();
+        public IAsyncDisposable EnterAsync(CancellationToken cancellationToken) => throw new NotImplementedException();
     }
 }
